@@ -10,11 +10,11 @@ main:
   - name: Blogs
     url: '#posts'
     weight: 20
- - name: Experience
-     url: '#experience'
+ - name: Projects
+     url: '#projects'
      weight: 30
-  - name: Courses
-    url: '#accomplishments'
+  - name: Gallery
+    url: '#allery'
     weight: 40
   - name: Contact
     url: '#contact'
