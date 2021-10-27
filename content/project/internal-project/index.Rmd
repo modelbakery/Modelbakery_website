@@ -10,7 +10,7 @@ links:
   icon_pack: 
   name: github material
   # put your github-rfm url here 
-  url: 
+  url: https://twitter.com/georgecushen
 slides: example
 # descriptions here
 summary: Simple trick to segment your customers with only three customer information:recency, frequency and monetary. Is this all their to it? (why is it still important?)
