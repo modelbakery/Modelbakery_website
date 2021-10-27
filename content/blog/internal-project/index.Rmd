@@ -13,7 +13,7 @@ links:
   url: https://twitter.com/georgecushen
 # slides: example
 # descriptions here
-summary: Simple trick to segment your customers with only three customer information:recency, frequency and monetary. Is this all their to it? (why is it still important?)
+summary: Simple trick to segment your customers with only three customer information recency, frequency and monetary. Is this all their to it? (why is it still important?)
 tags:
 - Marketing
 title: Why you MUST apply RFM matrics to your company right away!
