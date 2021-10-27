@@ -8,7 +8,7 @@
 
 
 # start_server()
-# stop_server()
+# serve_site()
 
 # 2.0 .gitignore ----
 # go to .gitignore *Add these to ignore*
