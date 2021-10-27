@@ -1,0 +1,109 @@
+---
+date: "2021-10-28T00:00:00Z"
+external_link: ""
+image:
+  caption: Photo by rawpixel on Unsplash
+  focal_point: Smart
+links:
+- icon: github 
+  icon_pack: fab
+  name: github material
+  url: https://github.com/modelbakery/Modelbakery_website/blob/main/content/blog/internal-project/index.Rmd
+summary: Simple trick to segment your customers with only three customer information:recency, frequency and monetary. Is this all their to it? (why is it still important?)
+tags:
+- Marketing
+title: Why you MUST apply RFM matrics to your company right away!
+url_code: ""
+url_pdf: ""
+url_slides: ""
+url_video: ""
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<style type="text/css">
+.main-container {
+    margin-left: 250px;
+}
+
+.sidenote, .marginnote { 
+  float: right;
+  clear: right;
+  margin-right: -60%;
+  width: 60%;         # best between 50% and 60%
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  vertical-align: baseline;
+  position: relative;
+}
+
+</style>
+<p>In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of
+scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.</p>
+<blockquote>
+<p>A distribution is simply a collection of data, or scores, on a variable. Usually, these scores are arranged in order from smallest to largest and then they can be presented graphically.</p>
+</blockquote>
+<ul>
+<li>Page 6, Statistics in Plain English, Third Edition, 2010.</li>
+</ul>
+<p>This argues that every data points in a given one dimensional space is its score itself. Having this is mind we will begin to explore individual RFM components and how to scale and build this matrics from a scratch.</p>
+<div id="menu" class="section level2">
+<h2>Menu</h2>
+<div id="appetizer" class="section level3">
+<h3>Appetizer</h3>
+<ul>
+<li>Motivation: Segmentation is “Divide and Conquer”</li>
+<li>What is RFM and why we do feature engineering</li>
+<li>Why Campaign Response important feature for CRM?</li>
+<li>Power of Quantile and Pareto Principle</li>
+<li>Robust Scoring Rules</li>
+</ul>
+</div>
+<div id="main" class="section level3">
+<h3>Main</h3>
+<ul>
+<li>Time Series Visualisation + seasonal effect</li>
+<li>Data splitting</li>
+<li>RFM Scoring</li>
+<li>Visualisation for business report</li>
+</ul>
+</div>
+<div id="desert" class="section level3">
+<h3>Desert</h3>
+<ul>
+<li>Perspective note</li>
+<li></li>
+</ul>
+</div>
+</div>
+<div id="motivation-segmentation-is-divide-and-conquer" class="section level2">
+<h2>Motivation: Segmentation is “Divide and Conquer”</h2>
+<p>Past history, Marketers realised that targeting the right audience is just as important as what you send. We are all aware that target marketing is a key strategy used to directly influence on the revenue. Understanding your customers purchasing behaviour is a valuable adduct as it gives a guidline which group to priorties. On top of this,
+and priortising your customers</p>
+<p>As many consulting companies e.g. Mchanzie and PwC have claimed, well defined customer segmentation has ability to cut through to the heart of business strategy. There is no doubt having expert knowlegde in the domain of business has a capability to reveal tangible insights and priorties business initiative. Broadly speaking, segmentation can be simply understood by picture of top-down mechanism. The deeper you divide your customers, it may give the feel of understanding your customer better, as you are almost personalising their uniquness. However, this holds two caveats,</p>
+<p>Small Segment of customers -&gt; reduce costs</p>
+</div>
+<div id="what-is-rfm-and-why-we-do-feature-engineering" class="section level2">
+<h2>What is RFM and why we do feature engineering</h2>
+<p>RFM is essentially a combined measure of customer’s purchasing characteristics for better organisation and decision makings. In data science world it is called feature engineering; applying a domain knowledge to extract feature and reshape in a way that it is more relevant to the given task.</p>
+<blockquote>
+<p>The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model without compromising its accuracy.</p>
+</blockquote>
+<p>Decision makings starts with assumptions: hypothesis. When I make a strong assumptions, I bring that idea and paint it on 2D canvas; this is a model. Yes - there will be restrictions and some of the excluded information can be important. It is almost too scary to see what may be behind that canvas; part of me just want to rip it apart and start again.</p>
+<p>Feature engineering is a trick that brings some of this hidden layers of information. Because I force them wear on a similar colour. Hence a prior knowledge at this specific domain gains more opportunity to be creative and … upon the assumptions made.</p>
+</div>
+<div id="why-campaign-response-important-feature-for-crm" class="section level2">
+<h2>Why Campaign Response important feature for CRM?</h2>
+<p>A campaign has variety of strategy and some examples are as follow:</p>
+<ul>
+<li>A time bound offer</li>
+<li>To specific set of target group e.g. location, age and payment methods etc.</li>
+<li>For a specific purchasing behaviour</li>
+<li>A specific reward for the same</li>
+</ul>
+<p>Tracking campaign activities are vital measure for customer engagement management. Effective CRM system can leverage life time value of company’s customers by effectively reducing their churn events. Data scientist and engineers are very well adapted in this field. Every businesses needs to optimise the balance between the cost retention and acquisition as they are essential track for ROI generation.</p>
+<p>The data I will be exploring below contains customer campaign response binary dataset.</p>
+</div>
