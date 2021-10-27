@@ -5,7 +5,6 @@ image:
   caption: Photo by rawpixel on Unsplash
   focal_point: Smart
 links:
-  # change to GitHub icon and url 
 - icon: github 
   icon_pack: fab
   name: github material
