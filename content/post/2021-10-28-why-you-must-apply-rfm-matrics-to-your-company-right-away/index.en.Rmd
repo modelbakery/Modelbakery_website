@@ -1,7 +1,7 @@
 ---
 title: Why you Must apply RFM matrics to your company right away!
 author: Package Build
-date: '2021-10-28'
+date: '2021-10-26'
 slug: why-you-must-apply-rfm-matrics-to-your-company-right-away
 categories:
   - R
