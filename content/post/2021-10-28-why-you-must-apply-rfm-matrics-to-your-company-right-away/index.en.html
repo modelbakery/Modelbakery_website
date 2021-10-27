@@ -23,27 +23,7 @@ draft: FALSE
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
 
 
-<style type="text/css">
-.main-container {
-    margin-left: 250px;
-}
-
-.sidenote, .marginnote { 
-  float: right;
-  clear: right;
-  margin-right: -60%;
-  width: 60%;         # best between 50% and 60%
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 1.1rem;
-  line-height: 1.3;
-  vertical-align: baseline;
-  position: relative;
-}
-
-</style>
-<p>In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of
-scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.</p>
+<p>In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.</p>
 <blockquote>
 <p>A distribution is simply a collection of data, or scores, on a variable. Usually, these scores are arranged in order from smallest to largest and then they can be presented graphically.</p>
 </blockquote>
@@ -51,6 +31,7 @@ scoring metrics. There are many excellent books and course materials that illust
 <li>Page 6, Statistics in Plain English, Third Edition, 2010.</li>
 </ul>
 <p>This argues that every data points in a given one dimensional space is its score itself. Having this is mind we will begin to explore individual RFM components and how to scale and build this matrics from a scratch.</p>
+<hr />
 <div id="menu" class="section level2">
 <h2>Menu</h2>
 <div id="appetizer" class="section level3">
@@ -78,6 +59,7 @@ scoring metrics. There are many excellent books and course materials that illust
 <li>Perspective note</li>
 <li></li>
 </ul>
+<hr />
 </div>
 </div>
 <div id="motivation-segmentation-is-divide-and-conquer" class="section level2">
@@ -107,4 +89,71 @@ and priortising your customers</p>
 </ul>
 <p>Tracking campaign activities are vital measure for customer engagement management. Effective CRM system can leverage life time value of company’s customers by effectively reducing their churn events. Data scientist and engineers are very well adapted in this field. Every businesses needs to optimise the balance between the cost retention and acquisition as they are essential track for ROI generation.</p>
 <p>The data I will be exploring below contains customer campaign response binary dataset.</p>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.5     ✓ dplyr   1.0.7
+## ✓ tibble  3.1.3     ✓ stringr 1.4.0
+## ✓ tidyr   1.1.3     ✓ forcats 0.5.1
+## ✓ purrr   0.3.4</code></pre>
+<pre><code>## Warning: package &#39;forcats&#39; was built under R version 4.1.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>## 
+## Attaching package: &#39;lubridate&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     date, intersect, setdiff, union</code></pre>
+<pre><code>## 
+## Attaching package: &#39;scales&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     discard</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     col_factor</code></pre>
+<pre><code>## 
+## Attaching package: &#39;psych&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:scales&#39;:
+## 
+##     alpha, rescale</code></pre>
+<pre><code>## The following objects are masked from &#39;package:ggplot2&#39;:
+## 
+##     %+%, alpha</code></pre>
+<pre><code>## Loading required package: PerformanceAnalytics</code></pre>
+<pre><code>## Loading required package: xts</code></pre>
+<pre><code>## Loading required package: zoo</code></pre>
+<pre><code>## 
+## Attaching package: &#39;zoo&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     as.Date, as.Date.numeric</code></pre>
+<pre><code>## 
+## Attaching package: &#39;xts&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     first, last</code></pre>
+<pre><code>## 
+## Attaching package: &#39;PerformanceAnalytics&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:graphics&#39;:
+## 
+##     legend</code></pre>
+<pre><code>## Loading required package: quantmod</code></pre>
+<pre><code>## Loading required package: TTR</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;quantmod&#39;:
+##   method            from
+##   as.zoo.data.frame zoo</code></pre>
+<pre><code>## ══ Need to Learn tidyquant? ════════════════════════════════════════════════════
+## Business Science offers a 1-hour course - Learning Lab #9: Performance Analysis &amp; Portfolio Optimization with tidyquant!
+## &lt;/&gt; Learn more at: https://university.business-science.io/p/learning-labs-pro &lt;/&gt;</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;tune&#39;:
+##   method                   from   
+##   required_pkgs.model_spec parsnip</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;GGally&#39;:
+##   method from   
+##   +.gg   ggplot2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;kableExtra&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     group_rows</code></pre>
 </div>

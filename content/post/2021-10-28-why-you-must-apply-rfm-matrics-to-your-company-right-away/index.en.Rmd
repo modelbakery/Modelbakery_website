@@ -22,70 +22,7 @@ draft: FALSE
 
 
 
-
-```{css sidenote, echo = FALSE}
-.main-container {
-    margin-left: 250px;
-}
-
-.sidenote, .marginnote { 
-  float: right;
-  clear: right;
-  margin-right: -60%;
-  width: 60%;         # best between 50% and 60%
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 1.1rem;
-  line-height: 1.3;
-  vertical-align: baseline;
-  position: relative;
-}
-
-```
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(
-    echo = TRUE,
-    eval = TRUE,
-    message = FALSE,
-    warning = FALSE,
-    dpi = 300,
-    fig.align = "center"
-    )
-
-```
-
-
-```{r,echo=FALSE}
-
-library(readr)
-library(fs)
-
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-library(skimr)
-library(scales)
-library(psych)
-library(gmodels)
-
-library(tidyquant)
-library(forecast)
-library(timetk)
-library(rsample) 
-
-library(ggplot2)
-library(wesanderson)
-library(GGally)
-library(knitr)
-library(kableExtra)
-
-```
-
-
-
-In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of 
-scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.
+In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.
 
 > A distribution is simply a collection of data, or scores, on a variable. Usually, these scores are arranged in order from smallest to largest and then they can be presented graphically. 
 
@@ -93,7 +30,7 @@ scoring metrics. There are many excellent books and course materials that illust
 
 This argues that every data points in a given one dimensional space is its score itself. Having this is mind we will begin to explore individual RFM components and how to scale and build this matrics from a scratch. 
 
-
+***
 ## Menu 
 
 ### Appetizer
@@ -113,7 +50,7 @@ This argues that every data points in a given one dimensional space is its score
 + Perspective note 
 + 
 
-
+***
 
 ## Motivation: Segmentation is "Divide and Conquer"
 
@@ -150,3 +87,34 @@ Tracking campaign activities are vital measure for customer engagement managemen
 
 
 The data I will be exploring below contains customer campaign response binary dataset. 
+
+
+
+
+```{r,echo=FALSE}
+
+library(readr)
+library(fs)
+
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(skimr)
+library(scales)
+library(psych)
+library(gmodels)
+
+library(tidyquant)
+library(forecast)
+library(timetk)
+library(rsample) 
+
+library(ggplot2)
+library(wesanderson)
+library(GGally)
+library(knitr)
+library(kableExtra)
+
+```
+
+
