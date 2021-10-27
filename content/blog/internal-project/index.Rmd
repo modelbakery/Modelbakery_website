@@ -8,7 +8,7 @@ links:
 - icon: github 
   icon_pack: fab
   name: github material
-  url: https://twitter.com/georgecushen
+  url: https://github.com/modelbakery/Modelbakery_website/blob/main/content/blog/internal-project/index.Rmd
 summary: Simple trick to segment your customers with only three customer information:recency, frequency and monetary. Is this all their to it? (why is it still important?)
 tags:
 - Marketing
