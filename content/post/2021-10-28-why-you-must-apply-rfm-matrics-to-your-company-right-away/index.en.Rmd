@@ -10,7 +10,7 @@ tags:
 subtitle: ''
 summary: ''
 authors: []
-lastmod: '2021-10-28T03:10:43+09:00'
+lastmod: '2021-10-26T03:10:43+09:00'
 featured: no
 image:
   caption: ''
