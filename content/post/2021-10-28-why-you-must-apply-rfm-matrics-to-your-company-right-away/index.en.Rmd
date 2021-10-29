@@ -122,7 +122,7 @@ The data I will be exploring below contains customer campaign response binary da
 
 ***
 
-## 1.0 libraries
+## 1.0 library load
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
@@ -156,16 +156,16 @@ library(wesanderson)
 ```
 
 
-```{r, echo = FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 set.seed(42)
-options(scipen = 99, digits = 3)
+options(scipen = 100, digits = 3)
 
 trans_df_raw <- read_csv("~/Dropbox/business_insight/df_trans_raw.csv", col_types = cols())
 
 ```
 
 
-```{r, echo = FALSE, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 resp_df_raw <- read_csv("~/Dropbox/business_insight/df_resp_raw.csv")
 resp_df_raw$X1 <- NULL
 ```
@@ -194,10 +194,21 @@ trans_df <- trans_df_raw %>%
 
 
 ### 3.1 Checking for duplicates 
+
 * No duplicate data 
 * Diagnosed same-day repeated purchase 
   + 10.7% from total customers falls in this category 
   +  0.6% of occurrence within transaction history 
+
+Knowing that the level of occurance on sameday repeated purchase 
+```{r}
+format_dollar  <- function(x, ...) {
+  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
+}
+
+se <- function(x) sqrt(var(x)/length(x))
+
+```
 
 ```{r}
 
@@ -208,9 +219,6 @@ n_dup_df <- trans_df[-dup_pur_customer,]
 y_dup_df$dup <- TRUE
 n_dup_df$dup <- FALSE
 
-format_dollar  <- function(x, ...) {
-  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
-}
 
 cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>% 
   group_by(customer_id) %>% 
@@ -219,7 +227,8 @@ cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>%
             dup = mean(dup) %>% ceiling() %>% as.factor()) %>% ungroup()
 
 ```
-Quick statistical comparison on monetary value is not significant enough to flag (mark) for further analysis.
+
+A quick statistics representations by these groups are not significantly different. It is not easy to make scientific decisions when the sample sizes differ in high degree. We all know often visualisation can be a great help. 
 
 ```{r}
 cust_dup_tbl %>% 
@@ -228,14 +237,26 @@ cust_dup_tbl %>%
             med_pur_freq     = median(frequency),
             avg_pur_freq     = mean(frequency),
             sd_freq          = sd(frequency),
+            se_freq          = se(frequency),
             med_pur_monetary = median(monetary) %>% format_dollar,
             avg_pur_monetary = mean(monetary)   %>% format_dollar,
-            sd_monetary      = sd(monetary)) %>% 
+            sd_monetary      = sd(monetary),
+            se_monetary      = se(monetary)) %>% 
     kbl() %>% 
     kable_material_dark()
 ```
 
-However, the density distribution of monetary value of these groups 
+This has become more interesting. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make assumption that there is a threshold from its low-density region to high-density region in purchasing characteristic cluster in amount. Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on 'target' customers.
+
+```{r}
+
+cust_dup_tbl %>% 
+  ggplot(aes(x = monetary)) +
+  geom_density(alpha = 0.5, fill = palette_light()[3]) +
+  scale_fill_tq() +
+  theme_tq()
+```
+The mean, median and other sample statistics had trouble to explain this difference in 
 
 ```{r}
 cust_dup_tbl %>% 
@@ -243,38 +264,47 @@ cust_dup_tbl %>%
   geom_density(alpha = 0.5) +
   scale_fill_tq() +
   theme_tq()
+
 ```
+
 
 ### 4.0 Quick overview on time series visualisation 
 
-Like I have mentioned above, having __prior knowledge__ is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on the perspective note.
+Like I have mentioned above, having __prior knowledge__ is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on our perspective note.
 
+Key questions
 
+* What phase are we in with revenue growth? (Recession, Recovery, Expansion)
+  + Is there noticeable trend?
+  + Periodic revenue fluctuation found in the customer activity
+    + Seasonal?
+    + Cycle? 
+  + How the campaign responded consumption patterns are evolving? 
+    + Yes - How we should fine-tune campaign strategies accordingly?
+    + No  - What could be the key influential factor (e.g. competitors, lack of recent customer engagement) 
+  
 
-### 4.1 Starting with the sample distribution and correlation
+### 4.1 Starting with periodic revenue 
 
+Depending on where we are with business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending the phase the scope of the target customer may regulate stricter or lesser policy - risk measurement. 
 
+What's more, visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure. 
 
-The correlation between customer purchase frequency and sales amount is above 0.9. 
+```{r}
+timespan_day <- max(trans_df$date) - min(trans_df$date)
+
+timespan_year <- format(as.numeric(timespan_day/365.24), digits = 3)
+
+cat("There is",paste0(timespan_year), "worth annual cycle")
+
+```
 
 
 ```{r}
-
 daily_pur <- trans_df %>%
   dplyr::group_by(date) %>%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %>% ungroup()
-
-psych::pairs.panels(daily_pur)
-
-cust_pur <- trans_df %>%
-  dplyr::group_by(customer_id) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount)) %>% ungroup()
-
-```
-
-```{r}
 
 week_pur <- trans_df %>%
   mutate(week = ceiling_date(date, unit = "week")) %>% 
@@ -285,6 +315,7 @@ week_pur <- trans_df %>%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %>% ungroup()
 
+
 monthly_pur <- trans_df %>%
   mutate(month = ceiling_date(date, unit = "month")) %>% 
     filter_by_time(.start_date = "2011-07", 
@@ -293,17 +324,9 @@ monthly_pur <- trans_df %>%
   dplyr::group_by(month) %>%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %>% ungroup()
-
 ```
 
-are prime source of business cycle and understanding organisation's allocation in their time. Visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure. 
-
-
-Perspective Notes : 
-[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model 
-[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind. 
-
-```{r}
+```{r, warning = FALSE, message=FALSE}
 week_pur %>%
   mutate_by_time(.by = "month",
                  sales_mean = mean(sales)) %>% 
@@ -320,6 +343,13 @@ monthly_pur %>%
                    .smooth = FALSE,
                    .interactive = FALSE) 
 ```
+
+
+Perspective Notes : 
+[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model 
+[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind. 
+
+
 
 ```{r}
 mon_sd_tbl <- monthly_pur %>% 
@@ -360,7 +390,7 @@ trans_df %>%
 
 
 ```{r}
-resp <- resp_df %>% 
+resp <- resp_df_raw %>% 
   select(customer_id, response) %>% 
   setNames(c("customer_id", "campaign"))
 

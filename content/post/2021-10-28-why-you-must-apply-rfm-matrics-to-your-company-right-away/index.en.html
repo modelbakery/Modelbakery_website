@@ -108,8 +108,8 @@ it may give the feel of understanding your customer better, as you are almost pe
 <p>The data I will be exploring below contains customer campaign response binary dataset.</p>
 <hr />
 </div>
-<div id="libraries" class="section level2">
-<h2>1.0 libraries</h2>
+<div id="library-load" class="section level2">
+<h2>1.0 library load</h2>
 <pre class="r"><code>library(tidyverse)
 library(dplyr)
 library(lubridate)
@@ -122,10 +122,16 @@ library(tidyquant)
 library(timetk)
 library(rsample) 
 library(wesanderson)</code></pre>
+<pre class="r"><code>set.seed(42)
+options(scipen = 100, digits = 3)
+
+trans_df_raw &lt;- read_csv(&quot;~/Dropbox/business_insight/df_trans_raw.csv&quot;, col_types = cols())</code></pre>
+<pre class="r"><code>resp_df_raw &lt;- read_csv(&quot;~/Dropbox/business_insight/df_resp_raw.csv&quot;)
+resp_df_raw$X1 &lt;- NULL</code></pre>
 </div>
 <div id="transcational-data" class="section level2">
 <h2>2.0 Transcational data</h2>
-<pre class="r"><code>trans_df %&gt;% head()</code></pre>
+<pre class="r"><code>trans_df_raw %&gt;% head()</code></pre>
 <pre><code>## # A tibble: 6 × 3
 ##   customer_id trans_date tran_amount
 ##   &lt;chr&gt;       &lt;chr&gt;            &lt;dbl&gt;
@@ -135,115 +141,221 @@ library(wesanderson)</code></pre>
 ## 4 CS1217      16-Nov-11           99
 ## 5 CS1850      20-Nov-13           78
 ## 6 CS5539      26-Mar-14           81</code></pre>
-<pre class="r"><code>trans_df %&gt;% head()</code></pre>
-<pre><code>## # A tibble: 6 × 3
-##   customer_id trans_date tran_amount
-##   &lt;chr&gt;       &lt;chr&gt;            &lt;dbl&gt;
-## 1 CS5295      11-Feb-13           35
-## 2 CS4768      15-Mar-15           39
-## 3 CS2122      26-Feb-13           52
-## 4 CS1217      16-Nov-11           99
-## 5 CS1850      20-Nov-13           78
-## 6 CS5539      26-Mar-14           81</code></pre>
-</div>
-<div id="data-preparation" class="section level2">
-<h2>3.0 Data Preparation</h2>
-<p>Analytic perspective notes<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a></p>
-<p>[1] 13% of customer has made same-day repeated purchase</p>
-<p>[2] I feel it is sufficient number to flag as it could counter as useful variable for customer segmentation in later analysis</p>
-<pre class="r"><code>trans_df &lt;- trans_df %&gt;% 
+<pre class="r"><code>resp_df_raw %&gt;% head()</code></pre>
+<pre><code>## # A tibble: 6 × 2
+##   customer_id response
+##   &lt;chr&gt;          &lt;dbl&gt;
+## 1 CS1112             0
+## 2 CS1113             0
+## 3 CS1114             1
+## 4 CS1115             1
+## 5 CS1116             1
+## 6 CS1117             0</code></pre>
+<pre class="r"><code>trans_df &lt;- trans_df_raw %&gt;% 
   mutate(trans_date = lubridate::dmy(trans_date)) %&gt;% 
   dplyr::rename(
     date   = trans_date,
-    amount = tran_amount) 
-
-dup_pur_customer &lt;- which(duplicated(trans_df[, c(&quot;customer_id&quot;, &quot;date&quot;)]))
-y_dup_df &lt;- trans_df[dup_pur_customer,]
-n_dup_df &lt;- trans_df[-dup_pur_customer,]
-y_dup_df$dup &lt;- TRUE
-n_dup_df$dup &lt;- FALSE
-
-format_dollar  &lt;- function(x, ...) {
+    amount = tran_amount) </code></pre>
+</div>
+<div id="data-preparation" class="section level2">
+<h2>3.0 Data Preparation</h2>
+<div id="checking-for-duplicates" class="section level3">
+<h3>3.1 Checking for duplicates</h3>
+<ul>
+<li>No duplicate data</li>
+<li>Diagnosed same-day repeated purchase
+<ul>
+<li>10.7% from total customers falls in this category</li>
+<li>0.6% of occurrence within transaction history</li>
+</ul></li>
+</ul>
+<p>Knowing that the level of occurance on sameday repeated purchase</p>
+<pre class="r"><code>format_dollar  &lt;- function(x, ...) {
   paste0(&quot;$&quot;, formatC(as.numeric(x), format=&quot;f&quot;, digits = 0, big.mark=&quot;,&quot;))
 }
 
-dup_dt &lt;- rbind(y_dup_df, n_dup_df) %&gt;% 
-    dplyr::group_by(dup) %&gt;% 
-    dplyr::summarise(count = n(),
-                     med_pur_amount = median(amount) %&gt;% format_dollar,
-                     avg_pur_amount = mean(amount)   %&gt;% format_dollar) 
-  
-dup_dt %&gt;%
-    set_names(c(&quot;Same Day Purchase&quot;, &quot;No. Customer&quot;, &quot;Median Purchase&quot;, &quot;Average Purchase&quot;)) %&gt;%
+se &lt;- function(x) sqrt(var(x)/length(x))</code></pre>
+<pre class="r"><code>dup_pur_customer &lt;- which(duplicated(trans_df[, c(&quot;customer_id&quot;, &quot;date&quot;)]))
+y_dup_df &lt;- trans_df[dup_pur_customer,]
+n_dup_df &lt;- trans_df[-dup_pur_customer,]
+
+y_dup_df$dup &lt;- TRUE
+n_dup_df$dup &lt;- FALSE
+
+
+cust_dup_tbl &lt;- rbind(y_dup_df, n_dup_df) %&gt;% 
+  group_by(customer_id) %&gt;% 
+  summarise(monetary = sum(amount),
+            frequency = n(),
+            dup = mean(dup) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()</code></pre>
+<p>A quick statistics representations by these groups are not significantly different. It is not easy to make scientific decisions when the sample sizes differ in high degree. We all know often visualisation can be a great help.</p>
+<pre class="r"><code>cust_dup_tbl %&gt;% 
+  group_by(dup) %&gt;% 
+  summarise(count            = n_distinct(customer_id),
+            med_pur_freq     = median(frequency),
+            avg_pur_freq     = mean(frequency),
+            sd_freq          = sd(frequency),
+            se_freq          = se(frequency),
+            med_pur_monetary = median(monetary) %&gt;% format_dollar,
+            avg_pur_monetary = mean(monetary)   %&gt;% format_dollar,
+            sd_monetary      = sd(monetary),
+            se_monetary      = se(monetary)) %&gt;% 
     kbl() %&gt;% 
     kable_material_dark()</code></pre>
 <table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
-Same Day Purchase
+dup
 </th>
 <th style="text-align:right;">
-No. Customer
+count
+</th>
+<th style="text-align:right;">
+med_pur_freq
+</th>
+<th style="text-align:right;">
+avg_pur_freq
+</th>
+<th style="text-align:right;">
+sd_freq
+</th>
+<th style="text-align:right;">
+se_freq
 </th>
 <th style="text-align:left;">
-Median Purchase
+med_pur_monetary
 </th>
 <th style="text-align:left;">
-Average Purchase
+avg_pur_monetary
+</th>
+<th style="text-align:right;">
+sd_monetary
+</th>
+<th style="text-align:right;">
+se_monetary
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-FALSE
+0
 </td>
 <td style="text-align:right;">
-124208
+6152
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+17.8
+</td>
+<td style="text-align:right;">
+5.12
+</td>
+<td style="text-align:right;">
+0.065
 </td>
 <td style="text-align:left;">
-$65
+$1,194
 </td>
 <td style="text-align:left;">
-$65
+$1,149
+</td>
+<td style="text-align:right;">
+461
+</td>
+<td style="text-align:right;">
+5.88
 </td>
 </tr>
 <tr>
 <td style="text-align:left;">
-TRUE
+1
 </td>
 <td style="text-align:right;">
-792
+737
+</td>
+<td style="text-align:right;">
+21
+</td>
+<td style="text-align:right;">
+21.2
+</td>
+<td style="text-align:right;">
+4.76
+</td>
+<td style="text-align:right;">
+0.175
 </td>
 <td style="text-align:left;">
-$67
+$1,486
 </td>
 <td style="text-align:left;">
-$67
+$1,436
+</td>
+<td style="text-align:right;">
+426
+</td>
+<td style="text-align:right;">
+15.69
 </td>
 </tr>
 </tbody>
 </table>
+<p>This has become more interesting. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make assumption that there is a threshold from its low-density region to high-density region in purchasing characteristic cluster in amount. Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on ‘target’ customers.</p>
+<pre class="r"><code>cust_dup_tbl %&gt;% 
+  ggplot(aes(x = monetary)) +
+  geom_density(alpha = 0.5, fill = palette_light()[3]) +
+  scale_fill_tq() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-10-1.png" width="672" />
+The mean, median and other sample statistics had trouble to explain this difference in</p>
+<pre class="r"><code>cust_dup_tbl %&gt;% 
+  ggplot(aes(x = monetary, fill = dup)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_tq() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
 <div id="quick-overview-on-time-series-visualisation" class="section level3">
 <h3>4.0 Quick overview on time series visualisation</h3>
-<p>Like I have mentioned above, having <strong>prior knowledge</strong> is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on the perspective note.</p>
+<p>Like I have mentioned above, having <strong>prior knowledge</strong> is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on our perspective note.</p>
+<p>Key questions</p>
+<ul>
+<li>What phase are we in with revenue growth? (Recession, Recovery, Expansion)
+<ul>
+<li>Is there noticeable trend?</li>
+<li>Periodic revenue fluctuation found in the customer activity
+<ul>
+<li>Seasonal?</li>
+<li>Cycle?</li>
+</ul></li>
+<li>How the campaign responded consumption patterns are evolving?
+<ul>
+<li>Yes - How we should fine-tune campaign strategies accordingly?</li>
+<li>No - What could be the key influential factor (e.g. competitors, lack of recent customer engagement)</li>
+</ul></li>
+</ul></li>
+</ul>
 </div>
-<div id="starting-with-the-sample-distribution-and-correlation" class="section level3">
-<h3>4.1 Starting with the sample distribution and correlation</h3>
-<p>The correlation between customer purchase frequency and sales amount is above 0.9.</p>
+<div id="starting-with-periodic-revenue" class="section level3">
+<h3>4.1 Starting with periodic revenue</h3>
+<p>Depending on where we are with business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending the phase the scope of the target customer may regulate stricter or lesser policy - risk measurement.</p>
+<p>What’s more, visualising time series supplies valuable boundary to the company’s goal. The ability to scale and formulate a value where the business falls within a High &lt;–&gt; Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure.</p>
+<pre class="r"><code>timespan_day &lt;- max(trans_df$date) - min(trans_df$date)
+
+timespan_year &lt;- format(as.numeric(timespan_day/365.24), digits = 3)
+
+cat(&quot;There is&quot;,paste0(timespan_year), &quot;worth annual cycle&quot;)</code></pre>
+<pre><code>## There is 3.83 worth annual cycle</code></pre>
 <pre class="r"><code>daily_pur &lt;- trans_df %&gt;%
   dplyr::group_by(date) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()
 
-psych::pairs.panels(daily_pur)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<pre class="r"><code>cust_pur &lt;- trans_df %&gt;%
-  dplyr::group_by(customer_id) %&gt;%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount)) %&gt;% ungroup()</code></pre>
-<pre class="r"><code>week_pur &lt;- trans_df %&gt;%
+week_pur &lt;- trans_df %&gt;%
   mutate(week = ceiling_date(date, unit = &quot;week&quot;)) %&gt;% 
     filter_by_time(.start_date = &quot;2011-07&quot;, 
                    .end_date = &quot;2015-03-01&quot;,
@@ -251,6 +363,7 @@ psych::pairs.panels(daily_pur)</code></pre>
   dplyr::group_by(week) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()
+
 
 monthly_pur &lt;- trans_df %&gt;%
   mutate(month = ceiling_date(date, unit = &quot;month&quot;)) %&gt;% 
@@ -260,10 +373,6 @@ monthly_pur &lt;- trans_df %&gt;%
   dplyr::group_by(month) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()</code></pre>
-<p>are prime source of business cycle and understanding organisation’s allocation in their time. Visualising time series supplies valuable boundary to the company’s goal. The ability to scale and formulate a value where the business falls within a High &lt;–&gt; Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure.</p>
-<p>Perspective Notes :
-[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
-[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
 <pre class="r"><code>week_pur %&gt;%
   mutate_by_time(.by = &quot;month&quot;,
                  sales_mean = mean(sales)) %&gt;% 
@@ -271,8 +380,7 @@ monthly_pur &lt;- trans_df %&gt;%
   plot_time_series(week, value, name,
                    .smooth = FALSE,
                    .interactive = FALSE) </code></pre>
-<pre><code>## .date_var is missing. Using: week</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <pre class="r"><code>monthly_pur %&gt;% 
   mutate_by_time(.by = &quot;3 month&quot;,
                  sales_mean = mean(sales)) %&gt;% 
@@ -280,8 +388,10 @@ monthly_pur &lt;- trans_df %&gt;%
   plot_time_series(month, value, name,
                    .smooth = FALSE,
                    .interactive = FALSE) </code></pre>
-<pre><code>## .date_var is missing. Using: month</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-9-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
+<p>Perspective Notes :
+[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
+[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
 <pre class="r"><code>mon_sd_tbl &lt;- monthly_pur %&gt;% 
   mutate(revenue = log(sales)) %&gt;% 
   mutate(revenue = standardize_vec(revenue)) </code></pre>
@@ -292,7 +402,7 @@ monthly_pur &lt;- trans_df %&gt;%
 std_sd   &lt;- 0.12791922963096</code></pre>
 <pre class="r"><code>mon_sd_tbl %&gt;% 
   plot_time_series(month, revenue, .interactive = FALSE)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <pre class="r"><code>trans_df %&gt;%
   mutate(month = month(date, label = TRUE, abbr = FALSE)) %&gt;% 
   dplyr::group_by(month) %&gt;%
@@ -519,7 +629,7 @@ $2,133,557
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>resp &lt;- resp_df %&gt;% 
+<pre class="r"><code>resp &lt;- resp_df_raw %&gt;% 
   select(customer_id, response) %&gt;% 
   setNames(c(&quot;customer_id&quot;, &quot;campaign&quot;))
 
@@ -633,27 +743,21 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-4.png" width="672" /></p>
 </div>
-</div>
-<div class="footnotes">
-<hr />
-<ol>
-<li id="fn1"><p>Analytic perspective notes<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
-</ol>
 </div>
