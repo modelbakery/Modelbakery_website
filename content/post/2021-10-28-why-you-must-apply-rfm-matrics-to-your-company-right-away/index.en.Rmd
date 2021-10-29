@@ -295,10 +295,11 @@ timespan_day <- max(trans_df$date) - min(trans_df$date)
 
 timespan_year <- format(as.numeric(timespan_day/365.24), digits = 3)
 
-cat("There is",paste0(timespan_year), "worth annual cycle")
+cat("There is",paste0(timespan_year), "annual cycle worth of data")
 
 ```
 
+Broadly speaking, there are two types of time series data: stationary and non-stationary time series. These are defined as whether their statistical properties, in general, mean and variance is independent (stationary) or dependent (non-stationary) with time. Any human interactive data wont be stationary, there always be some trend or seasonality that enables us to decompose from its series. In other words, understanding these components will aid tracking down their purchasing patterns.
 
 ```{r}
 daily_pur <- trans_df %>%
@@ -326,7 +327,18 @@ monthly_pur <- trans_df %>%
                    sales     = sum(amount)) %>% ungroup()
 ```
 
+The volatile daily and weekly transcations data can bury many useful information such as trend or activity variance.
+
 ```{r, warning = FALSE, message=FALSE}
+
+daily_pur %>% 
+  mutate_by_time(.by = "week",
+                 sales_mean = mean(sales)) %>% 
+  pivot_longer(contains("sales")) %>% 
+  plot_time_series(date, value, name,
+                   .smooth = FALSE,
+                   .interactive = FALSE) 
+
 week_pur %>%
   mutate_by_time(.by = "month",
                  sales_mean = mean(sales)) %>% 
@@ -335,13 +347,33 @@ week_pur %>%
                    .smooth = FALSE,
                    .interactive = FALSE) 
 
-monthly_pur %>% 
+```
+
+
+```{r, warning = FALSE, message=FALSE}
+
+P4_monthly_plot <- monthly_pur %>% 
   mutate_by_time(.by = "3 month",
                  sales_mean = mean(sales)) %>% 
   pivot_longer(contains("sales")) %>% 
   plot_time_series(month, value, name,
-                   .smooth = FALSE,
+                   .smooth      = FALSE,
+                   .legend_show = FALSE,
+                   .title       = "The monthly revenue time series with 3-month moving average",
                    .interactive = FALSE) 
+
+mon_sd_tbl <- monthly_pur %>% 
+  mutate(revenue = log(sales)) %>% 
+  mutate(revenue = standardize_vec(revenue)) 
+
+P4_monthlysd_plot <- mon_sd_tbl %>% 
+  plot_time_series(month, revenue,
+                   .title       = "The monthly revenue time series with its standard deviation",
+                   .interactive = FALSE) 
+
+gridExtra::grid.arrange(P4_monthly_plot, P4_monthlysd_plot, ncol = 2)
+
+
 ```
 
 
@@ -352,16 +384,11 @@ Perspective Notes :
 
 
 ```{r}
-mon_sd_tbl <- monthly_pur %>% 
-  mutate(revenue = log(sales)) %>% 
-  mutate(revenue = standardize_vec(revenue)) 
-std_mean <- 12.0533540952864
-std_sd   <- 0.12791922963096
+
 ```
 
 ```{r}
-mon_sd_tbl %>% 
-  plot_time_series(month, revenue, .interactive = FALSE)
+
 ```
 
 
@@ -473,4 +500,4 @@ cmpg_vis_df %>% plot_time_series(week,
 ```
 
 
-
+the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance. 

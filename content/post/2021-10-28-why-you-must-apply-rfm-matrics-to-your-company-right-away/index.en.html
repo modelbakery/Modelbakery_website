@@ -348,8 +348,9 @@ The mean, median and other sample statistics had trouble to explain this differe
 
 timespan_year &lt;- format(as.numeric(timespan_day/365.24), digits = 3)
 
-cat(&quot;There is&quot;,paste0(timespan_year), &quot;worth annual cycle&quot;)</code></pre>
-<pre><code>## There is 3.83 worth annual cycle</code></pre>
+cat(&quot;There is&quot;,paste0(timespan_year), &quot;annual cycle worth of data&quot;)</code></pre>
+<pre><code>## There is 3.83 annual cycle worth of data</code></pre>
+<p>Broadly speaking, there are two types of time series data: stationary and non-stationary time series. These are defined as whether their statistical properties, in general, mean and variance is independent (stationary) or dependent (non-stationary) with time. Any human interactive data wont be stationary, there always be some trend or seasonality that enables us to decompose from its series. In other words, understanding these components will aid tracking down their purchasing patterns.</p>
 <pre class="r"><code>daily_pur &lt;- trans_df %&gt;%
   dplyr::group_by(date) %&gt;%
   dplyr::summarise(frequency = n(),
@@ -373,6 +374,15 @@ monthly_pur &lt;- trans_df %&gt;%
   dplyr::group_by(month) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()</code></pre>
+<p>The volatile daily and weekly transcations data can bury many useful information such as trend or activity variance.</p>
+<pre class="r"><code>daily_pur %&gt;% 
+  mutate_by_time(.by = &quot;week&quot;,
+                 sales_mean = mean(sales)) %&gt;% 
+  pivot_longer(contains(&quot;sales&quot;)) %&gt;% 
+  plot_time_series(date, value, name,
+                   .smooth = FALSE,
+                   .interactive = FALSE) </code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <pre class="r"><code>week_pur %&gt;%
   mutate_by_time(.by = &quot;month&quot;,
                  sales_mean = mean(sales)) %&gt;% 
@@ -380,29 +390,31 @@ monthly_pur &lt;- trans_df %&gt;%
   plot_time_series(week, value, name,
                    .smooth = FALSE,
                    .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<pre class="r"><code>monthly_pur %&gt;% 
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
+<pre class="r"><code>P4_monthly_plot &lt;- monthly_pur %&gt;% 
   mutate_by_time(.by = &quot;3 month&quot;,
                  sales_mean = mean(sales)) %&gt;% 
   pivot_longer(contains(&quot;sales&quot;)) %&gt;% 
   plot_time_series(month, value, name,
-                   .smooth = FALSE,
-                   .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
+                   .smooth      = FALSE,
+                   .legend_show = FALSE,
+                   .title       = &quot;The monthly revenue time series with 3-month moving average&quot;,
+                   .interactive = FALSE) 
+
+mon_sd_tbl &lt;- monthly_pur %&gt;% 
+  mutate(revenue = log(sales)) %&gt;% 
+  mutate(revenue = standardize_vec(revenue)) 
+
+P4_monthlysd_plot &lt;- mon_sd_tbl %&gt;% 
+  plot_time_series(month, revenue,
+                   .title       = &quot;The monthly revenue time series with its standard deviation&quot;,
+                   .interactive = FALSE) 
+
+gridExtra::grid.arrange(P4_monthly_plot, P4_monthlysd_plot, ncol = 2)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>Perspective Notes :
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
-<pre class="r"><code>mon_sd_tbl &lt;- monthly_pur %&gt;% 
-  mutate(revenue = log(sales)) %&gt;% 
-  mutate(revenue = standardize_vec(revenue)) </code></pre>
-<pre><code>## Standardization Parameters
-## mean: 12.0787873749495
-## standard deviation: 0.0392434794501825</code></pre>
-<pre class="r"><code>std_mean &lt;- 12.0533540952864
-std_sd   &lt;- 0.12791922963096</code></pre>
-<pre class="r"><code>mon_sd_tbl %&gt;% 
-  plot_time_series(month, revenue, .interactive = FALSE)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <pre class="r"><code>trans_df %&gt;%
   mutate(month = month(date, label = TRUE, abbr = FALSE)) %&gt;% 
   dplyr::group_by(month) %&gt;%
@@ -743,21 +755,22 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-4.png" width="672" /></p>
+<p>the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance.</p>
 </div>
 </div>
