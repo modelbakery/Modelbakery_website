@@ -274,7 +274,7 @@ Like I have mentioned above, having __prior knowledge__ is a key to successful f
 
 Key questions
 
-* What phase are we in with revenue growth? (Recession, Recovery, Expansion)
+* What phase are we in with revenue growth? 
   + Is there noticeable trend?
   + Periodic revenue fluctuation found in the customer activity
     + Seasonal?
