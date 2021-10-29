@@ -311,7 +311,7 @@ $1,436
   scale_fill_tq() +
   theme_tq()</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-10-1.png" width="672" />
-The mean, median and other sample statistics had trouble to explain this difference in</p>
+The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to “confonding” effects it behaviour as if it has some predictive power between the two groups. Perhaps it is the <strong>accessibility</strong> upon purchase act as a confounder between monetary value and same-day purchase.</p>
 <pre class="r"><code>cust_dup_tbl %&gt;% 
   ggplot(aes(x = monetary, fill = dup)) +
   geom_density(alpha = 0.5) +
@@ -348,7 +348,7 @@ The mean, median and other sample statistics had trouble to explain this differe
 
 timespan_year &lt;- format(as.numeric(timespan_day/365.24), digits = 3)
 
-cat(&quot;There is&quot;,paste0(timespan_year), &quot;annual cycle worth of data&quot;)</code></pre>
+cat(&quot;There is&quot;,paste0(timespan_year),&quot;annual cycle worth of data&quot;)</code></pre>
 <pre><code>## There is 3.83 annual cycle worth of data</code></pre>
 <p>Broadly speaking, there are two types of time series data: stationary and non-stationary time series. These are defined as whether their statistical properties, in general, mean and variance is independent (stationary) or dependent (non-stationary) with time. Any human interactive data wont be stationary, there always be some trend or seasonality that enables us to decompose from its series. In other words, understanding these components will aid tracking down their purchasing patterns.</p>
 <pre class="r"><code>daily_pur &lt;- trans_df %&gt;%
@@ -374,7 +374,7 @@ monthly_pur &lt;- trans_df %&gt;%
   dplyr::group_by(month) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()</code></pre>
-<p>The volatile daily and weekly transcations data can bury many useful information such as trend or activity variance.</p>
+<p>The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. The moving average smoothing (red) removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series.</p>
 <pre class="r"><code>daily_pur %&gt;% 
   mutate_by_time(.by = &quot;week&quot;,
                  sales_mean = mean(sales)) %&gt;% 
@@ -391,7 +391,24 @@ monthly_pur &lt;- trans_df %&gt;%
                    .smooth = FALSE,
                    .interactive = FALSE) </code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
-<pre class="r"><code>P4_monthly_plot &lt;- monthly_pur %&gt;% 
+<p>Now the monthly revenue time series reveals some useful components.
+*
+revenues with its worst performance. shows +3 years overall descending trend.</p>
+<pre class="r"><code>outlier_detection &lt;- function(x) {
+  x[x &gt; quantile(x, .95, na.rm = T)] 
+  x[x &lt; quantile(x, .05, na.rm = T)] 
+}
+
+mon_sd_tbl &lt;- monthly_pur %&gt;%
+  mutate(revenue       = sales) %&gt;% 
+  mutate(revenue_log   = log(sales)) %&gt;% 
+  mutate(revenue_sd    = standardize_vec(revenue_log),
+         outlier       = ifelse(revenue %in% outlier_detection(revenue) == TRUE, 1, NA),
+         revenue_text  = case_when(outlier == 1 ~ revenue, 
+                                   TRUE~ outlier),
+         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = &quot;K&quot;))
+         
+monthly_pur %&gt;% 
   mutate_by_time(.by = &quot;3 month&quot;,
                  sales_mean = mean(sales)) %&gt;% 
   pivot_longer(contains(&quot;sales&quot;)) %&gt;% 
@@ -399,28 +416,102 @@ monthly_pur &lt;- trans_df %&gt;%
                    .smooth      = FALSE,
                    .legend_show = FALSE,
                    .title       = &quot;The monthly revenue time series with 3-month moving average&quot;,
-                   .interactive = FALSE) 
-
-mon_sd_tbl &lt;- monthly_pur %&gt;% 
-  mutate(revenue = log(sales)) %&gt;% 
-  mutate(revenue = standardize_vec(revenue)) 
-
-P4_monthlysd_plot &lt;- mon_sd_tbl %&gt;% 
-  plot_time_series(month, revenue,
-                   .title       = &quot;The monthly revenue time series with its standard deviation&quot;,
-                   .interactive = FALSE) 
-
-gridExtra::grid.arrange(P4_monthly_plot, P4_monthlysd_plot, ncol = 2)</code></pre>
+                   .interactive = FALSE)</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<pre class="r"><code>mon_sd_tbl %&gt;% 
+  ggplot(aes(x = month, y = (revenue_sd))) +
+  geom_line(size = 0.5, linetype = 1) +
+  geom_smooth(method   = &quot;lm&quot;, se = FALSE) +
+  geom_label(aes(label = revenue_text,
+             frontface = &quot;bold&quot;,
+             vjust     = 0.5,
+             hjust     = 1.2,
+             color     = &quot;red&quot;)) +
+  labs(
+     title    = &quot;Monthly Revenue Time Series: We are at the end of seasonal downturn!&quot;,
+     x        = &quot;Year&quot;,
+     y        = &quot;Revenue&quot;
+  ) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
 <p>Perspective Notes :
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
 <pre class="r"><code>trans_df %&gt;%
+  mutate(quarter = quarter(date)) %&gt;% 
+  dplyr::group_by(quarter) %&gt;%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount) %&gt;% format_dollar()) %&gt;% 
+  set_names(c(&quot;Quarter&quot;, &quot;Frequency&quot;, &quot;Revenue&quot;)) %&gt;%
+  kbl() %&gt;% 
+  kable_material_dark()</code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+Quarter
+</th>
+<th style="text-align:right;">
+Frequency
+</th>
+<th style="text-align:left;">
+Revenue
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+30837
+</td>
+<td style="text-align:left;">
+$2,005,838
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+28419
+</td>
+<td style="text-align:left;">
+$1,846,017
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+32923
+</td>
+<td style="text-align:left;">
+$2,138,577
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+32821
+</td>
+<td style="text-align:left;">
+$2,133,557
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>trans_df %&gt;%
   mutate(month = month(date, label = TRUE, abbr = FALSE)) %&gt;% 
   dplyr::group_by(month) %&gt;%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount) %&gt;%  format_dollar()) %&gt;% 
-  set_names(c(&quot;Month&quot;, &quot;Frequency&quot;, &quot;Revenue&quot;)) %&gt;%
+  dplyr::summarise(frequency   = n(),
+                   tot_revenue = sum(amount) %&gt;% format_dollar()) %&gt;%  
+  set_names(c(&quot;Month&quot;, &quot;Total No Purchase&quot;, &quot;Total Revenue&quot;)) %&gt;%
   kbl() %&gt;% 
   kable_material_dark()</code></pre>
 <table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
@@ -430,10 +521,10 @@ gridExtra::grid.arrange(P4_monthly_plot, P4_monthlysd_plot, ncol = 2)</code></pr
 Month
 </th>
 <th style="text-align:right;">
-Frequency
+Total No Purchase
 </th>
 <th style="text-align:left;">
-Revenue
+Total Revenue
 </th>
 </tr>
 </thead>
@@ -572,75 +663,6 @@ $709,964
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>trans_df %&gt;%
-  mutate(quarter = quarter(date)) %&gt;% 
-  dplyr::group_by(quarter) %&gt;%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount) %&gt;% format_dollar()) %&gt;% 
-  set_names(c(&quot;Quarter&quot;, &quot;Frequency&quot;, &quot;Revenue&quot;)) %&gt;%
-  kbl() %&gt;% 
-  kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-Quarter
-</th>
-<th style="text-align:right;">
-Frequency
-</th>
-<th style="text-align:left;">
-Revenue
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-30837
-</td>
-<td style="text-align:left;">
-$2,005,838
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-28419
-</td>
-<td style="text-align:left;">
-$1,846,017
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-32923
-</td>
-<td style="text-align:left;">
-$2,138,577
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-32821
-</td>
-<td style="text-align:left;">
-$2,133,557
-</td>
-</tr>
-</tbody>
-</table>
 <pre class="r"><code>resp &lt;- resp_df_raw %&gt;% 
   select(customer_id, response) %&gt;% 
   setNames(c(&quot;customer_id&quot;, &quot;campaign&quot;))
@@ -649,9 +671,6 @@ pre_rfm_df &lt;- trans_df %&gt;%
   left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
   mutate(campaign = case_when(campaign == 1 ~ 1,
                                 TRUE ~ 0))</code></pre>
-<pre class="r"><code>colSums(is.na(pre_rfm_df))</code></pre>
-<pre><code>## customer_id        date      amount    campaign 
-##           0           0           0           0</code></pre>
 <pre class="r"><code>pre_rfm_df %&gt;% 
   mutate(month = month(date)) %&gt;%
   group_by(campaign) %&gt;% 
@@ -755,22 +774,22 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-4.png" width="672" /></p>
 <p>the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance.</p>
 </div>
 </div>

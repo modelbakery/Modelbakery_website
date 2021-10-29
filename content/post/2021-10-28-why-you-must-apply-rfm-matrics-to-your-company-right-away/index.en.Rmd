@@ -256,7 +256,7 @@ cust_dup_tbl %>%
   scale_fill_tq() +
   theme_tq()
 ```
-The mean, median and other sample statistics had trouble to explain this difference in 
+The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it behaviour as if it has some predictive power between the two groups. Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase. 
 
 ```{r}
 cust_dup_tbl %>% 
@@ -295,7 +295,7 @@ timespan_day <- max(trans_df$date) - min(trans_df$date)
 
 timespan_year <- format(as.numeric(timespan_day/365.24), digits = 3)
 
-cat("There is",paste0(timespan_year), "annual cycle worth of data")
+cat("There is",paste0(timespan_year),"annual cycle worth of data")
 
 ```
 
@@ -327,7 +327,7 @@ monthly_pur <- trans_df %>%
                    sales     = sum(amount)) %>% ungroup()
 ```
 
-The volatile daily and weekly transcations data can bury many useful information such as trend or activity variance.
+The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. The moving average smoothing (red) removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series. 
 
 ```{r, warning = FALSE, message=FALSE}
 
@@ -349,10 +349,27 @@ week_pur %>%
 
 ```
 
+Now the monthly revenue time series reveals some useful components. 
+* 
+revenues with its worst performance. shows +3 years overall descending trend. 
 
 ```{r, warning = FALSE, message=FALSE}
 
-P4_monthly_plot <- monthly_pur %>% 
+outlier_detection <- function(x) {
+  x[x > quantile(x, .95, na.rm = T)] 
+  x[x < quantile(x, .05, na.rm = T)] 
+}
+
+mon_sd_tbl <- monthly_pur %>%
+  mutate(revenue       = sales) %>% 
+  mutate(revenue_log   = log(sales)) %>% 
+  mutate(revenue_sd    = standardize_vec(revenue_log),
+         outlier       = ifelse(revenue %in% outlier_detection(revenue) == TRUE, 1, NA),
+         revenue_text  = case_when(outlier == 1 ~ revenue, 
+                                   TRUE~ outlier),
+         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = "K"))
+         
+monthly_pur %>% 
   mutate_by_time(.by = "3 month",
                  sales_mean = mean(sales)) %>% 
   pivot_longer(contains("sales")) %>% 
@@ -360,18 +377,23 @@ P4_monthly_plot <- monthly_pur %>%
                    .smooth      = FALSE,
                    .legend_show = FALSE,
                    .title       = "The monthly revenue time series with 3-month moving average",
-                   .interactive = FALSE) 
+                   .interactive = FALSE)
 
-mon_sd_tbl <- monthly_pur %>% 
-  mutate(revenue = log(sales)) %>% 
-  mutate(revenue = standardize_vec(revenue)) 
-
-P4_monthlysd_plot <- mon_sd_tbl %>% 
-  plot_time_series(month, revenue,
-                   .title       = "The monthly revenue time series with its standard deviation",
-                   .interactive = FALSE) 
-
-gridExtra::grid.arrange(P4_monthly_plot, P4_monthlysd_plot, ncol = 2)
+mon_sd_tbl %>% 
+  ggplot(aes(x = month, y = (revenue_sd))) +
+  geom_line(size = 0.5, linetype = 1) +
+  geom_smooth(method   = "lm", se = FALSE) +
+  geom_label(aes(label = revenue_text,
+             frontface = "bold",
+             vjust     = 0.5,
+             hjust     = 1.2,
+             color     = "red")) +
+  labs(
+     title    = "Monthly Revenue Time Series: We are at the end of seasonal downturn!",
+     x        = "Year",
+     y        = "Revenue"
+  ) +
+  theme_tq()
 
 
 ```
@@ -384,25 +406,6 @@ Perspective Notes :
 
 
 ```{r}
-
-```
-
-```{r}
-
-```
-
-
-```{r}
-
-trans_df %>%
-  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
-  dplyr::group_by(month) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount) %>%  format_dollar()) %>% 
-  set_names(c("Month", "Frequency", "Revenue")) %>%
-  kbl() %>% 
-  kable_material_dark()
-
 trans_df %>%
   mutate(quarter = quarter(date)) %>% 
   dplyr::group_by(quarter) %>%
@@ -412,6 +415,14 @@ trans_df %>%
   kbl() %>% 
   kable_material_dark()
 
+trans_df %>%
+  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
+  dplyr::group_by(month) %>%
+  dplyr::summarise(frequency   = n(),
+                   tot_revenue = sum(amount) %>% format_dollar()) %>%  
+  set_names(c("Month", "Total No Purchase", "Total Revenue")) %>%
+  kbl() %>% 
+  kable_material_dark()
 ```
 
 
@@ -431,8 +442,6 @@ pre_rfm_df <- trans_df %>%
 
 
 ```{r}
-colSums(is.na(pre_rfm_df))
-
 pre_rfm_df %>% 
   mutate(month = month(date)) %>%
   group_by(campaign) %>% 
