@@ -84,7 +84,10 @@ Feature engineering is a trick that brings some of this hidden layers of informa
 
 RFM metrics traditional marketing trick to segment customer based on their purchasing behaviours. Past history, Marketers realised that targeting the right audience is just as important as what you send. The idea behind a target marketing can be defined as "anyone interested in our service". Short understandings and certainity on their values for the future put more risk on your marketing decisions. 
 
-$$ E(Sales) = \frac{Sales + Cost\ of\ goods\ sold}{Risk} $$
+$$ 
+\ E(Sales) = \frac{Sales + Cost\ of\ goods\ sold}{Risk} 
+$$
+
 
 Having said, well-defined customer-life value is not easy calculations, in fact, it should not be ran by company's operational convience. In my opinion, the "Target" will ever be general and the key will always be a simplifications. 
 
@@ -153,69 +156,55 @@ library(wesanderson)
 ```
 
 
-```{r, echo = FALSE, warning=FALSE}
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 set.seed(42)
 options(scipen = 99, digits = 3)
 
 trans_df_raw <- read_csv("~/Dropbox/business_insight/df_trans_raw.csv", col_types = cols())
-trans_df <- trans_df_raw 
 
 ```
 
 
-```{r, echo = FALSE, warning=FALSE}
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 resp_df_raw <- read_csv("~/Dropbox/business_insight/df_resp_raw.csv")
 resp_df_raw$X1 <- NULL
-resp_df <- resp_df_raw
 ```
 
 
 ## 2.0 Transcational data 
 
-```{r, high-range-cv, echo = FALSE}
-# DT::datatable(trans_df, class = 'cell=border stripe', rownames = F, filter = 'top',
-#               editable = TRUE, extensions = 'Buttons', options = list(
-#                 pageLength = 5,
-#                 dom = 'Bfrtip',
-#                 width = '55%',
-#                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-#                 scrollX = TRUE))
-# 
-# DT::datatable(resp_df, class = 'cell=border stripe', rownames = F, filter = 'top',
-#               editable = TRUE, extensions = 'Buttons', options = list(
-#                 pageLength = 5,
-#                 dom = 'Bfrtip',
-#                 width = '55%',
-#                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-#                 scrollX = TRUE)) 
-# 
-# 
+```{r, warning=FALSE}
+trans_df_raw %>% head()
+
+resp_df_raw %>% head()
+
+```
+
+
+```{r}
+trans_df <- trans_df_raw %>% 
+  mutate(trans_date = lubridate::dmy(trans_date)) %>% 
+  dplyr::rename(
+    date   = trans_date,
+    amount = tran_amount) 
 ```
 
 
 ## 3.0 Data Preparation 
 
-more random words ^[Analytic perspective notes]
 
-Analytic perspective notes 
-
-[1] 13% of customer has made same-day repeated purchase 
-
-[2] I feel it is sufficient number to flag as it could counter as useful variable for customer segmentation in later analysis 
-
-
+### 3.1 Checking for duplicates 
+* No duplicate data 
+* Diagnosed same-day repeated purchase 
+  + 10.7% from total customers falls in this category 
+  +  0.6% of occurrence within transaction history 
 
 ```{r}
-
-trans_df <- trans_df %>% 
-  mutate(trans_date = lubridate::dmy(trans_date)) %>% 
-  dplyr::rename(
-    date   = trans_date,
-    amount = tran_amount) 
 
 dup_pur_customer <- which(duplicated(trans_df[, c("customer_id", "date")]))
 y_dup_df <- trans_df[dup_pur_customer,]
 n_dup_df <- trans_df[-dup_pur_customer,]
+
 y_dup_df$dup <- TRUE
 n_dup_df$dup <- FALSE
 
@@ -223,20 +212,38 @@ format_dollar  <- function(x, ...) {
   paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
 }
 
-dup_dt <- rbind(y_dup_df, n_dup_df) %>% 
-    dplyr::group_by(dup) %>% 
-    dplyr::summarise(count = n(),
-                     med_pur_amount = median(amount) %>% format_dollar,
-                     avg_pur_amount = mean(amount)   %>% format_dollar) 
-  
-dup_dt %>%
-    set_names(c("Same Day Purchase", "No. Customer", "Median Purchase", "Average Purchase")) %>%
-    kbl() %>% 
-    kable_material_dark()
+cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>% 
+  group_by(customer_id) %>% 
+  summarise(monetary = sum(amount),
+            frequency = n(),
+            dup = mean(dup) %>% ceiling() %>% as.factor()) %>% ungroup()
 
 ```
+Quick statistical comparison on monetary value is not significant enough to flag (mark) for further analysis.
 
+```{r}
+cust_dup_tbl %>% 
+  group_by(dup) %>% 
+  summarise(count            = n_distinct(customer_id),
+            med_pur_freq     = median(frequency),
+            avg_pur_freq     = mean(frequency),
+            sd_freq          = sd(frequency),
+            med_pur_monetary = median(monetary) %>% format_dollar,
+            avg_pur_monetary = mean(monetary)   %>% format_dollar,
+            sd_monetary      = sd(monetary)) %>% 
+    kbl() %>% 
+    kable_material_dark()
+```
 
+However, the density distribution of monetary value of these groups 
+
+```{r}
+cust_dup_tbl %>% 
+  ggplot(aes(x = monetary, fill = dup)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_tq() +
+  theme_tq()
+```
 
 ### 4.0 Quick overview on time series visualisation 
 
@@ -330,7 +337,6 @@ mon_sd_tbl %>%
 
 ```{r}
 
-
 trans_df %>%
   mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
   dplyr::group_by(month) %>%
@@ -339,7 +345,6 @@ trans_df %>%
   set_names(c("Month", "Frequency", "Revenue")) %>%
   kbl() %>% 
   kable_material_dark()
-
 
 trans_df %>%
   mutate(quarter = quarter(date)) %>% 
