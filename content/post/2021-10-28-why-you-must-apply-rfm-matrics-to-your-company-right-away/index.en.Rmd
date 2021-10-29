@@ -21,14 +21,7 @@ draft: FALSE
 ---
 
 
-
-In this post I like to introduce on simple statistical RFM metric and further discuss on the essence of scoring metrics. There are many excellent books and course materials that illustrates technical details on statistical inference, but knowing when and how to apply it in real world is another muscle we all need to train ourselves.
-
-> A distribution is simply a collection of data, or scores, on a variable. Usually, these scores are arranged in order from smallest to largest and then they can be presented graphically. 
-
-- Page 6, Statistics in Plain English, Third Edition, 2010.
-
-This argues that every data points in a given one dimensional space is its score itself. Having this is mind we will begin to explore individual RFM components and how to scale and build this matrics from a scratch. 
+You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers' demographics,  desire, and product categories, the power of the leading score can ever so be significant. In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.
 
 ***
 ## Menu 
@@ -48,30 +41,66 @@ This argues that every data points in a given one dimensional space is its score
 
 ### Desert 
 + Perspective note 
-+ 
++ To take action
++ Wrap up: What I have learned
++ Ready to receive feedback  
 
 ***
 
 ## Motivation: Segmentation is "Divide and Conquer"
 
-Past history, Marketers realised that targeting the right audience is just as important as what you send. We are all aware that target marketing is a key strategy used to directly influence on the revenue. Understanding your customers purchasing behaviour is a valuable adduct as it gives a guidline which group to priorties. On top of this, 
-and priortising your customers 
+As many consulting companies, e.g. McKenzie and PwC, have claimed, well-defined customer segmentation has the ability to cut through to the heart of business strategy. Perhaps, segmentation can be simply understood by a picture of a top-down mechanism. I like to bring the concept of the decision tree algorithm in two folds. First, the "complexity" of function depends on the depth and second, more splits provide a finer-grained partitioning; hence more homogeneous groups would result. Despite many caveats to this model and its concept (e.g. robustness of these segments), the model cannot avoid that this is an opportunity-seeking model. It is breaking through defined groups and uncovering potential leading customers with unmet needs, the one of era analytic marketers should strive and provide solution to effectively reduce such Type 1 error. This took time to sink into me. I hope the message is not about what model we should consider. It is the necessity to plan for both actionable short-term and robust long-term bulk scoring ... leverage CRM system. 
 
-As many consulting companies e.g. Mchanzie and PwC have claimed, well defined customer segmentation has ability to cut through to the heart of business strategy. There is no doubt having expert knowlegde in the domain of business has a capability to reveal tangible insights and priorties business initiative. Broadly speaking, segmentation can be simply understood by picture of top-down mechanism. The deeper you divide your customers, it may give the feel of understanding your customer better, as you are almost personalising their uniquness. However, this holds two caveats, 
+In this post I would like to illustrate example on actionable target marketing with RFM model, emphasizing on the Pareto Principle. Now lets break down its components in details. 
 
-Small Segment of customers -> reduce costs 
+
+***
 
 
 ## What is RFM and why we do feature engineering 
 
-RFM is essentially a combined measure of customer's purchasing characteristics for better organisation and decision makings. In data science world it is called feature engineering; applying a domain knowledge to extract feature and reshape in a way that it is more relevant to the given task.    
+Past history, Marketers realised that targeting the right audience is just as important as what you send. The phrase "right" customer is too general. The RFM sets a trick here. It is well known statistical model to develope a sense of company's customer base. Top of this, due to its high adaptibility in various industries it serves as good starting point of your customer segmentation journey. 
 
->The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model without compromising its accuracy.
+RFM is essentially a combined measure of customer's purchasing characteristics; a method that lets business to pin down their most valuable customers and in what degree in differs as the score board progressively descends. RFM consists three customer behviour data points: recency, frequency and monetary. 
 
-Decision makings starts with assumptions: hypothesis. When I make a strong assumptions, I bring that idea and paint it on 2D canvas; this is a model. Yes - there will be restrictions and some of the excluded information can be important. It is almost too scary to see what may be behind that canvas; part of me just want to rip it apart and start again. 
++ Recency  : __Length__ of a time period since the __last__ purchase 
++ Frequency: __Number__ of purchase within a customer life-span
++ Monetary : __Amount__ of money spent within customer transcations
+
+There are various approaches to these weight control and customerised metrics but at its basic, 
+In data science world RFM is a type of feature engineering.
+
+>The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model __without compromising its accuracy__.
+
+is a process of applying domain knowledge to select and transform raw data into new definable features (characterisitcs, properties, attributes) that better represent the underlying problem to solve or predict with improve model performance. 
+
+Decision makings starts with assumptions: hypothesis. When I make a strong assumptions, I bring that idea and paint it on 2D canvas; this is a model. Yes - there will be restrictions and some of the excluded information can be important. It is almost too scary to see what may be behind that canvas.
 
 Feature engineering is a trick that brings some of this hidden layers of information. Because I force them wear on a similar colour. Hence a prior knowledge at this specific domain gains more opportunity to be creative and ... upon the assumptions made. 
 
+***
+
+
+
+RFM metrics traditional marketing trick to segment customer based on their purchasing behaviours. Past history, Marketers realised that targeting the right audience is just as important as what you send. The idea behind a target marketing can be defined as "anyone interested in our service". Short understandings and certainity on their values for the future put more risk on your marketing decisions. 
+
+$$ E(Sales) = \frac{Sales + Cost\ of\ goods\ sold}{Risk} $$
+
+Having said, well-defined customer-life value is not easy calculations, in fact, it should not be ran by company's operational convience. In my opinion, the "Target" will ever be general and the key will always be a simplifications. 
+
+
+So why are we doing RFM? To find customer priorities? for better customer organisation? - Yes these may all remain true. But, I would like to interpret differently, the heart of scoring and segmentation is to 
+
+There is no doubt having expert knowlegde in the domain of business has a capability to reveal tangible insights and priorties business initiative. 
+
+In opinion its message is clear. There are no one-way scoring mechanism 
+
+
+In-depth KYC (know your customer) ensures  only can leverage ROI from  
+it may give the feel of understanding your customer better, as you are almost personalising their uniquness. However, this holds two caveats, 
+
+
+Small Segment of customers -> reduce costs 
 
 
 ## Why Campaign Response important feature for CRM?
@@ -88,13 +117,26 @@ Tracking campaign activities are vital measure for customer engagement managemen
 
 The data I will be exploring below contains customer campaign response binary dataset. 
 
+***
 
+## 1.0 libraries
 
-
-```{r,echo=FALSE}
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
 library(readr)
 library(fs)
+library(tufte)
+
+library(forecast)
+
+library(GGally)
+library(knitr)
+library(kableExtra)
+
+```
+
+
+```{r, echo = TRUE, message=FALSE, warning=FALSE}
 
 library(tidyverse)
 library(dplyr)
@@ -105,16 +147,295 @@ library(psych)
 library(gmodels)
 
 library(tidyquant)
-library(forecast)
 library(timetk)
 library(rsample) 
-
-library(ggplot2)
 library(wesanderson)
-library(GGally)
-library(knitr)
-library(kableExtra)
+```
+
+
+```{r, echo = FALSE, warning=FALSE}
+set.seed(42)
+options(scipen = 99, digits = 3)
+
+trans_df_raw <- read_csv("~/Dropbox/business_insight/df_trans_raw.csv", col_types = cols())
+trans_df <- trans_df_raw 
 
 ```
+
+
+```{r, echo = FALSE, warning=FALSE}
+resp_df_raw <- read_csv("~/Dropbox/business_insight/df_resp_raw.csv")
+resp_df_raw$X1 <- NULL
+resp_df <- resp_df_raw
+```
+
+
+## 2.0 Transcational data 
+
+```{r, high-range-cv, echo = FALSE}
+# DT::datatable(trans_df, class = 'cell=border stripe', rownames = F, filter = 'top',
+#               editable = TRUE, extensions = 'Buttons', options = list(
+#                 pageLength = 5,
+#                 dom = 'Bfrtip',
+#                 width = '55%',
+#                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+#                 scrollX = TRUE))
+# 
+# DT::datatable(resp_df, class = 'cell=border stripe', rownames = F, filter = 'top',
+#               editable = TRUE, extensions = 'Buttons', options = list(
+#                 pageLength = 5,
+#                 dom = 'Bfrtip',
+#                 width = '55%',
+#                 buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+#                 scrollX = TRUE)) 
+# 
+# 
+```
+
+
+## 3.0 Data Preparation 
+
+more random words ^[Analytic perspective notes]
+
+Analytic perspective notes 
+
+[1] 13% of customer has made same-day repeated purchase 
+
+[2] I feel it is sufficient number to flag as it could counter as useful variable for customer segmentation in later analysis 
+
+
+
+```{r}
+
+trans_df <- trans_df %>% 
+  mutate(trans_date = lubridate::dmy(trans_date)) %>% 
+  dplyr::rename(
+    date   = trans_date,
+    amount = tran_amount) 
+
+dup_pur_customer <- which(duplicated(trans_df[, c("customer_id", "date")]))
+y_dup_df <- trans_df[dup_pur_customer,]
+n_dup_df <- trans_df[-dup_pur_customer,]
+y_dup_df$dup <- TRUE
+n_dup_df$dup <- FALSE
+
+format_dollar  <- function(x, ...) {
+  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
+}
+
+dup_dt <- rbind(y_dup_df, n_dup_df) %>% 
+    dplyr::group_by(dup) %>% 
+    dplyr::summarise(count = n(),
+                     med_pur_amount = median(amount) %>% format_dollar,
+                     avg_pur_amount = mean(amount)   %>% format_dollar) 
+  
+dup_dt %>%
+    set_names(c("Same Day Purchase", "No. Customer", "Median Purchase", "Average Purchase")) %>%
+    kbl() %>% 
+    kable_material_dark()
+
+```
+
+
+
+### 4.0 Quick overview on time series visualisation 
+
+Like I have mentioned above, having __prior knowledge__ is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on the perspective note.
+
+
+
+### 4.1 Starting with the sample distribution and correlation
+
+
+
+The correlation between customer purchase frequency and sales amount is above 0.9. 
+
+
+```{r}
+
+daily_pur <- trans_df %>%
+  dplyr::group_by(date) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount)) %>% ungroup()
+
+psych::pairs.panels(daily_pur)
+
+cust_pur <- trans_df %>%
+  dplyr::group_by(customer_id) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount)) %>% ungroup()
+
+```
+
+```{r}
+
+week_pur <- trans_df %>%
+  mutate(week = ceiling_date(date, unit = "week")) %>% 
+    filter_by_time(.start_date = "2011-07", 
+                   .end_date = "2015-03-01",
+                   .date_var = week) %>% 
+  dplyr::group_by(week) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount)) %>% ungroup()
+
+monthly_pur <- trans_df %>%
+  mutate(month = ceiling_date(date, unit = "month")) %>% 
+    filter_by_time(.start_date = "2011-07", 
+                   .end_date = "2015-03-01",
+                   .date_var = month) %>% 
+  dplyr::group_by(month) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount)) %>% ungroup()
+
+```
+
+are prime source of business cycle and understanding organisation's allocation in their time. Visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure. 
+
+
+Perspective Notes : 
+[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model 
+[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind. 
+
+```{r}
+week_pur %>%
+  mutate_by_time(.by = "month",
+                 sales_mean = mean(sales)) %>% 
+  pivot_longer(contains("sales")) %>% 
+  plot_time_series(week, value, name,
+                   .smooth = FALSE,
+                   .interactive = FALSE) 
+
+monthly_pur %>% 
+  mutate_by_time(.by = "3 month",
+                 sales_mean = mean(sales)) %>% 
+  pivot_longer(contains("sales")) %>% 
+  plot_time_series(month, value, name,
+                   .smooth = FALSE,
+                   .interactive = FALSE) 
+```
+
+```{r}
+mon_sd_tbl <- monthly_pur %>% 
+  mutate(revenue = log(sales)) %>% 
+  mutate(revenue = standardize_vec(revenue)) 
+std_mean <- 12.0533540952864
+std_sd   <- 0.12791922963096
+```
+
+```{r}
+mon_sd_tbl %>% 
+  plot_time_series(month, revenue, .interactive = FALSE)
+```
+
+
+```{r}
+
+
+trans_df %>%
+  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
+  dplyr::group_by(month) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount) %>%  format_dollar()) %>% 
+  set_names(c("Month", "Frequency", "Revenue")) %>%
+  kbl() %>% 
+  kable_material_dark()
+
+
+trans_df %>%
+  mutate(quarter = quarter(date)) %>% 
+  dplyr::group_by(quarter) %>%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(amount) %>% format_dollar()) %>% 
+  set_names(c("Quarter", "Frequency", "Revenue")) %>%
+  kbl() %>% 
+  kable_material_dark()
+
+```
+
+
+
+```{r}
+resp <- resp_df %>% 
+  select(customer_id, response) %>% 
+  setNames(c("customer_id", "campaign"))
+
+pre_rfm_df <- trans_df %>% 
+  left_join(resp, by = "customer_id") %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))
+  
+
+```
+
+
+```{r}
+colSums(is.na(pre_rfm_df))
+
+pre_rfm_df %>% 
+  mutate(month = month(date)) %>%
+  group_by(campaign) %>% 
+  summarise(no_pur  = n(),
+            avg_pur = mean(amount)   %>% format_dollar(),
+            med_pur = median(amount) %>% format_dollar(),
+            sd_pur  = sd(amount)     %>% format_dollar()) %>% 
+  ungroup() %>% 
+  set_names(c("Campaign", "No Purchase", "Averge Purchase", "Median Purchase", "Std Purchase")) %>%
+  kbl() %>% 
+  kable_material_dark()
+
+```
+
+
+```{r}
+library(reshape2)
+cmpg_df <- pre_rfm_df %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0),
+         week = ceiling_date(date, unit = "week")) %>%
+  group_by(week, campaign) %>% 
+  summarise(no_pur = n(),
+            revenue = sum(amount))
+
+
+cmpg_pur_df <- cmpg_df %>% 
+  dcast(week ~ campaign, value.var = "no_pur") 
+cmpg_rev_df <- cmpg_df %>% 
+  dcast(week ~ campaign, value.var = "revenue") 
+
+cmpg_vis_df <- left_join(cmpg_pur_df, cmpg_rev_df, by = "week") %>% 
+  set_names(c("week", "no_pur_N", "no_pur_Y", "sales_N", "sales_Y")) %>% 
+  filter_by_time(.start_date = "2011-07", 
+                   .end_date = "2015-03-01",
+                   .date_var = week) %>% 
+  
+  group_by(week) %>%
+  summarise(no_pur_N_cmpg  = sum(no_pur_N),
+            no_pur_Y_cmpg  = sum(no_pur_Y),
+            revenue_N_cmpg = sum(sales_N),
+            revenue_Y_cmpg = sum(sales_Y)) %>% ungroup()
+  
+cmpg_vis_df %>% plot_time_series(week, 
+                                 revenue_Y_cmpg,
+                                 .smooth = FALSE,
+                                 .interactive = FALSE) 
+
+cmpg_vis_df %>% plot_time_series(week, 
+                                 revenue_N_cmpg,
+                                 .smooth = FALSE,
+                                 .interactive = FALSE) 
+
+cmpg_vis_df %>% plot_time_series(week, 
+                                 no_pur_Y_cmpg,
+                                 .smooth = FALSE,
+                                 .interactive = FALSE) 
+
+cmpg_vis_df %>% plot_time_series(week, 
+                                 no_pur_N_cmpg,
+                                 .smooth = FALSE,
+                                 .interactive = FALSE) 
+
+  
+```
+
 
 
