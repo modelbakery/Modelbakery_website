@@ -1,0 +1,98 @@
+---
+title: 'Understanding Customer Churn and Prevention Strategy'
+author: Package Build
+date: '2021-10-30'
+slug: understanding-customer-churn-and-prevention-strategy
+categories:
+  - R
+tags:
+  - Marketing
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-10-30T00:03:50+09:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+
+## Menu 
+
+### Appetizer
++ Motivation: Segmentation is "Divide and Conquer"
++ What is RFM and why we do feature engineering 
++ Why Campaign Response important feature for CRM?
++ Power of Quantile and Pareto Principle 
++ Robust Scoring Rules 
+
+### Main
++ Time Series Visualisation + seasonal effect
++ Data splitting 
++ RFM Scoring 
++ Visualisation for business report 
+
+### Desert 
++ Perspective note 
++ To take action
++ Wrap up: What I have learned
++ Ready to receive feedback  
+
+
+## 1.0 library load
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+
+library(readr)
+library(fs)
+library(tufte)
+library(forecast)
+library(GGally)
+library(knitr)
+library(kableExtra)
+
+library(psych)
+library(skimr)
+library(janitor)
+library(tidyverse)
+library(readxl)
+library(ggridges)
+library(cowplot)
+library(Information)
+
+```
+
+
+```{r, echo = TRUE, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+library(skimr)
+library(scales)
+library(psych)
+library(gmodels)
+
+library(tidyquant)
+library(timetk)
+library(rsample) 
+library(wesanderson)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+set.seed(42)
+options(scipen = 100, digits = 3)
+
+churn_tbl <- read_csv("/Users/seunghyunsung/Desktop/R_DS/Machine_Learning/classification/randomForest/", col_types = cols())
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+resp_df_raw <- read_csv("~/Dropbox/business_insight/df_resp_raw.csv")
+resp_df_raw$X1 <- NULL
+```
