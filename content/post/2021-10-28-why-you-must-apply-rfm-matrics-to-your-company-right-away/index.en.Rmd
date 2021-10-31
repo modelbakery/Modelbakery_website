@@ -328,6 +328,8 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 * Inquire customer information on geographical and payment method from database in order to approach on defining service "accessibility" and its scoring board. 
 
 
+
+
 ### 4.0 Quick overview on time series visualisation 
 
 Like I have mentioned above, having __prior knowledge__ is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on our perspective note.
