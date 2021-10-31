@@ -162,14 +162,18 @@ resp_df_raw$X1 &lt;- NULL</code></pre>
 <div id="checking-for-duplicates" class="section level3">
 <h3>3.1 Checking for duplicates</h3>
 <ul>
-<li>No duplicate data</li>
+<li>No duplicated data</li>
 <li>Diagnosed same-day repeated purchase
 <ul>
 <li>10.7% from total customers falls in this category</li>
 <li>0.6% of occurrence within transaction history</li>
 </ul></li>
 </ul>
-<p>Knowing that the level of occurance on sameday repeated purchase</p>
+<p>Important question to ask:</p>
+<ul>
+<li>Are these group statistically significant in respect to their revenue?</li>
+<li>Does same-day repeated purchase represent any meaning?</li>
+</ul>
 <pre class="r"><code>format_dollar  &lt;- function(x, ...) {
   paste0(&quot;$&quot;, formatC(as.numeric(x), format=&quot;f&quot;, digits = 0, big.mark=&quot;,&quot;))
 }
@@ -179,18 +183,17 @@ se &lt;- function(x) sqrt(var(x)/length(x))</code></pre>
 y_dup_df &lt;- trans_df[dup_pur_customer,]
 n_dup_df &lt;- trans_df[-dup_pur_customer,]
 
-y_dup_df$dup &lt;- TRUE
-n_dup_df$dup &lt;- FALSE
+y_dup_df$samday_purchase &lt;- TRUE
+n_dup_df$samday_purchase &lt;- FALSE
 
 
 cust_dup_tbl &lt;- rbind(y_dup_df, n_dup_df) %&gt;% 
   group_by(customer_id) %&gt;% 
   summarise(monetary = sum(amount),
             frequency = n(),
-            dup = mean(dup) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()</code></pre>
-<p>A quick statistics representations by these groups are not significantly different. It is not easy to make scientific decisions when the sample sizes differ in high degree. We all know often visualisation can be a great help.</p>
+            samday_purchase = mean(samday_purchase) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()</code></pre>
 <pre class="r"><code>cust_dup_tbl %&gt;% 
-  group_by(dup) %&gt;% 
+  group_by(samday_purchase) %&gt;% 
   summarise(count            = n_distinct(customer_id),
             med_pur_freq     = median(frequency),
             avg_pur_freq     = mean(frequency),
@@ -206,7 +209,7 @@ cust_dup_tbl &lt;- rbind(y_dup_df, n_dup_df) %&gt;%
 <thead>
 <tr>
 <th style="text-align:left;">
-dup
+samday_purchase
 </th>
 <th style="text-align:right;">
 count
@@ -304,20 +307,98 @@ $1,436
 </tr>
 </tbody>
 </table>
-<p>This has become more interesting. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make assumption that there is a threshold from its low-density region to high-density region in purchasing characteristic cluster in amount. Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on ‘target’ customers.</p>
-<pre class="r"><code>cust_dup_tbl %&gt;% 
-  ggplot(aes(x = monetary)) +
-  geom_density(alpha = 0.5, fill = palette_light()[3]) +
+</div>
+<div id="hypothesis-test-on-same-day-repeated-and-non-repeated-customer" class="section level3">
+<h3>3.2 Hypothesis Test on same-day repeated and non-repeated customer</h3>
+<ul>
+<li>Unbalanced Welch Two Sample t-test</li>
+<li>Balanced Welch Two Sample t-test</li>
+</ul>
+<p>Both the hypothesis tests rejects null hypothesis (p-value &lt; 0.05) that the difference in mean of customer “same-day duplicate” and “non-duplicate” groups are not significant.</p>
+<blockquote>
+<p>p &lt; .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
+- Traflmow, editor of the Basic and Applied Social Psychology journal
+- Mentioned by Ashutosh Nandeshwar</p>
+</blockquote>
+<p>A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote “statistically significant”. However, we can invoke the result is not by chance.</p>
+<pre class="r"><code>random_n_dup_df &lt;- sample_n(n_dup_df, 737) 
+random_n_dup_df$samday_purchase &lt;- FALSE
+
+sample_dup_tbl &lt;- rbind(y_dup_df, random_n_dup_df) %&gt;% 
+  group_by(customer_id) %&gt;% 
+  summarise(monetary = sum(amount),
+            frequency = n(),
+            samday_purchase = mean(samday_purchase) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()
+
+t.test(monetary~samday_purchase, data = cust_dup_tbl)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  monetary by samday_purchase
+## t = -17, df = 955, p-value &lt;0.0000000000000002
+## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
+## 95 percent confidence interval:
+##  -320 -255
+## sample estimates:
+## mean in group 0 mean in group 1 
+##            1149            1436</code></pre>
+<pre class="r"><code>t.test(monetary~samday_purchase, data = sample_dup_tbl)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  monetary by samday_purchase
+## t = 6, df = 1326, p-value = 0.00000002
+## alternative hypothesis: true difference in means between group 1 and group 0 is not equal to 0
+## 95 percent confidence interval:
+##   7.08 14.64
+## sample estimates:
+## mean in group 1 mean in group 0 
+##            80.3            69.5</code></pre>
+</div>
+<div id="visualisation-on-same-day-repeated-and-non-repeated-customer" class="section level3">
+<h3>3.3 Visualisation on same-day repeated and non-repeated customer</h3>
+<p>The visualisation here provides more insights.</p>
+<ul>
+<li><p>Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.</p></li>
+<li><p>The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable.</p></li>
+<li><p>Given the same weight on number of customers to these groups, their first quantile density shrinks by factor of ~2.</p></li>
+</ul>
+<p>The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to “confonding” effects it false appearence as if it has some predictive power between these two groups.</p>
+<p>Perhaps it is the <strong>accessibility</strong> upon purchase act as a confounder between monetary value and same-day purchase customer behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings.</p>
+<pre class="r"><code>P3_C_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
+  geom_col(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_tq() +
-  theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-10-1.png" width="672" />
-The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to “confonding” effects it behaviour as if it has some predictive power between the two groups. Perhaps it is the <strong>accessibility</strong> upon purchase act as a confounder between monetary value and same-day purchase.</p>
-<pre class="r"><code>cust_dup_tbl %&gt;% 
-  ggplot(aes(x = monetary, fill = dup)) +
+  theme_tq()
+
+P3_B_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_tq() +
+  theme_tq()
+
+P3_V_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
+  geom_violin(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_tq() +
+  theme_tq()
+
+P3_D_dup &lt;- cust_dup_tbl %&gt;% 
+  ggplot(aes(x = monetary, fill = samday_purchase)) +
   geom_density(alpha = 0.5) +
   scale_fill_tq() +
-  theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+  theme_tq()
+
+gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" />
+### 3.4 Perspective Notes</p>
+<ul>
+<li>Comparative analysis and potential aspects on “what is the behind the scene” of customers at low and high monetary regions are needed.
+<ul>
+<li>Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy.</li>
+</ul></li>
+<li>Inquire customer information on geographical and payment method from database in order to approach on defining service “accessibility” and its scoring board.</li>
+</ul>
 </div>
 <div id="quick-overview-on-time-series-visualisation" class="section level3">
 <h3>4.0 Quick overview on time series visualisation</h3>

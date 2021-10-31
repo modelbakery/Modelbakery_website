@@ -201,6 +201,7 @@ trans_df <- trans_df_raw %>%
   +  0.6% of occurrence within transaction history 
   
 Important question to ask:
+
 * Are these group statistically significant in respect to their revenue?
 * Does same-day repeated purchase represent any meaning?
 
@@ -220,21 +221,21 @@ dup_pur_customer <- which(duplicated(trans_df[, c("customer_id", "date")]))
 y_dup_df <- trans_df[dup_pur_customer,]
 n_dup_df <- trans_df[-dup_pur_customer,]
 
-y_dup_df$dup <- TRUE
-n_dup_df$dup <- FALSE
+y_dup_df$samday_purchase <- TRUE
+n_dup_df$samday_purchase <- FALSE
 
 
 cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>% 
   group_by(customer_id) %>% 
   summarise(monetary = sum(amount),
             frequency = n(),
-            dup = mean(dup) %>% ceiling() %>% as.factor()) %>% ungroup()
+            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
 
 ```
 
 ```{r}
 cust_dup_tbl %>% 
-  group_by(dup) %>% 
+  group_by(samday_purchase) %>% 
   summarise(count            = n_distinct(customer_id),
             med_pur_freq     = median(frequency),
             avg_pur_freq     = mean(frequency),
@@ -264,48 +265,54 @@ A small p-value does not indicate that the null hypothesis is false, in fact it 
 
 ```{r}
 random_n_dup_df <- sample_n(n_dup_df, 737) 
-random_n_dup_df$dup <- FALSE
+random_n_dup_df$samday_purchase <- FALSE
 
 sample_dup_tbl <- rbind(y_dup_df, random_n_dup_df) %>% 
   group_by(customer_id) %>% 
   summarise(monetary = sum(amount),
             frequency = n(),
-            dup = mean(dup) %>% ceiling() %>% as.factor()) %>% ungroup()
+            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
 
-t.test(monetary~dup, data = cust_dup_tbl)
-t.test(monetary~dup, data = sample_dup_tbl)
+t.test(monetary~samday_purchase, data = cust_dup_tbl)
+t.test(monetary~samday_purchase, data = sample_dup_tbl)
 ```
 
 ### 3.3 Visualisation on same-day repeated and non-repeated customer 
 
-The visualisation here provides more insight. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make a rather weak assumption that there is a threshold from its low-density region to high-density region in its monetary values in scale. 
+The visualisation here provides more insights. 
 
-The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
+* Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.
 
-Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase customer behaviour. 
+* The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable. 
+
+* Given the same weight on number of customers to these groups, their first quantile density shrinks by factor of ~2.  
+
+The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
+
+Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase customer behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings. 
 
 ```{r}
 
-P3_C_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+P3_C_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
   geom_col(alpha = 0.5) +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_tq() +
   theme_tq()
 
-P3_B_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+P3_B_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
   geom_boxplot(alpha = 0.5) +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_tq() +
   theme_tq()
 
-P3_V_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+P3_V_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
   geom_violin(alpha = 0.5) +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_tq() +
   theme_tq()
 
 P3_D_dup <- cust_dup_tbl %>% 
-  ggplot(aes(x = monetary, fill = dup)) +
+  ggplot(aes(x = monetary, fill = samday_purchase)) +
   geom_density(alpha = 0.5) +
   scale_fill_tq() +
   theme_tq()
@@ -313,11 +320,12 @@ P3_D_dup <- cust_dup_tbl %>%
 gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 
 ```
-### 3.4
+### 3.4 Perspective Notes 
 
-Perspective Note 
-
-Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on 'target' customers.
+* Comparative analysis and potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
+  + Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy. 
+  
+* Inquire customer information on geographical and payment method from database in order to approach on defining service "accessibility" and its scoring board. 
 
 
 ### 4.0 Quick overview on time series visualisation 
