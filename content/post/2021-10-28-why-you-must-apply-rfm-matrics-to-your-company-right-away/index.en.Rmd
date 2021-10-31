@@ -195,12 +195,16 @@ trans_df <- trans_df_raw %>%
 
 ### 3.1 Checking for duplicates 
 
-* No duplicate data 
+* No duplicated data 
 * Diagnosed same-day repeated purchase 
   + 10.7% from total customers falls in this category 
   +  0.6% of occurrence within transaction history 
+  
+Important question to ask:
+* Are these group statistically significant in respect to their revenue?
+* Does same-day repeated purchase represent any meaning?
 
-Knowing that the level of occurance on sameday repeated purchase 
+
 ```{r}
 format_dollar  <- function(x, ...) {
   paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
@@ -228,8 +232,6 @@ cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>%
 
 ```
 
-A quick statistics representations by these groups are not significantly different. It is not easy to make scientific decisions when the sample sizes differ in high degree. We all know often visualisation can be a great help. 
-
 ```{r}
 cust_dup_tbl %>% 
   group_by(dup) %>% 
@@ -244,28 +246,78 @@ cust_dup_tbl %>%
             se_monetary      = se(monetary)) %>% 
     kbl() %>% 
     kable_material_dark()
+
 ```
 
-This has become more interesting. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make assumption that there is a threshold from its low-density region to high-density region in purchasing characteristic cluster in amount. Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on 'target' customers.
+### 3.2 Hypothesis Test on same-day repeated and non-repeated customer 
+
+* Unbalanced Welch Two Sample t-test
+* Balanced Welch Two Sample t-test
+
+Both the hypothesis tests rejects null hypothesis (p-value < 0.05) that the difference in mean of customer "same-day duplicate" and "non-duplicate" groups are not significant. 
+
+> p < .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
+- Traflmow, editor of the Basic and Applied Social Psychology journal 
+- Mentioned by Ashutosh Nandeshwar 
+
+A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote "statistically significant". However, we can invoke the result is not by chance. 
+
+```{r}
+random_n_dup_df <- sample_n(n_dup_df, 737) 
+random_n_dup_df$dup <- FALSE
+
+sample_dup_tbl <- rbind(y_dup_df, random_n_dup_df) %>% 
+  group_by(customer_id) %>% 
+  summarise(monetary = sum(amount),
+            frequency = n(),
+            dup = mean(dup) %>% ceiling() %>% as.factor()) %>% ungroup()
+
+t.test(monetary~dup, data = cust_dup_tbl)
+t.test(monetary~dup, data = sample_dup_tbl)
+```
+
+### 3.3 Visualisation on same-day repeated and non-repeated customer 
+
+The visualisation here provides more insight. Customer monetary value, by nature, has two noticeable binary distributions (there can always be more) overlapped from one and another. It may be valid to make a rather weak assumption that there is a threshold from its low-density region to high-density region in its monetary values in scale. 
+
+The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
+
+Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase customer behaviour. 
 
 ```{r}
 
-cust_dup_tbl %>% 
-  ggplot(aes(x = monetary)) +
-  geom_density(alpha = 0.5, fill = palette_light()[3]) +
+P3_C_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+  geom_col(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_tq() +
   theme_tq()
-```
-The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it behaviour as if it has some predictive power between the two groups. Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase. 
 
-```{r}
-cust_dup_tbl %>% 
+P3_B_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+  geom_boxplot(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_tq() +
+  theme_tq()
+
+P3_V_dup <- cust_dup_tbl %>% ggplot(aes(x = dup, y = monetary, fill = dup)) +
+  geom_violin(alpha = 0.5) +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_tq() +
+  theme_tq()
+
+P3_D_dup <- cust_dup_tbl %>% 
   ggplot(aes(x = monetary, fill = dup)) +
   geom_density(alpha = 0.5) +
   scale_fill_tq() +
   theme_tq()
 
+gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
+
 ```
+### 3.4
+
+Perspective Note 
+
+Thorough analysis on their purchasing pattern can add valuable information for cross-sell, offer, pricing strategy. However, this is not my primary focus for now. I like to make quick, actionable marketing decisions on 'target' customers.
 
 
 ### 4.0 Quick overview on time series visualisation 
