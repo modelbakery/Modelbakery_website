@@ -322,19 +322,22 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 ```
 ### 3.4 Perspective Notes 
 
-* Comparative analysis and potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
-  + Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy. 
+* Comparative analysis of potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
+  + Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy.
   
-* Inquire customer information on geographical and payment method from database in order to approach on defining service "accessibility" and its scoring board. 
+* In order to identify common characteristics among customers, the "hard" variables such as age, gender, place of residence are needed. 
+  
+* Inquire customer information on geographical and payment method from database in order to approach on defining "soft" variables such as "service accessibility" and its scoring board. 
 
 
+***
+
+## 4.0 Quick overview on time series visualisation 
+
+In this section I will explore and study on revenue time series visualisation and TSL (Trend, Seasonal, Irregular) components. Unfortunately, I would not be able to throw any punch line of my task here. Especially I wish not to deliver any miss interpreted knowledge to anyone. Hence I will be only clarifying the techniques and quotes supplied by professionals and codes with real thoughts. 
 
 
-### 4.0 Quick overview on time series visualisation 
-
-Like I have mentioned above, having __prior knowledge__ is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on our perspective note.
-
-Key questions
+Key questions to ask: 
 
 * What phase are we in with revenue growth? 
   + Is there noticeable trend?
@@ -342,15 +345,15 @@ Key questions
     + Seasonal?
     + Cycle? 
   + How the campaign responded consumption patterns are evolving? 
-    + Yes - How we should fine-tune campaign strategies accordingly?
-    + No  - What could be the key influential factor (e.g. competitors, lack of recent customer engagement) 
+    + Positive - How we should fine-tune campaign strategies accordingly?
+    + Negative - What could be the key influential factor (e.g. competitors, lack of recent customer engagement)?
   
 
-### 4.1 Starting with periodic revenue 
+### 4.1 Why time series?
 
-Depending on where we are with business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending the phase the scope of the target customer may regulate stricter or lesser policy - risk measurement. 
+Depending on where businesses are with their business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending on the phase, the scope of the target customer may regulate stricter or lesser policy (risk measurement). 
 
-What's more, visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure. 
+What's more, visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I can not wait to study this more for future blog post on credit loan default risk prediction modelling.  
 
 ```{r}
 timespan_day <- max(trans_df$date) - min(trans_df$date)
@@ -361,57 +364,73 @@ cat("There is",paste0(timespan_year),"annual cycle worth of data")
 
 ```
 
-Broadly speaking, there are two types of time series data: stationary and non-stationary time series. These are defined as whether their statistical properties, in general, mean and variance is independent (stationary) or dependent (non-stationary) with time. Any human interactive data wont be stationary, there always be some trend or seasonality that enables us to decompose from its series. In other words, understanding these components will aid tracking down their purchasing patterns.
+
+### 4.2 Data frame of daily, weekly, monthly time stamps + time series visualisation 
+
+The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. 
+
+The moving average smoothing (red) is added as it removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series. 
 
 ```{r}
-daily_pur <- trans_df %>%
-  dplyr::group_by(date) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount)) %>% ungroup()
 
-week_pur <- trans_df %>%
-  mutate(week = ceiling_date(date, unit = "week")) %>% 
-    filter_by_time(.start_date = "2011-07", 
-                   .end_date = "2015-03-01",
-                   .date_var = week) %>% 
-  dplyr::group_by(week) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount)) %>% ungroup()
+start_date <- "2011-07"
+end_date   <- "2015-03-01"
 
+generator_periodic_tbl <- function(data, period, start_date, end_date, var_x1, var_x2){
+  
+  var_x1 <- enquo(var_x1)
+  var_x2 <- enquo(var_x2)
+  start_date <- enquo(start_date)
+  end_date   <- enquo(end_date)
+  
+  period_list   <- enquo(period)
+  period_quote  <- quo_name(period_list)
+  
+  out_tbl <- data %>%
+    mutate(foo = ceiling_date(!!var_x2, unit = !!period_quote)) %>% 
+    filter_by_time(.start_date = !!start_date, 
+                   .end_date = !!end_date,
+                   .date_var = foo)  %>% 
+    dplyr::group_by(foo) %>%
+    dplyr::summarise(frequency = n(),
+                     sales     = sum(!!var_x1)) %>% ungroup()
+  
+  names(out_tbl)[1] <- "date"
+  out_tbl
+}
 
-monthly_pur <- trans_df %>%
-  mutate(month = ceiling_date(date, unit = "month")) %>% 
-    filter_by_time(.start_date = "2011-07", 
-                   .end_date = "2015-03-01",
-                   .date_var = month) %>% 
-  dplyr::group_by(month) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount)) %>% ungroup()
+daily_pur   <- generator_periodic_tbl(trans_df, day, start_date, end_date, amount, date)
+weekly_pur  <- generator_periodic_tbl(trans_df, week, start_date, end_date, amount, date)
+monthly_pur <- generator_periodic_tbl(trans_df, month, start_date, end_date, amount, date)
+
 ```
 
-The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. The moving average smoothing (red) removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series. 
 
 ```{r, warning = FALSE, message=FALSE}
 
-daily_pur %>% 
-  mutate_by_time(.by = "week",
-                 sales_mean = mean(sales)) %>% 
-  pivot_longer(contains("sales")) %>% 
+generator_plot_ts <- function(.data, .period, .var_x1){
+  
+  period_list <- enquo(.period)
+  period_name <- quo_name(period_list)
+  var_x1_list  <- enquo(.var_x1)
+  var_x1_name  <- quo_name(var_x1_list)
+  
+  .data %>% 
+  mutate_by_time(.by = period_name,
+                 sales_mean = mean(!!var_x1_list)) %>% 
+  pivot_longer(contains(!!var_x1_name))  %>%  
   plot_time_series(date, value, name,
                    .smooth = FALSE,
-                   .interactive = FALSE) 
+                   .interactive = FALSE)
+}
 
-week_pur %>%
-  mutate_by_time(.by = "month",
-                 sales_mean = mean(sales)) %>% 
-  pivot_longer(contains("sales")) %>% 
-  plot_time_series(week, value, name,
-                   .smooth = FALSE,
-                   .interactive = FALSE) 
-
+generator_plot_ts(daily_pur, week, sales)
+generator_plot_ts(weekly_pur, month, sales)
+generator_plot_ts(monthly_pur, "3 month", sales)
 ```
 
-Now the monthly revenue time series reveals some useful components. 
+Now the monthly revenue time series reveals some useful information 
+
 * 
 revenues with its worst performance. shows +3 years overall descending trend. 
 
@@ -430,19 +449,9 @@ mon_sd_tbl <- monthly_pur %>%
          revenue_text  = case_when(outlier == 1 ~ revenue, 
                                    TRUE~ outlier),
          revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = "K"))
-         
-monthly_pur %>% 
-  mutate_by_time(.by = "3 month",
-                 sales_mean = mean(sales)) %>% 
-  pivot_longer(contains("sales")) %>% 
-  plot_time_series(month, value, name,
-                   .smooth      = FALSE,
-                   .legend_show = FALSE,
-                   .title       = "The monthly revenue time series with 3-month moving average",
-                   .interactive = FALSE)
 
 mon_sd_tbl %>% 
-  ggplot(aes(x = month, y = (revenue_sd))) +
+  ggplot(aes(x = date, y = (revenue_sd))) +
   geom_line(size = 0.5, linetype = 1) +
   geom_smooth(method   = "lm", se = FALSE) +
   geom_label(aes(label = revenue_text,
@@ -455,15 +464,66 @@ mon_sd_tbl %>%
      x        = "Year",
      y        = "Revenue"
   ) +
+  guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
   theme_tq()
 
+```
+
+```{r}
+monthly_ts <- ts(monthly_pur$sales, start = c(2011, 7), f = 12)
+weekly_ts <- ts(weekly_pur$sales, start = c(2011, 7), f = 365.25/7)
+daily_ts <- ts(daily_pur$sales, start = c(2011, 7), f = 365)
 
 ```
 
 
+```{r}
+```
+
+
+```{r}
+t <- 1:length(monthly_ts)
+fit_monthly_lm <- lm(monthly_ts ~ t)
+fit_monthly_lm$coefficients
+anova(fit_monthly_lm)
+trend <- fitted(fit_monthly_lm)
+ts.plot(monthly_ts, trend, col=1:2, lty = 1:2, ylab = "Monthly Sales", xlab = "time")
+        legend("topright", lty=1:2, col=1:2, c("Raw Monthly Time series", "Trend component"))
+```
+
+```{r}
+adjtrend = monthly_ts/trend
+y = factor(cycle(adjtrend))
+fit_monthly_1 <-auto.arima(adjtrend,
+                           max.p = 2,
+                           xreg=model.matrix(~0 + y)[, -12],
+                           seasonal = F, max.d = 0, max.q = 0)
+coef(fit_monthly_1)
+seasonal = fit_monthly_1$fitted
+pred = trend*seasonal
+irregular = monthly_ts/pred
+ts.plot(trend)
+ts.plot(seasonal)
+ts.plot(irregular)
+ts.plot(monthly_ts, pred, lty = 1:2, ylab = "Monthly Sales", col = c("blue", "red"))
+```
+```{r}
+# * Create table for TSl components ----
+date <- ymd("20110701") + months(1:length(monthly_ts)-1)
+table4 <- data.frame(date, monthly_ts, trend, seasonal, irregular)
+```
+
 Perspective Notes : 
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model 
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind. 
+
+
+### 4.3 Comonents for Time Series Analysis 
+
+
+```{r}
+
+```
 
 
 
@@ -572,3 +632,5 @@ cmpg_vis_df %>% plot_time_series(week,
 
 
 the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance. 
+
+***

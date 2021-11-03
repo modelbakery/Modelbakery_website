@@ -1,0 +1,49 @@
+---
+title: 'Back to the Basic: What is Regression function'
+author: Package Build
+date: '2021-11-03'
+slug: back-to-the-basic-what-is-regression-function
+categories:
+  - R
+tags:
+  - Academic
+  - Regression 
+  - Model Interpretation
+  - R
+subtitle: 'A general class of regression models and how to interpret these models'
+summary: ''
+authors: []
+lastmod: '2021-11-03T13:30:59+09:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+draft: TRUE
+---
+
+## General notation for Regression model
+
+The general notation:
+
+f(x) = E(Y|X =x) 
+
+Depending on the complexity of the function, we may be able to understand how each components Xj affects Y, and therefore the interpretable level of parameters with respect to independent X variables influencing on Y. 
+
+Thus models, even within Regression, have many uses and those amongst them. Some of its models would be easier to interpret than others but stronger the assumptions and its limitations to follow. I mean there is really no "free-lunch" right? 
+
+Before I begin explore the assumptions and algorithms of different regression models. Lets try to understand the general scheme of ideal function - explained by ...
+
+
+
+So what is the ideal 
+
+## The ordinary mutiple linear regression function and its loss function 
+
+
+```{r}
+
+```
+
+Main pitfalls of linear regression: heteroscedasticity 

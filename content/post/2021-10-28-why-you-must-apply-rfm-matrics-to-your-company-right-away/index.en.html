@@ -393,17 +393,20 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)</code>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" />
 ### 3.4 Perspective Notes</p>
 <ul>
-<li>Comparative analysis and potential aspects on “what is the behind the scene” of customers at low and high monetary regions are needed.
+<li><p>Comparative analysis of potential aspects on “what is the behind the scene” of customers at low and high monetary regions are needed.</p>
 <ul>
 <li>Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy.</li>
 </ul></li>
-<li>Inquire customer information on geographical and payment method from database in order to approach on defining service “accessibility” and its scoring board.</li>
+<li><p>In order to identify common characteristics among customers, the “hard” variables such as age, gender, place of residence are needed.</p></li>
+<li><p>Inquire customer information on geographical and payment method from database in order to approach on defining “soft” variables such as “service accessibility” and its scoring board.</p></li>
 </ul>
+<hr />
 </div>
-<div id="quick-overview-on-time-series-visualisation" class="section level3">
-<h3>4.0 Quick overview on time series visualisation</h3>
-<p>Like I have mentioned above, having <strong>prior knowledge</strong> is a key to successful feature engineering. RFM metrics is not an exception. This data unfortunately does not hold background information (supplied by Regi found on Kaggle community). Instead, there are time and sales components, and additionally campaign customer response flag data. From what is given lets pull some insights and write in it on our perspective note.</p>
-<p>Key questions</p>
+</div>
+<div id="quick-overview-on-time-series-visualisation" class="section level2">
+<h2>4.0 Quick overview on time series visualisation</h2>
+<p>In this section I will explore and study on revenue time series visualisation and TSL (Trend, Seasonal, Irregular) components. Unfortunately, I would not be able to throw any punch line of my task here. Especially I wish not to deliver any miss interpreted knowledge to anyone. Hence I will be only clarifying the techniques and quotes supplied by professionals and codes with real thoughts.</p>
+<p>Key questions to ask:</p>
 <ul>
 <li>What phase are we in with revenue growth?
 <ul>
@@ -415,47 +418,75 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)</code>
 </ul></li>
 <li>How the campaign responded consumption patterns are evolving?
 <ul>
-<li>Yes - How we should fine-tune campaign strategies accordingly?</li>
-<li>No - What could be the key influential factor (e.g. competitors, lack of recent customer engagement)</li>
+<li>Positive - How we should fine-tune campaign strategies accordingly?</li>
+<li>Negative - What could be the key influential factor (e.g. competitors, lack of recent customer engagement)?</li>
 </ul></li>
 </ul></li>
 </ul>
-</div>
-<div id="starting-with-periodic-revenue" class="section level3">
-<h3>4.1 Starting with periodic revenue</h3>
-<p>Depending on where we are with business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending the phase the scope of the target customer may regulate stricter or lesser policy - risk measurement.</p>
-<p>What’s more, visualising time series supplies valuable boundary to the company’s goal. The ability to scale and formulate a value where the business falls within a High &lt;–&gt; Low risk spectrum is spectacularly important before scoring any business/finance matrices. I will illustrate this on my next blog using credit loan default risk measure.</p>
+<div id="why-time-series" class="section level3">
+<h3>4.1 Why time series?</h3>
+<p>Depending on where businesses are with their business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending on the phase, the scope of the target customer may regulate stricter or lesser policy (risk measurement).</p>
+<p>What’s more, visualising time series supplies valuable boundary to the company’s goal. The ability to scale and formulate a value where the business falls within a High &lt;–&gt; Low risk spectrum is spectacularly important before scoring any business/finance matrices. I can not wait to study this more for future blog post on credit loan default risk prediction modelling.</p>
 <pre class="r"><code>timespan_day &lt;- max(trans_df$date) - min(trans_df$date)
 
 timespan_year &lt;- format(as.numeric(timespan_day/365.24), digits = 3)
 
 cat(&quot;There is&quot;,paste0(timespan_year),&quot;annual cycle worth of data&quot;)</code></pre>
 <pre><code>## There is 3.83 annual cycle worth of data</code></pre>
-<p>Broadly speaking, there are two types of time series data: stationary and non-stationary time series. These are defined as whether their statistical properties, in general, mean and variance is independent (stationary) or dependent (non-stationary) with time. Any human interactive data wont be stationary, there always be some trend or seasonality that enables us to decompose from its series. In other words, understanding these components will aid tracking down their purchasing patterns.</p>
-<pre class="r"><code>daily_pur &lt;- trans_df %&gt;%
+</div>
+<div id="data-frame-of-daily-weekly-monthly-time-stamps-time-series-visualisation" class="section level3">
+<h3>4.2 Data frame of daily, weekly, monthly time stamps + time series visualisation</h3>
+<p>The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance.</p>
+<p>The moving average smoothing (red) is added as it removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series.</p>
+<pre class="r"><code>start_date &lt;- &quot;2011-07&quot;
+end_date   &lt;- &quot;2015-03-01&quot;
+
+generator_periodic_tbl &lt;- function(data, period, start_date, end_date, var_x1, var_x2){
+
+  var_x1 &lt;- enquo(var_x1)
+  var_x2 &lt;- enquo(var_x2)
+  start_date &lt;- enquo(start_date)
+  end_date   &lt;- enquo(end_date)
+  
+  period_list   &lt;- enquo(period)
+  period_quote  &lt;- quo_name(period_list)
+  
+  out_tbl &lt;- data %&gt;%
+  mutate(foo = ceiling_date(!!var_x2, unit = !!period_quote)) %&gt;% 
+  filter_by_time(.start_date = !!start_date, 
+                 .end_date = !!end_date,
+                 .date_var = foo)  %&gt;% 
+  dplyr::group_by(foo) %&gt;%
+  dplyr::summarise(frequency = n(),
+                   sales     = sum(!!var_x1)) %&gt;% ungroup()
+  
+}
+
+xx &lt;- trans_df
+generator_periodic_tbl(trans_df, week, start_date, end_date, amount, date)
+
+daily_pur &lt;- trans_df %&gt;%
   dplyr::group_by(date) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()
 
 week_pur &lt;- trans_df %&gt;%
   mutate(week = ceiling_date(date, unit = &quot;week&quot;)) %&gt;% 
-    filter_by_time(.start_date = &quot;2011-07&quot;, 
-                   .end_date = &quot;2015-03-01&quot;,
-                   .date_var = week) %&gt;% 
+  filter_by_time(.start_date = &quot;2011-07&quot;, 
+                 .end_date = &quot;2015-03-01&quot;,
+                 .date_var = week) %&gt;% 
   dplyr::group_by(week) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()
 
-
 monthly_pur &lt;- trans_df %&gt;%
   mutate(month = ceiling_date(date, unit = &quot;month&quot;)) %&gt;% 
-    filter_by_time(.start_date = &quot;2011-07&quot;, 
-                   .end_date = &quot;2015-03-01&quot;,
-                   .date_var = month) %&gt;% 
+  filter_by_time(.start_date = &quot;2011-07&quot;, 
+                 .end_date = &quot;2015-03-01&quot;,
+                 .date_var = month) %&gt;% 
   dplyr::group_by(month) %&gt;%
   dplyr::summarise(frequency = n(),
                    sales     = sum(amount)) %&gt;% ungroup()</code></pre>
-<p>The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. The moving average smoothing (red) removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series.</p>
 <pre class="r"><code>daily_pur %&gt;% 
   mutate_by_time(.by = &quot;week&quot;,
                  sales_mean = mean(sales)) %&gt;% 
@@ -472,9 +503,10 @@ monthly_pur &lt;- trans_df %&gt;%
                    .smooth = FALSE,
                    .interactive = FALSE) </code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
-<p>Now the monthly revenue time series reveals some useful components.
-*
-revenues with its worst performance. shows +3 years overall descending trend.</p>
+<p>Now the monthly revenue time series reveals some useful information</p>
+<ul>
+<li>revenues with its worst performance. shows +3 years overall descending trend.</li>
+</ul>
 <pre class="r"><code>outlier_detection &lt;- function(x) {
   x[x &gt; quantile(x, .95, na.rm = T)] 
   x[x &lt; quantile(x, .05, na.rm = T)] 
@@ -513,11 +545,21 @@ monthly_pur %&gt;%
      x        = &quot;Year&quot;,
      y        = &quot;Revenue&quot;
   ) +
+  guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
   theme_tq()</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-2.png" width="672" /></p>
+<pre class="r"><code>diff(mon_sd_tbl$revenue)</code></pre>
+<pre><code>##  [1]   3570  10534 -19458  13461 -15713  14484  -3418  -7852  10318 -12453
+## [11]  10880  -5947   6184    167  -4239   6817  -2706  -5409   7982 -21370
+## [21]  21132  -7849  12184  -9013   4170   -952  -3201   4691  -4180   3461
+## [31]   3752 -30403  25653  -5655  -4594   3186   6285    -51  -5590   5918
+## [41]  -4448   -845   5827 -19328</code></pre>
 <p>Perspective Notes :
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
+</div>
+<div id="comonents-for-time-series-analysis" class="section level3">
+<h3>4.3 Comonents for Time Series Analysis</h3>
 <pre class="r"><code>trans_df %&gt;%
   mutate(quarter = quarter(date)) %&gt;% 
   dplyr::group_by(quarter) %&gt;%
@@ -855,22 +897,23 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-4.png" width="672" /></p>
 <p>the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance.</p>
+<hr />
 </div>
 </div>
