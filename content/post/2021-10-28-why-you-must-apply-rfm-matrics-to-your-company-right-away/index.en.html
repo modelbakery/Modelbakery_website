@@ -404,6 +404,1006 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)</code>
 </ul>
 <hr />
 </div>
+<div id="measure-the-campaign-response-rate" class="section level3">
+<h3>Measure the Campaign Response Rate</h3>
+<p>What is a good response rate? The response rate varies with industries, company size, type of campaign, time and more. Typically in the field of ecommerce, in average, a good response rate are within 10~13% boundary.</p>
+<p>The average email benchmark by retail industry: 12.6% (open rate), 8.5% (click-to-open rate)</p>
+<pre class="r"><code>resp &lt;- resp_df_raw %&gt;% 
+  select(customer_id, response) %&gt;% 
+  setNames(c(&quot;customer_id&quot;, &quot;campaign&quot;))
+
+cust_df &lt;- trans_df %&gt;% 
+  left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))</code></pre>
+<pre class="r"><code>cust_df %&gt;% 
+  group_by(customer_id) %&gt;% 
+  summarise(campaign = median(campaign)) %&gt;% ungroup() %&gt;% 
+  count(campaign) %&gt;% 
+  mutate(pct_response = n/n_distinct(cust_df$customer_id)*100)</code></pre>
+<pre><code>## # A tibble: 2 × 3
+##   campaign     n pct_response
+##      &lt;dbl&gt; &lt;int&gt;        &lt;dbl&gt;
+## 1        0  6242        90.6 
+## 2        1   647         9.39</code></pre>
+</div>
+<div id="rfm-feature-engineering" class="section level3">
+<h3>5.0 RFM feature engineering</h3>
+<p>Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I haved added 1 value to all customers which takes account of customer has purchased the day we compute this metric; named as recency days.</p>
+<pre class="r"><code>generator_rfm &lt;- function(data){
+  analy_day &lt;- max(cust_df$date) + 1
+
+  cust_df %&gt;% 
+  dplyr::group_by(customer_id) %&gt;% 
+  dplyr::summarise(recency_days = as.numeric(analy_day - max(date)),
+                   frequency = n(), 
+                   monetary = sum(amount)) %&gt;%  ungroup()
+}
+
+cust_df %&gt;% 
+  generator_rfm()</code></pre>
+<pre><code>## # A tibble: 6,889 × 4
+##    customer_id recency_days frequency monetary
+##    &lt;chr&gt;              &lt;dbl&gt;     &lt;int&gt;    &lt;dbl&gt;
+##  1 CS1112                62        15     1012
+##  2 CS1113                36        20     1490
+##  3 CS1114                33        19     1432
+##  4 CS1115                12        22     1659
+##  5 CS1116               204        13      857
+##  6 CS1117               258        17     1185
+##  7 CS1118                 3        15     1011
+##  8 CS1119                12        15     1158
+##  9 CS1120                11        24     1677
+## 10 CS1121                42        26     1524
+## # … with 6,879 more rows</code></pre>
+<pre class="r"><code>cust_df %&gt;% 
+  generator_rfm() %&gt;% head() %&gt;% 
+  mutate(monetary = sum(monetary) %&gt;% format_dollar()) %&gt;% 
+  set_names(c(&quot;Customer ID&quot;, &quot;Recency Days&quot;, &quot;Frequency&quot;, &quot;Monetary&quot;)) %&gt;%
+  kbl() %&gt;% 
+  kable_material_dark()</code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Customer ID
+</th>
+<th style="text-align:right;">
+Recency Days
+</th>
+<th style="text-align:right;">
+Frequency
+</th>
+<th style="text-align:left;">
+Monetary
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+CS1112
+</td>
+<td style="text-align:right;">
+62
+</td>
+<td style="text-align:right;">
+15
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CS1113
+</td>
+<td style="text-align:right;">
+36
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CS1114
+</td>
+<td style="text-align:right;">
+33
+</td>
+<td style="text-align:right;">
+19
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CS1115
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CS1116
+</td>
+<td style="text-align:right;">
+204
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CS1117
+</td>
+<td style="text-align:right;">
+258
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:left;">
+$7,635
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>generator_hist_facet &lt;- function(data, bins = 20, ncol = 5,
+                                 fct_reorder = FALSE, 
+                                 fct_rev = FALSE,
+                                 fill = palette_light()[[3]],
+                                 color = &quot;white&quot;, scale = &quot;free&quot;) {
+      data_factored &lt;- data %&gt;% 
+        gather(key = key, value = value, factor_key = TRUE) 
+      
+    if(fct_reorder) {
+      data_factored &lt;- data_factored %&gt;% 
+        # Trick to get variables in alphabetical order 
+        mutate(key = as.character(key) %&gt;% as.factor())
+    }
+      
+    if(fct_rev) {
+      data_factored &lt;- data_factored %&gt;% 
+        mutate(key = fct_rev(key))
+    }
+      
+    g &lt;- data_factored %&gt;% 
+      ggplot(aes(x = value, group = key)) +
+      geom_histogram(bins = bins, fill = fill, color = color) +
+      facet_wrap(~key, ncol = ncol, scale = scale) +
+      theme_tq()
+    
+    return(g)
+}
+
+theme_ben &lt;- function(base_size = 14) {theme_bw(base_size = base_size) %+replace%
+    theme(
+      # L&#39;ensemble de la figure
+      plot.title = element_text(size = rel(1), face = &quot;bold&quot;, margin = margin(0,0,5,0), hjust = 0),
+      # Zone où se situe le graphique
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      # Les axes
+      axis.title = element_text(size = rel(0.85), face = &quot;bold&quot;),
+      axis.text = element_text(size = rel(0.70), face = &quot;bold&quot;),
+      axis.line = element_line(color = &quot;black&quot;, arrow = arrow(length = unit(0.3, &quot;lines&quot;), type = &quot;closed&quot;)),
+      # La légende
+      legend.title = element_text(size = rel(0.85), face = &quot;bold&quot;),
+      legend.text = element_text(size = rel(0.70), face = &quot;bold&quot;),
+      legend.key = element_rect(fill = &quot;transparent&quot;, colour = NA),
+      legend.key.size = unit(1.5, &quot;lines&quot;),
+      legend.background = element_rect(fill = &quot;transparent&quot;, colour = NA),
+      # Les étiquettes dans le cas d&#39;un facetting
+      strip.background = element_rect(fill = &quot;#17252D&quot;, color = &quot;#17252D&quot;),
+      strip.text = element_text(size = rel(0.85), face = &quot;bold&quot;, color = &quot;white&quot;, margin = margin(5,0,5,0))
+    )
+}</code></pre>
+<p>We can see that the recency days data is highly right skewed. There are many transformations to handle skewed distribution. In the case, I do not intend to incorporate Machine Learning for customer segmentation thus I will try to modify quantile range in order to overcome this distributional problem on scoring.</p>
+<pre class="r"><code>skimr::partition(skim(cust_df %&gt;% 
+  generator_rfm()))$numeric %&gt;% data.frame %&gt;%
+   kbl() %&gt;% 
+   kable_material_dark()</code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+recency_days
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+81.5
+</td>
+<td style="text-align:right;">
+85.38
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+23
+</td>
+<td style="text-align:right;">
+54
+</td>
+<td style="text-align:right;">
+112
+</td>
+<td style="text-align:right;">
+858
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+frequency
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+18.1
+</td>
+<td style="text-align:right;">
+5.19
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+22
+</td>
+<td style="text-align:right;">
+39
+</td>
+<td style="text-align:left;">
+▂▇▇▂▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+monetary
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1179.3
+</td>
+<td style="text-align:right;">
+465.83
+</td>
+<td style="text-align:right;">
+149
+</td>
+<td style="text-align:right;">
+781
+</td>
+<td style="text-align:right;">
+1227
+</td>
+<td style="text-align:right;">
+1520
+</td>
+<td style="text-align:right;">
+2933
+</td>
+<td style="text-align:left;">
+▅▆▇▂▁
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>cust_df %&gt;% 
+  generator_rfm() %&gt;% 
+  select(monetary, frequency:recency_days) %&gt;% 
+  generator_hist_facet(bins = 40, ncol = 5, fct_rev = FALSE) + theme_ben()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>generator_hist_facet() and theme_ben() are customised facet histogram function. We can find it on my github or for better understanding I recommend looking into Business Science 101 Course organised by Matt Dancho. He regularly uploads free tutorials on youtube as well :)</p>
+<pre class="r"><code>result &lt;- c() 
+j &lt;- 0
+for(i in 1:5){
+  j = j + i
+  result[i] = 1 -(j/(1+2+3+4+5))
+  print(result)
+}</code></pre>
+<pre><code>## [1] 0.933
+## [1] 0.933 0.800
+## [1] 0.933 0.800 0.600
+## [1] 0.933 0.800 0.600 0.333
+## [1] 0.933 0.800 0.600 0.333 0.000</code></pre>
+<pre class="r"><code>rfm_example &lt;- cust_df %&gt;% 
+    generator_rfm() 
+
+R_result &lt;- quantile(rfm_example$recency_days, probs = result)
+F_result &lt;- quantile(rfm_example$frequency, probs = result)
+M_result &lt;- quantile(rfm_example$monetary, probs = result)
+
+cbind(R_result,F_result, M_result)</code></pre>
+<pre><code>##           R_result F_result M_result
+## 93.33333%      221     26.0     1847
+## 80%            129     23.0     1589
+## 60%             73     19.8     1345
+## 33.33333%       32     16.0      980
+## 0%               1      4.0      149</code></pre>
+<pre class="r"><code>generator_rfm_score &lt;- function(data) {
+  
+  analy_day &lt;- max(data$date) + 1
+  
+  step_1 &lt;- data %&gt;% 
+        generator_rfm() 
+  
+  R_level &lt;- quantile(step_1$recency_days, probs = result)
+  F_level &lt;- quantile(step_1$frequency,    probs = result)
+  M_level &lt;- quantile(step_1$monetary,     probs = result)
+  
+  out &lt;- step_1 %&gt;%
+    mutate(R_score = case_when(.$recency_days &gt;= R_level[1] ~ 1,
+                               .$recency_days &gt;= R_level[2] ~ 2,
+                               .$recency_days &gt;= R_level[3] ~ 3,
+                               .$recency_days &gt;= R_level[4] ~ 4,
+                               TRUE ~ 5),
+           F_score = case_when(.$frequency &gt;= F_level[1] ~ 5,
+                               .$frequency &gt;= F_level[2] ~ 4,
+                               .$frequency &gt;= F_level[3] ~ 3,
+                               .$frequency &gt;= F_level[4] ~ 2,
+                               TRUE ~ 1),
+           M_score = case_when(.$monetary &gt;= M_level[1] ~ 5,
+                               .$monetary &gt;= M_level[2] ~ 4,
+                               .$monetary &gt;= M_level[3] ~ 3,
+                               .$monetary &gt;= M_level[4] ~ 2,
+                               TRUE ~ 1))
+  return(out)
+}
+
+generator_per_metric &lt;- function(pre_score_data, ...) {
+  
+  pre_score_data %&gt;% 
+    dplyr::group_by(...) %&gt;% 
+    dplyr::summarise(cust = n_distinct(customer_id),
+                     total_monetary = sum(monetary)) %&gt;% ungroup() %&gt;% 
+    
+    dplyr::mutate(per_cus = total_monetary/cust,
+                  effect = per_cus/per_cus[1],
+                  prop_cus = cust/sum(cust),
+                  prop_money = total_monetary/sum(total_monetary),
+                  effect = prop_money/prop_cus)
+}</code></pre>
+<pre class="r"><code>R_score_table &lt;- cust_df %&gt;% 
+  generator_rfm_score() %&gt;% 
+  generator_per_metric(R_score); R_score_table %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+R_score
+</th>
+<th style="text-align:right;">
+cust
+</th>
+<th style="text-align:right;">
+total_monetary
+</th>
+<th style="text-align:right;">
+per_cus
+</th>
+<th style="text-align:right;">
+effect
+</th>
+<th style="text-align:right;">
+prop_cus
+</th>
+<th style="text-align:right;">
+prop_money
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+461
+</td>
+<td style="text-align:right;">
+376503
+</td>
+<td style="text-align:right;">
+817
+</td>
+<td style="text-align:right;">
+0.693
+</td>
+<td style="text-align:right;">
+0.067
+</td>
+<td style="text-align:right;">
+0.046
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+930
+</td>
+<td style="text-align:right;">
+987059
+</td>
+<td style="text-align:right;">
+1061
+</td>
+<td style="text-align:right;">
+0.900
+</td>
+<td style="text-align:right;">
+0.135
+</td>
+<td style="text-align:right;">
+0.121
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1372
+</td>
+<td style="text-align:right;">
+1586396
+</td>
+<td style="text-align:right;">
+1156
+</td>
+<td style="text-align:right;">
+0.980
+</td>
+<td style="text-align:right;">
+0.199
+</td>
+<td style="text-align:right;">
+0.195
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+1851
+</td>
+<td style="text-align:right;">
+2285361
+</td>
+<td style="text-align:right;">
+1235
+</td>
+<td style="text-align:right;">
+1.047
+</td>
+<td style="text-align:right;">
+0.269
+</td>
+<td style="text-align:right;">
+0.281
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+2275
+</td>
+<td style="text-align:right;">
+2888670
+</td>
+<td style="text-align:right;">
+1270
+</td>
+<td style="text-align:right;">
+1.077
+</td>
+<td style="text-align:right;">
+0.330
+</td>
+<td style="text-align:right;">
+0.356
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>F_score_table &lt;- cust_df %&gt;% 
+  generator_rfm_score() %&gt;% 
+  generator_per_metric(F_score); F_score_table %&gt;% kbl() %&gt;% kable_material_dark() </code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+F_score
+</th>
+<th style="text-align:right;">
+cust
+</th>
+<th style="text-align:right;">
+total_monetary
+</th>
+<th style="text-align:right;">
+per_cus
+</th>
+<th style="text-align:right;">
+effect
+</th>
+<th style="text-align:right;">
+prop_cus
+</th>
+<th style="text-align:right;">
+prop_money
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2157
+</td>
+<td style="text-align:right;">
+1433411
+</td>
+<td style="text-align:right;">
+665
+</td>
+<td style="text-align:right;">
+0.564
+</td>
+<td style="text-align:right;">
+0.313
+</td>
+<td style="text-align:right;">
+0.176
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1976
+</td>
+<td style="text-align:right;">
+2249121
+</td>
+<td style="text-align:right;">
+1138
+</td>
+<td style="text-align:right;">
+0.965
+</td>
+<td style="text-align:right;">
+0.287
+</td>
+<td style="text-align:right;">
+0.277
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1355
+</td>
+<td style="text-align:right;">
+1945214
+</td>
+<td style="text-align:right;">
+1436
+</td>
+<td style="text-align:right;">
+1.217
+</td>
+<td style="text-align:right;">
+0.197
+</td>
+<td style="text-align:right;">
+0.239
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+840
+</td>
+<td style="text-align:right;">
+1397047
+</td>
+<td style="text-align:right;">
+1663
+</td>
+<td style="text-align:right;">
+1.410
+</td>
+<td style="text-align:right;">
+0.122
+</td>
+<td style="text-align:right;">
+0.172
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+561
+</td>
+<td style="text-align:right;">
+1099196
+</td>
+<td style="text-align:right;">
+1959
+</td>
+<td style="text-align:right;">
+1.661
+</td>
+<td style="text-align:right;">
+0.081
+</td>
+<td style="text-align:right;">
+0.135
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>M_score_table &lt;- cust_df %&gt;% 
+  generator_rfm_score() %&gt;% 
+  generator_per_metric(M_score); M_score_table %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
+<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+M_score
+</th>
+<th style="text-align:right;">
+cust
+</th>
+<th style="text-align:right;">
+total_monetary
+</th>
+<th style="text-align:right;">
+per_cus
+</th>
+<th style="text-align:right;">
+effect
+</th>
+<th style="text-align:right;">
+prop_cus
+</th>
+<th style="text-align:right;">
+prop_money
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2297
+</td>
+<td style="text-align:right;">
+1451799
+</td>
+<td style="text-align:right;">
+632
+</td>
+<td style="text-align:right;">
+0.536
+</td>
+<td style="text-align:right;">
+0.333
+</td>
+<td style="text-align:right;">
+0.179
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+1833
+</td>
+<td style="text-align:right;">
+2163269
+</td>
+<td style="text-align:right;">
+1180
+</td>
+<td style="text-align:right;">
+1.001
+</td>
+<td style="text-align:right;">
+0.266
+</td>
+<td style="text-align:right;">
+0.266
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1380
+</td>
+<td style="text-align:right;">
+2016601
+</td>
+<td style="text-align:right;">
+1461
+</td>
+<td style="text-align:right;">
+1.239
+</td>
+<td style="text-align:right;">
+0.200
+</td>
+<td style="text-align:right;">
+0.248
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+918
+</td>
+<td style="text-align:right;">
+1562466
+</td>
+<td style="text-align:right;">
+1702
+</td>
+<td style="text-align:right;">
+1.443
+</td>
+<td style="text-align:right;">
+0.133
+</td>
+<td style="text-align:right;">
+0.192
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+461
+</td>
+<td style="text-align:right;">
+929854
+</td>
+<td style="text-align:right;">
+2017
+</td>
+<td style="text-align:right;">
+1.710
+</td>
+<td style="text-align:right;">
+0.067
+</td>
+<td style="text-align:right;">
+0.114
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>rfm_effect &lt;- sapply(list(R_score_table$effect, F_score_table$effect, M_score_table$effect), function(x) sum(x))
+
+sum_effect &lt;- sum(rfm_effect)
+weight &lt;- c(rfm_effect[1]/sum_effect, rfm_effect[2]/sum_effect, rfm_effect[3]/sum_effect)
+
+RFM_function &lt;- function(x, y, z, w){
+  RFM_Score &lt;- x*w[1] + y*w[2] + z*w[3]
+  return(RFM_Score)
+}
+
+min_max_normalization &lt;- function(x) {
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+generator_RFM_score &lt;- function(pre_score_data) {
+  pre_score_data %&gt;% 
+  mutate(RFM_Score_norm = RFM_function(.$R_score,
+                                  .$F_score,
+                                  .$M_score,
+                                  w = weight),
+         RFM_Score_norm = min_max_normalization(RFM_Score_norm),
+         RFM_Score = (RFM_Score_norm)*100,
+         RFM_Score_gr = ifelse(RFM_Score &gt;= 90, 10,
+                               ifelse(RFM_Score &gt;= 80, 9,
+                                      ifelse(RFM_Score &gt;= 70, 8,
+                                             ifelse(RFM_Score &gt;= 60, 7,
+                                                    ifelse(RFM_Score &gt;= 50, 6,
+                                                           ifelse(RFM_Score &gt;= 40, 5,
+                                                                  ifelse(RFM_Score &gt;= 30, 4,
+                                                                         ifelse(RFM_Score &gt;= 20, 3,
+                                                                                ifelse(RFM_Score &gt;= 10, 2,
+                                                                                       1))))))))))
+}</code></pre>
+<pre class="r"><code>rfm_score_df &lt;- cust_df %&gt;% 
+  generator_rfm_score() %&gt;% 
+  generator_RFM_score() %&gt;% 
+  left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0) %&gt;% as.factor())
+
+rfm_score_df %&gt;% 
+  select(R_score:M_score) %&gt;% 
+  generator_hist_facet(bins = 5, ncol = 5, fct_rev = FALSE) + theme_ben()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<pre class="r"><code>rfm_score_df %&gt;% 
+  select(RFM_Score, RFM_Score_gr) %&gt;% 
+  mutate(RFM_Score_gr = as.numeric(RFM_Score_gr)) %&gt;% 
+  generator_hist_facet(bins = 10, ncol = 5, fct_rev = FALSE) + theme_ben()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-2.png" width="672" /></p>
+<pre class="r"><code>generator_plot_rfm &lt;- function(data, var1, var2, cmpg, point_size =0.7,
+                               colour = wesanderson::wes_palette(name=&quot;Royal1&quot;, 2)){
+  
+  var1 &lt;- enquo(var1)
+  var2 &lt;- enquo(var2)
+  var1_name&lt;- quo_name(var1)
+  var2_name&lt;- quo_name(var2)
+  
+  data %&gt;% 
+    ggplot(aes(x = {{var1}}, y = {{var2}}, color = {{cmpg}})) + 
+    geom_point(position = &quot;jitter&quot;, size = point_size) +
+    theme_bw() + 
+    scale_color_manual(values=colour) +
+    scale_y_continuous(label = scales::dollar) +
+    ggtitle(paste0(&quot;Customer Purchasing Behaviour Plot: &quot;, str_to_upper(var1_name), &quot; and &quot;, str_to_upper(var2_name))) +
+  labs(
+     x        = var1_name %&gt;% str_to_upper(),
+     y        = var2_name %&gt;% str_to_upper(),
+     color    = &quot;Campaign Response&quot;,
+     caption  = &quot;Any prior knowledge to this cause from +2 years of historical data&quot;
+  ) +
+  theme_tq()
+
+}
+
+generator_plot_rfm(rfm_score_df, RFM_Score, monetary, campaign)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<pre class="r"><code>generator_plot_rfm(rfm_score_df, recency_days, monetary, campaign)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-2.png" width="672" /></p>
+<pre class="r"><code>generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(rfm_score_df, aes(x = RFM_Score)) +
+  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[6]) +
+  stat_function(fun=dnorm, 
+                args = list(mean=mean(rfm_score_df$RFM_Score),
+                              sd=sd(rfm_score_df$RFM_Score)),
+                color=&quot;red&quot;, lwd = 1) +
+  geom_density(color=&quot;black&quot;, lwd =1.5) +
+  theme_minimal()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre class="r"><code>summary_rfm_table &lt;- rfm_score_df %&gt;% 
+  mutate(RFM_Score_gr = RFM_Score_gr %&gt;% as.factor) %&gt;% 
+  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %&gt;% 
+  dplyr::group_by(RFM_Score_gr) %&gt;% 
+  dplyr::summarise(no_cust           = n(),
+                   avg_RFM_Score     = mean(RFM_Score),
+                   avg_freq          = mean(frequency),
+                   avg_sales         = mean(monetary),
+                   avg_recency_days  = mean(recency_days),
+                   tot_freq          = sum(frequency),
+                   tot_sales         = sum(monetary)) %&gt;% ungroup() %&gt;% 
+  arrange(desc(avg_RFM_Score)) %&gt;% 
+  mutate(RFM_Score_gr = RFM_Score_gr %&gt;% fct_reorder(desc(avg_RFM_Score))) %&gt;% 
+  select(avg_RFM_Score, everything())</code></pre>
+<pre class="r"><code># a dataframe
+a &lt;- data.frame(x = 1:3, y = 4:6)
+# make a list of several dataframes, then apply function (change column names, e.g.):
+my.list &lt;- list(a, a)
+my.list &lt;- lapply(my.list, function(x) {names(x) &lt;- c(&quot;a&quot;, &quot;b&quot;) ; return(x)})
+# save dfs to csv with similar lapply-call:
+n &lt;- 1:length(my.list)
+lapply(n, function(ni) {
+               write.table(file = paste(ni, &quot;.csv&quot;, sep = &quot;&quot;), 
+               my.list[ni], sep = &quot;;&quot;, row.names = F)
+               }
+       )</code></pre>
+<pre><code>## [[1]]
+## NULL
+## 
+## [[2]]
+## NULL</code></pre>
+</div>
 </div>
 <div id="quick-overview-on-time-series-visualisation" class="section level2">
 <h2>4.0 Quick overview on time series visualisation</h2>
@@ -501,15 +1501,15 @@ generator_plot_ts &lt;- function(.data,
 <pre class="r"><code>trans_df %&gt;% 
   generator_periodic_tbl(day, start_date, end_date, amount, date) %&gt;% 
   generator_plot_ts(week, sales)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <pre class="r"><code>trans_df %&gt;% 
   generator_periodic_tbl(week, start_date, end_date, amount, date) %&gt;% 
   generator_plot_ts(month, sales)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-2.png" width="672" /></p>
 <pre class="r"><code>trans_df %&gt;% 
   generator_periodic_tbl(month, start_date, end_date, amount, date) %&gt;% 
   generator_plot_ts(&quot;3 month&quot;, sales)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-3.png" width="672" /></p>
 <p>Now the monthly revenue time series reveals some useful information</p>
 <ul>
 <li>revenues with its worst performance. shows +3 years overall descending trend.</li>
@@ -543,7 +1543,7 @@ trans_df %&gt;%
   ) +
   guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
   theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
 </div>
 <div id="stl-time-series-decomposition" class="section level3">
 <h3>4.3 STL time series decomposition</h3>
@@ -635,7 +1635,7 @@ trans_df %&gt;%
   geom_line(aes(linetype = type_rev, colour = type_rev)) +
   scale_color_brewer(palette = &quot;Dark2&quot;) +
   theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
 <pre class="r"><code>trans_df %&gt;% 
   generator_stl_monthly(start_date, end_date) %&gt;%
   mutate(unexp_revenue  = revenue - exp_rev,
@@ -643,7 +1643,172 @@ trans_df %&gt;%
   ggplot(aes(date, risk_rev_index)) +
   geom_line() +
   theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-32-2.png" width="672" /></p>
+<pre class="r"><code>resp &lt;- resp_df_raw %&gt;% 
+  select(customer_id, response) %&gt;% 
+  setNames(c(&quot;customer_id&quot;, &quot;campaign&quot;))
+
+cust_df &lt;- trans_df %&gt;% 
+  left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))
+
+cust_df %&gt;% 
+  filter(campaign == 0) %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;% 
+  ggplot(aes(date, seasonal)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;% 
+  ggplot(aes(date, seasonal)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-33-2.png" width="672" /></p>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) </code></pre>
+<pre><code>##          date revenue exp_rev  trend seasonal irregular
+## 1  2011-07-01  174527  175463 177720    0.987     0.995
+## 2  2011-08-01  178097  180555 177652    1.016     0.986
+## 3  2011-09-01  188631  182978 177584    1.030     1.031
+## 4  2011-10-01  169173  174824 177516    0.985     0.968
+## 5  2011-11-01  182634  182586 177449    1.029     1.000
+## 6  2011-12-01  166921  175796 177381    0.991     0.950
+## 7  2012-01-01  181405  178718 177313    1.008     1.015
+## 8  2012-02-01  177987  182293 177245    1.028     0.976
+## 9  2012-03-01  170135  162392 177177    0.917     1.048
+## 10 2012-04-01  180453  181418 177109    1.024     0.995
+## 11 2012-05-01  168000  172737 177041    0.976     0.973
+## 12 2012-06-01  178880  178898 176973    1.011     1.000
+## 13 2012-07-01  172933  174659 176906    0.987     0.990
+## 14 2012-08-01  179117  179727 176838    1.016     0.997
+## 15 2012-09-01  179284  182138 176770    1.030     0.984
+## 16 2012-10-01  175045  174022 176702    0.985     1.006
+## 17 2012-11-01  181862  181748 176634    1.029     1.001
+## 18 2012-12-01  179156  174989 176566    0.991     1.024
+## 19 2013-01-01  173747  177897 176498    1.008     0.977
+## 20 2013-02-01  181729  181455 176430    1.028     1.002
+## 21 2013-03-01  160359  161646 176363    0.917     0.992
+## 22 2013-04-01  181491  180584 176295    1.024     1.005
+## 23 2013-05-01  173642  171942 176227    0.976     1.010
+## 24 2013-06-01  185826  178075 176159    1.011     1.044
+## 25 2013-07-01  176813  173855 176091    0.987     1.017
+## 26 2013-08-01  180983  178899 176023    1.016     1.012
+## 27 2013-09-01  180031  181299 175955    1.030     0.993
+## 28 2013-10-01  176830  173220 175888    0.985     1.021
+## 29 2013-11-01  181521  180910 175820    1.029     1.003
+## 30 2013-12-01  177341  174182 175752    0.991     1.018
+## 31 2014-01-01  180802  177077 175684    1.008     1.021
+## 32 2014-02-01  184554  180618 175616    1.028     1.022
+## 33 2014-03-01  154151  160899 175548    0.917     0.958
+## 34 2014-04-01  179804  179750 175480    1.024     1.000
+## 35 2014-05-01  174149  171148 175412    0.976     1.018
+## 36 2014-06-01  169555  177252 175345    1.011     0.957
+## 37 2014-07-01  172741  173051 175277    0.987     0.998
+## 38 2014-08-01  179026  178072 175209    1.016     1.005
+## 39 2014-09-01  178975  180460 175141    1.030     0.992
+## 40 2014-10-01  173385  172418 175073    0.985     1.006
+## 41 2014-11-01  179303  180072 175005    1.029     0.996
+## 42 2014-12-01  174855  173375 174937    0.991     1.009
+## 43 2015-01-01  174010  176256 174869    1.008     0.987
+## 44 2015-02-01  179837  179780 174802    1.028     1.000
+## 45 2015-03-01  160509  160153 174734    0.917     1.002</code></pre>
+<pre class="r"><code>cust_df %&gt;% 
+  filter(campaign == 0) %&gt;% 
+  generator_stl_monthly(start_date, end_date)</code></pre>
+<pre><code>##          date revenue exp_rev  trend seasonal irregular
+## 1  2011-07-01  156431  156758 159446    0.983     0.998
+## 2  2011-08-01  158361  161340 159261    1.013     0.982
+## 3  2011-09-01  168466  162441 159076    1.021     1.037
+## 4  2011-10-01  152122  155817 158892    0.981     0.976
+## 5  2011-11-01  165222  163686 158707    1.031     1.009
+## 6  2011-12-01  150089  158002 158522    0.997     0.950
+## 7  2012-01-01  162350  160875 158337    1.016     1.009
+## 8  2012-02-01  158300  163955 158153    1.037     0.966
+## 9  2012-03-01  152868  147208 157968    0.932     1.038
+## 10 2012-04-01  159951  160661 157783    1.018     0.996
+## 11 2012-05-01  148107  151954 157598    0.964     0.975
+## 12 2012-06-01  159302  157936 157414    1.003     1.009
+## 13 2012-07-01  154498  154578 157229    0.983     0.999
+## 14 2012-08-01  160620  159094 157044    1.013     1.010
+## 15 2012-09-01  159683  160177 156859    1.021     0.997
+## 16 2012-10-01  156372  153643 156674    0.981     1.018
+## 17 2012-11-01  161977  161399 156490    1.031     1.004
+## 18 2012-12-01  161622  155792 156305    0.997     1.037
+## 19 2013-01-01  157289  158622 156120    1.016     0.992
+## 20 2013-02-01  162673  161657 155935    1.037     1.006
+## 21 2013-03-01  144340  145142 155751    0.932     0.994
+## 22 2013-04-01  161288  158404 155566    1.018     1.018
+## 23 2013-05-01  149289  149816 155381    0.964     0.996
+## 24 2013-06-01  161263  155712 155196    1.003     1.036
+## 25 2013-07-01  152804  152398 155012    0.983     1.003
+## 26 2013-08-01  158578  156848 154827    1.013     1.011
+## 27 2013-09-01  155539  157913 154642    1.021     0.985
+## 28 2013-10-01  151523  151469 154457    0.981     1.000
+## 29 2013-11-01  157527  159112 154273    1.031     0.990
+## 30 2013-12-01  153990  153582 154088    0.997     1.003
+## 31 2014-01-01  158037  156370 153903    1.016     1.011
+## 32 2014-02-01  159959  159358 153718    1.037     1.004
+## 33 2014-03-01  132890  143076 153533    0.932     0.929
+## 34 2014-04-01  153993  156146 153349    1.018     0.986
+## 35 2014-05-01  151937  147678 153164    0.964     1.029
+## 36 2014-06-01  146688  153487 152979    1.003     0.956
+## 37 2014-07-01  150210  150219 152794    0.983     1.000
+## 38 2014-08-01  154268  154602 152610    1.013     0.998
+## 39 2014-09-01  152695  155649 152425    1.021     0.981
+## 40 2014-10-01  150129  149294 152240    0.981     1.006
+## 41 2014-11-01  156354  156825 152055    1.031     0.997
+## 42 2014-12-01  152886  151372 151871    0.997     1.010
+## 43 2015-01-01  152356  154117 151686    1.016     0.989
+## 44 2015-02-01  160898  157060 151501    1.037     1.024
+## 45 2015-03-01  146407  141010 151316    0.932     1.038</code></pre>
+<pre class="r"><code>cust_norespo_df &lt;- cust_df %&gt;% 
+  filter(campaign ==0) %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;% 
+  mutate(campaign = 0 %&gt;% as.factor())
+
+cust_yesrespo_df &lt;- cust_df %&gt;% 
+  filter(campaign ==1 ) %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;% 
+  mutate(campaign = 1 %&gt;% as.factor())
+
+cust_norespo_df %&gt;% 
+  rbind(cust_yesrespo_df) %&gt;%   
+  mutate(unexp_revenue  = revenue - exp_rev) %&gt;% 
+  ggplot(aes(date, seasonal, group = campaign)) +
+  geom_line(aes(linetype = campaign)) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;%
+  mutate(unexp_revenue  = revenue - exp_rev) %&gt;% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-2.png" width="672" /></p>
+<pre class="r"><code>cust_yesrespo_df %&gt;% 
+  ggplot(aes(date, revenue)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-3.png" width="672" /></p>
+<pre class="r"><code>cust_yesrespo_df %&gt;% 
+  mutate(unexp_revenue  = revenue - exp_rev) %&gt;% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-4.png" width="672" /></p>
+<pre class="r"><code>cust_norespo_df %&gt;% 
+  ggplot(aes(date, revenue)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-5.png" width="672" /></p>
+<pre class="r"><code>cust_norespo_df %&gt;% 
+  mutate(unexp_revenue  = revenue - exp_rev) %&gt;% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-34-6.png" width="672" /></p>
 <p>Perspective Notes :
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
@@ -987,22 +2152,22 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-39-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-39-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-39-4.png" width="672" /></p>
 <p>the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance.</p>
 <hr />
 </div>

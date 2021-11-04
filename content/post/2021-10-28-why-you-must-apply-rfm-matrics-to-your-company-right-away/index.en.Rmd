@@ -600,12 +600,14 @@ rfm_score_df %>%
 
 rfm_score_df %>% 
   select(RFM_Score, RFM_Score_gr) %>% 
+  mutate(RFM_Score_gr = as.numeric(RFM_Score_gr)) %>% 
   generator_hist_facet(bins = 10, ncol = 5, fct_rev = FALSE) + theme_ben()
 ```
 
 ```{r}
 
-generator_plot_rfm <- function(data, var1, var2, cmpg){
+generator_plot_rfm <- function(data, var1, var2, cmpg, point_size =0.7,
+                               colour = wesanderson::wes_palette(name="Royal1", 2)){
   
   var1 <- enquo(var1)
   var2 <- enquo(var2)
@@ -614,13 +616,14 @@ generator_plot_rfm <- function(data, var1, var2, cmpg){
   
   data %>% 
     ggplot(aes(x = {{var1}}, y = {{var2}}, color = {{cmpg}})) + 
-    geom_point(position = "jitter", size = 0.7) +
-    theme_bw() + scale_color_manual(values=wesanderson::wes_palette(name="Royal1", 2)) +
+    geom_point(position = "jitter", size = point_size) +
+    theme_bw() + 
+    scale_color_manual(values=colour) +
     scale_y_continuous(label = scales::dollar) +
     ggtitle(paste0("Customer Purchasing Behaviour Plot: ", str_to_upper(var1_name), " and ", str_to_upper(var2_name))) +
   labs(
-     x        = "Frequency",
-     y        = "Monetary",
+     x        = var1_name %>% str_to_upper(),
+     y        = var2_name %>% str_to_upper(),
      color    = "Campaign Response",
      caption  = "Any prior knowledge to this cause from +2 years of historical data"
   ) +
@@ -634,7 +637,11 @@ generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
 ```
 
 
+```{r}
 
+
+
+```
 
 ```{r}
 ggplot(rfm_score_df, aes(x = RFM_Score)) +
@@ -663,6 +670,10 @@ summary_rfm_table <- rfm_score_df %>%
   mutate(RFM_Score_gr = RFM_Score_gr %>% fct_reorder(desc(avg_RFM_Score))) %>% 
   select(avg_RFM_Score, everything())
 ```
+
+
+
+
 
 
 ```{r}
