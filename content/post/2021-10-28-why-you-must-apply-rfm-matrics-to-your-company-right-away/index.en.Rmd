@@ -333,6 +333,353 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 
 ***
 
+### Measure the Campaign Response Rate
+
+What is a good response rate? The response rate varies with industries, company size, type of campaign, time and more. Typically in the field of ecommerce, in average, a good response rate are within 10~13% boundary. 
+
+The average email benchmark by retail industry: 12.6% (open rate), 8.5% (click-to-open rate)
+
+
+```{r}
+resp <- resp_df_raw %>% 
+  select(customer_id, response) %>% 
+  setNames(c("customer_id", "campaign"))
+
+cust_df <- trans_df %>% 
+  left_join(resp, by = "customer_id") %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))
+```
+
+
+```{r}
+cust_df %>% 
+  group_by(customer_id) %>% 
+  summarise(campaign = median(campaign)) %>% ungroup() %>% 
+  count(campaign) %>% 
+  mutate(pct_response = n/n_distinct(cust_df$customer_id)*100)
+```
+
+
+### 5.0 RFM feature engineering 
+
+Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I haved added 1 value to all customers which takes account of customer has purchased the day we compute this metric; named as recency days.  
+
+```{r}
+generator_rfm <- function(data){
+  analy_day <- max(cust_df$date) + 1
+
+  cust_df %>% 
+  dplyr::group_by(customer_id) %>% 
+  dplyr::summarise(recency_days = as.numeric(analy_day - max(date)),
+                   frequency = n(), 
+                   monetary = sum(amount)) %>%  ungroup()
+}
+
+cust_df %>% 
+  generator_rfm()
+
+cust_df %>% 
+  generator_rfm() %>% head() %>% 
+  mutate(monetary = sum(monetary) %>% format_dollar()) %>% 
+  set_names(c("Customer ID", "Recency Days", "Frequency", "Monetary")) %>%
+  kbl() %>% 
+  kable_material_dark()
+
+```
+
+
+```{r, echo = TRUE}
+
+generator_hist_facet <- function(data, bins = 20, ncol = 5,
+                                 fct_reorder = FALSE, 
+                                 fct_rev = FALSE,
+                                 fill = palette_light()[[3]],
+                                 color = "white", scale = "free") {
+      data_factored <- data %>% 
+        gather(key = key, value = value, factor_key = TRUE) 
+      
+    if(fct_reorder) {
+      data_factored <- data_factored %>% 
+        # Trick to get variables in alphabetical order 
+        mutate(key = as.character(key) %>% as.factor())
+    }
+      
+    if(fct_rev) {
+      data_factored <- data_factored %>% 
+        mutate(key = fct_rev(key))
+    }
+      
+    g <- data_factored %>% 
+      ggplot(aes(x = value, group = key)) +
+      geom_histogram(bins = bins, fill = fill, color = color) +
+      facet_wrap(~key, ncol = ncol, scale = scale) +
+      theme_tq()
+    
+    return(g)
+}
+
+theme_ben <- function(base_size = 14) {theme_bw(base_size = base_size) %+replace%
+    theme(
+      # L'ensemble de la figure
+      plot.title = element_text(size = rel(1), face = "bold", margin = margin(0,0,5,0), hjust = 0),
+      # Zone où se situe le graphique
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      # Les axes
+      axis.title = element_text(size = rel(0.85), face = "bold"),
+      axis.text = element_text(size = rel(0.70), face = "bold"),
+      axis.line = element_line(color = "black", arrow = arrow(length = unit(0.3, "lines"), type = "closed")),
+      # La légende
+      legend.title = element_text(size = rel(0.85), face = "bold"),
+      legend.text = element_text(size = rel(0.70), face = "bold"),
+      legend.key = element_rect(fill = "transparent", colour = NA),
+      legend.key.size = unit(1.5, "lines"),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      # Les étiquettes dans le cas d'un facetting
+      strip.background = element_rect(fill = "#17252D", color = "#17252D"),
+      strip.text = element_text(size = rel(0.85), face = "bold", color = "white", margin = margin(5,0,5,0))
+    )
+}
+
+```
+
+
+We can see that the recency days data is highly right skewed. There are many transformations to handle skewed distribution. In the case, I do not intend to incorporate Machine Learning for customer segmentation thus I will try to modify quantile range in order to overcome this distributional problem on scoring.
+
+```{r}
+skimr::partition(skim(cust_df %>% 
+  generator_rfm()))$numeric %>% data.frame %>%
+   kbl() %>% 
+   kable_material_dark()
+
+cust_df %>% 
+  generator_rfm() %>% 
+  select(monetary, frequency:recency_days) %>% 
+  generator_hist_facet(bins = 40, ncol = 5, fct_rev = FALSE) + theme_ben()
+  
+```
+
+generator_hist_facet() and theme_ben() are customised facet histogram function. We can find it on my github or for better understanding I recommend looking into Business Science 101 Course organised by Matt Dancho. He regularly uploads free tutorials on youtube as well :) 
+
+
+
+```{r}
+result <- c() 
+j <- 0
+for(i in 1:5){
+  j = j + i
+  result[i] = 1 -(j/(1+2+3+4+5))
+  print(result)
+}
+
+rfm_example <- cust_df %>% 
+    generator_rfm() 
+
+R_result <- quantile(rfm_example$recency_days, probs = result)
+F_result <- quantile(rfm_example$frequency, probs = result)
+M_result <- quantile(rfm_example$monetary, probs = result)
+
+cbind(R_result,F_result, M_result)
+```
+
+```{r}
+
+generator_rfm_score <- function(data) {
+  
+  analy_day <- max(data$date) + 1
+  
+  step_1 <- data %>% 
+        generator_rfm() 
+  
+  R_level <- quantile(step_1$recency_days, probs = result)
+  F_level <- quantile(step_1$frequency,    probs = result)
+  M_level <- quantile(step_1$monetary,     probs = result)
+  
+  out <- step_1 %>%
+    mutate(R_score = case_when(.$recency_days >= R_level[1] ~ 1,
+                               .$recency_days >= R_level[2] ~ 2,
+                               .$recency_days >= R_level[3] ~ 3,
+                               .$recency_days >= R_level[4] ~ 4,
+                               TRUE ~ 5),
+           F_score = case_when(.$frequency >= F_level[1] ~ 5,
+                               .$frequency >= F_level[2] ~ 4,
+                               .$frequency >= F_level[3] ~ 3,
+                               .$frequency >= F_level[4] ~ 2,
+                               TRUE ~ 1),
+           M_score = case_when(.$monetary >= M_level[1] ~ 5,
+                               .$monetary >= M_level[2] ~ 4,
+                               .$monetary >= M_level[3] ~ 3,
+                               .$monetary >= M_level[4] ~ 2,
+                               TRUE ~ 1))
+  return(out)
+}
+
+generator_per_metric <- function(pre_score_data, ...) {
+  
+  pre_score_data %>% 
+    dplyr::group_by(...) %>% 
+    dplyr::summarise(cust = n_distinct(customer_id),
+                     total_monetary = sum(monetary)) %>% ungroup() %>% 
+    
+    dplyr::mutate(per_cus = total_monetary/cust,
+                  effect = per_cus/per_cus[1],
+                  prop_cus = cust/sum(cust),
+                  prop_money = total_monetary/sum(total_monetary),
+                  effect = prop_money/prop_cus)
+}
+
+```
+
+```{r}
+
+R_score_table <- cust_df %>% 
+  generator_rfm_score() %>% 
+  generator_per_metric(R_score); R_score_table %>% kbl() %>% kable_material_dark()
+
+F_score_table <- cust_df %>% 
+  generator_rfm_score() %>% 
+  generator_per_metric(F_score); F_score_table %>% kbl() %>% kable_material_dark() 
+
+M_score_table <- cust_df %>% 
+  generator_rfm_score() %>% 
+  generator_per_metric(M_score); M_score_table %>% kbl() %>% kable_material_dark()
+  
+```
+
+```{r}
+
+rfm_effect <- sapply(list(R_score_table$effect, F_score_table$effect, M_score_table$effect), function(x) sum(x))
+
+sum_effect <- sum(rfm_effect)
+weight <- c(rfm_effect[1]/sum_effect, rfm_effect[2]/sum_effect, rfm_effect[3]/sum_effect)
+
+RFM_function <- function(x, y, z, w){
+  RFM_Score <- x*w[1] + y*w[2] + z*w[3]
+  return(RFM_Score)
+}
+
+min_max_normalization <- function(x) {
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+generator_RFM_score <- function(pre_score_data) {
+  pre_score_data %>% 
+  mutate(RFM_Score_norm = RFM_function(.$R_score,
+                                  .$F_score,
+                                  .$M_score,
+                                  w = weight),
+         RFM_Score_norm = min_max_normalization(RFM_Score_norm),
+         RFM_Score = (RFM_Score_norm)*100,
+         RFM_Score_gr = ifelse(RFM_Score >= 90, 10,
+                               ifelse(RFM_Score >= 80, 9,
+                                      ifelse(RFM_Score >= 70, 8,
+                                             ifelse(RFM_Score >= 60, 7,
+                                                    ifelse(RFM_Score >= 50, 6,
+                                                           ifelse(RFM_Score >= 40, 5,
+                                                                  ifelse(RFM_Score >= 30, 4,
+                                                                         ifelse(RFM_Score >= 20, 3,
+                                                                                ifelse(RFM_Score >= 10, 2,
+                                                                                       1))))))))))
+}
+  
+
+```
+
+```{r}
+rfm_score_df <- cust_df %>% 
+  generator_rfm_score() %>% 
+  generator_RFM_score() %>% 
+  left_join(resp, by = "customer_id") %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0) %>% as.factor())
+
+rfm_score_df %>% 
+  select(R_score:M_score) %>% 
+  generator_hist_facet(bins = 5, ncol = 5, fct_rev = FALSE) + theme_ben()
+
+rfm_score_df %>% 
+  select(RFM_Score, RFM_Score_gr) %>% 
+  generator_hist_facet(bins = 10, ncol = 5, fct_rev = FALSE) + theme_ben()
+```
+
+```{r}
+
+generator_plot_rfm <- function(data, var1, var2, cmpg){
+  
+  var1 <- enquo(var1)
+  var2 <- enquo(var2)
+  var1_name<- quo_name(var1)
+  var2_name<- quo_name(var2)
+  
+  data %>% 
+    ggplot(aes(x = {{var1}}, y = {{var2}}, color = {{cmpg}})) + 
+    geom_point(position = "jitter", size = 0.7) +
+    theme_bw() + scale_color_manual(values=wesanderson::wes_palette(name="Royal1", 2)) +
+    scale_y_continuous(label = scales::dollar) +
+    ggtitle(paste0("Customer Purchasing Behaviour Plot: ", str_to_upper(var1_name), " and ", str_to_upper(var2_name))) +
+  labs(
+     x        = "Frequency",
+     y        = "Monetary",
+     color    = "Campaign Response",
+     caption  = "Any prior knowledge to this cause from +2 years of historical data"
+  ) +
+  theme_tq()
+
+}
+
+generator_plot_rfm(rfm_score_df, RFM_Score, monetary, campaign)
+generator_plot_rfm(rfm_score_df, recency_days, monetary, campaign)
+generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
+```
+
+
+
+
+```{r}
+ggplot(rfm_score_df, aes(x = RFM_Score)) +
+  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[6]) +
+  stat_function(fun=dnorm, 
+                args = list(mean=mean(rfm_score_df$RFM_Score),
+                              sd=sd(rfm_score_df$RFM_Score)),
+                color="red", lwd = 1) +
+  geom_density(color="black", lwd =1.5) +
+  theme_minimal()
+```
+
+```{r}
+summary_rfm_table <- rfm_score_df %>% 
+  mutate(RFM_Score_gr = RFM_Score_gr %>% as.factor) %>% 
+  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %>% 
+  dplyr::group_by(RFM_Score_gr) %>% 
+  dplyr::summarise(no_cust           = n(),
+                   avg_RFM_Score     = mean(RFM_Score),
+                   avg_freq          = mean(frequency),
+                   avg_sales         = mean(monetary),
+                   avg_recency_days  = mean(recency_days),
+                   tot_freq          = sum(frequency),
+                   tot_sales         = sum(monetary)) %>% ungroup() %>% 
+  arrange(desc(avg_RFM_Score)) %>% 
+  mutate(RFM_Score_gr = RFM_Score_gr %>% fct_reorder(desc(avg_RFM_Score))) %>% 
+  select(avg_RFM_Score, everything())
+```
+
+
+```{r}
+# a dataframe
+a <- data.frame(x = 1:3, y = 4:6)
+# make a list of several dataframes, then apply function (change column names, e.g.):
+my.list <- list(a, a)
+my.list <- lapply(my.list, function(x) {names(x) <- c("a", "b") ; return(x)})
+# save dfs to csv with similar lapply-call:
+n <- 1:length(my.list)
+lapply(n, function(ni) {
+               write.table(file = paste(ni, ".csv", sep = ""), 
+               my.list[ni], sep = ";", row.names = F)
+               }
+       )
+```
+
 
 ## 4.0 Quick overview on time series visualisation 
 
@@ -369,16 +716,25 @@ cat("There is",paste0(timespan_year),"annual cycle worth of data")
 
 ### 4.2 Data frame of daily, weekly, monthly time stamps + time series visualisation 
 
-The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. 
+Above three years of revenue annual cycle is sufficient collection of data to predict its future revenue and sales. According to Amazon's time series forecasting principles, also mentioned by Lucas Soares on _towards data science blog post_, forecasting is a hard problem for two reasons:
 
-The moving average smoothing (red) is added as it removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series. 
+* Incorporating large volumes of historical data, which can lead to missing important information about the past of the target data dynamics.
+
+* Incorporating related yet independent data (holidays/event, locations, marketing promotions)
+
+Beside that, sales forecasting is likely to depend on the economic situation, the competition, consumer behaviour and many other external factors. For these reasons the concept of relaxing assumption will remain a key for quantitatively measuring the issues influencing on the revenue metrics. Again, too generic. 
 
 ```{r}
-
+# Tidy eval + time series visualisation function 
 start_date <- "2011-07"
 end_date   <- "2015-03-01"
 
-generator_periodic_tbl <- function(data, period, start_date, end_date, var_x1, var_x2){
+generator_periodic_tbl <- function(data, 
+                                   period, 
+                                   start_date, 
+                                   end_date, 
+                                   var_x1, 
+                                   var_x2){
   
   var_x1 <- enquo(var_x1)
   var_x2 <- enquo(var_x2)
@@ -401,16 +757,9 @@ generator_periodic_tbl <- function(data, period, start_date, end_date, var_x1, v
   out_tbl
 }
 
-daily_pur   <- generator_periodic_tbl(trans_df, day, start_date, end_date, amount, date)
-weekly_pur  <- generator_periodic_tbl(trans_df, week, start_date, end_date, amount, date)
-monthly_pur <- generator_periodic_tbl(trans_df, month, start_date, end_date, amount, date)
-
-```
-
-
-```{r, warning = FALSE, message=FALSE}
-
-generator_plot_ts <- function(.data, .period, .var_x1){
+generator_plot_ts <- function(.data, 
+                              .period, 
+                              .var_x1){
   
   period_list <- enquo(.period)
   period_name <- quo_name(period_list)
@@ -426,9 +775,32 @@ generator_plot_ts <- function(.data, .period, .var_x1){
                    .interactive = FALSE)
 }
 
-generator_plot_ts(daily_pur, week, sales)
-generator_plot_ts(weekly_pur, month, sales)
-generator_plot_ts(monthly_pur, "3 month", sales)
+
+```
+In here I will like to illustrate traditional statisical method for decomposing time series. STL decomposition 
+
+uncover step-by-step how to 
+
+For these reasons, we first need to remove highly volatile and predictable 
+
+to generalise and interpret evidence for sales quantitative measure. 
+
+The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. 
+
+```{r, warning = FALSE, message=FALSE}
+
+trans_df %>% 
+  generator_periodic_tbl(day, start_date, end_date, amount, date) %>% 
+  generator_plot_ts(week, sales)
+
+trans_df %>% 
+  generator_periodic_tbl(week, start_date, end_date, amount, date) %>% 
+  generator_plot_ts(month, sales)
+
+trans_df %>% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
+  generator_plot_ts("3 month", sales)
+
 ```
 
 Now the monthly revenue time series reveals some useful information 
@@ -443,16 +815,15 @@ outlier_detection <- function(x) {
   x[x < quantile(x, .05, na.rm = T)] 
 }
 
-mon_sd_tbl <- monthly_pur %>%
+trans_df %>% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
   mutate(revenue       = sales) %>% 
   mutate(revenue_log   = log(sales)) %>% 
   mutate(revenue_sd    = standardize_vec(revenue_log),
          outlier       = ifelse(revenue %in% outlier_detection(revenue) == TRUE, 1, NA),
          revenue_text  = case_when(outlier == 1 ~ revenue, 
                                    TRUE~ outlier),
-         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = "K"))
-
-mon_sd_tbl %>% 
+         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = "K")) %>% 
   ggplot(aes(x = date, y = (revenue_sd))) +
   geom_line(size = 0.5, linetype = 1) +
   geom_smooth(method   = "lm", se = FALSE) +
@@ -471,48 +842,153 @@ mon_sd_tbl %>%
 
 ```
 
-```{r}
-monthly_ts <- ts(monthly_pur$sales, start = c(2011, 7), f = 12)
-weekly_ts <- ts(weekly_pur$sales, start = c(2011, 7), f = 365.25/7)
-daily_ts <- ts(daily_pur$sales, start = c(2011, 7), f = 365)
 
-```
+### 4.3 STL time series decomposition 
 
+ 
 
 ```{r}
-```
 
-
-```{r}
-t <- 1:length(monthly_ts)
-fit_monthly_lm <- lm(monthly_ts ~ t)
-fit_monthly_lm$coefficients
-anova(fit_monthly_lm)
-trend <- fitted(fit_monthly_lm)
-ts.plot(monthly_ts, trend, col=1:2, lty = 1:2, ylab = "Monthly Sales", xlab = "time")
-        legend("topright", lty=1:2, col=1:2, c("Raw Monthly Time series", "Trend component"))
-```
-
-```{r}
-adjtrend = monthly_ts/trend
-y = factor(cycle(adjtrend))
-fit_monthly_1 <-auto.arima(adjtrend,
+generator_stl_monthly <- function(data, start_date, end_date){
+  
+  start <- start_date %>% str_split("-") %>% unlist()
+  
+  monthly_ts <- data %>% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
+  select(sales) %>% 
+  ts(start = c(start[1], start[2]), f = 12)
+  
+  t <- 1:length(monthly_ts)
+  
+  fit_monthly_lm <- lm(monthly_ts ~ t)
+  trend <- fitted(fit_monthly_lm)
+  
+  adjtrend = monthly_ts/trend
+  y = factor(cycle(adjtrend))
+  fit_monthly_1 <-auto.arima(adjtrend,
                            max.p = 2,
                            xreg=model.matrix(~0 + y)[, -12],
                            seasonal = F, max.d = 0, max.q = 0)
-coef(fit_monthly_1)
-seasonal = fit_monthly_1$fitted
-pred = trend*seasonal
-irregular = monthly_ts/pred
-ts.plot(trend)
-ts.plot(seasonal)
-ts.plot(irregular)
-ts.plot(monthly_ts, pred, lty = 1:2, ylab = "Monthly Sales", col = c("blue", "red"))
+  
+  seasonal = fit_monthly_1$fitted
+  pred = trend*seasonal
+  irregular = monthly_ts/pred
+
+  date <- ym(start_date) + months(1:length(monthly_ts)-1)
+  table4 <- data.frame(date, monthly_ts, pred, trend, seasonal, irregular) %>% 
+    setNames(c("date", "revenue", "exp_rev","trend", "seasonal", "irregular"))
+  
+  return(table4)
+}
+
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) 
+
 ```
+
 ```{r}
-# * Create table for TSl components ----
-date <- ymd("20110701") + months(1:length(monthly_ts)-1)
-table4 <- data.frame(date, monthly_ts, trend, seasonal, irregular)
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) %>% 
+  select(date, revenue, exp_rev) %>% 
+  gather(key = "type_rev", value = "value", -date) %>% 
+  ggplot(aes(date, value, group = type_rev)) +
+  geom_line(aes(linetype = type_rev, colour = type_rev)) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_tq()
+
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) %>%
+  mutate(unexp_revenue  = revenue - exp_rev,
+         risk_rev_index = unexp_revenue/revenue*100) %>% 
+  ggplot(aes(date, risk_rev_index)) +
+  geom_line() +
+  theme_tq()
+
+
+```
+
+```{r}
+resp <- resp_df_raw %>% 
+  select(customer_id, response) %>% 
+  setNames(c("customer_id", "campaign"))
+
+cust_df <- trans_df %>% 
+  left_join(resp, by = "customer_id") %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))
+
+cust_df %>% 
+  filter(campaign == 0) %>% 
+  generator_stl_monthly(start_date, end_date) %>% 
+  ggplot(aes(date, seasonal)) +
+  geom_line() +
+  theme_tq()
+  
+  
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) %>% 
+  ggplot(aes(date, seasonal)) +
+  geom_line() +
+  theme_tq()
+
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) 
+
+cust_df %>% 
+  filter(campaign == 0) %>% 
+  generator_stl_monthly(start_date, end_date)
+
+
+```
+
+```{r}
+
+
+cust_norespo_df <- cust_df %>% 
+  filter(campaign ==0) %>% 
+  generator_stl_monthly(start_date, end_date) %>% 
+  mutate(campaign = 0 %>% as.factor())
+
+cust_yesrespo_df <- cust_df %>% 
+  filter(campaign ==1 ) %>% 
+  generator_stl_monthly(start_date, end_date) %>% 
+  mutate(campaign = 1 %>% as.factor())
+
+cust_norespo_df %>% 
+  rbind(cust_yesrespo_df) %>%   
+  mutate(unexp_revenue  = revenue - exp_rev) %>% 
+  ggplot(aes(date, seasonal, group = campaign)) +
+  geom_line(aes(linetype = campaign)) +
+  theme_tq()
+
+trans_df %>% 
+  generator_stl_monthly(start_date, end_date) %>%
+  mutate(unexp_revenue  = revenue - exp_rev) %>% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()
+
+cust_yesrespo_df %>% 
+  ggplot(aes(date, revenue)) +
+  geom_line() +
+  theme_tq()
+
+cust_yesrespo_df %>% 
+  mutate(unexp_revenue  = revenue - exp_rev) %>% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()
+
+cust_norespo_df %>% 
+  ggplot(aes(date, revenue)) +
+  geom_line() +
+  theme_tq()
+
+cust_norespo_df %>% 
+  mutate(unexp_revenue  = revenue - exp_rev) %>% 
+  ggplot(aes(date, unexp_revenue)) +
+  geom_line() +
+  theme_tq()
 ```
 
 Perspective Notes : 

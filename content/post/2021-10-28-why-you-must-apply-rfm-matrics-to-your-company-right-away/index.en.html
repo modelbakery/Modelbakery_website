@@ -438,12 +438,22 @@ cat(&quot;There is&quot;,paste0(timespan_year),&quot;annual cycle worth of data&
 </div>
 <div id="data-frame-of-daily-weekly-monthly-time-stamps-time-series-visualisation" class="section level3">
 <h3>4.2 Data frame of daily, weekly, monthly time stamps + time series visualisation</h3>
-<p>The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance.</p>
-<p>The moving average smoothing (red) is added as it removes fine-grained variation between the time steps by averaging values within given window size which slides along the time series.</p>
-<pre class="r"><code>start_date &lt;- &quot;2011-07&quot;
+<p>Above three years of revenue annual cycle is sufficient collection of data to predict its future revenue and sales. According to Amazon’s time series forecasting principles, also mentioned by Lucas Soares on <em>towards data science blog post</em>, forecasting is a hard problem for two reasons:</p>
+<ul>
+<li><p>Incorporating large volumes of historical data, which can lead to missing important information about the past of the target data dynamics.</p></li>
+<li><p>Incorporating related yet independent data (holidays/event, locations, marketing promotions)</p></li>
+</ul>
+<p>Beside that, sales forecasting is likely to depend on the economic situation, the competition, consumer behaviour and many other external factors. For these reasons the concept of relaxing assumption will remain a key for quantitatively measuring the issues influencing on the revenue metrics. Again, too generic.</p>
+<pre class="r"><code># Tidy eval + time series visualisation function 
+start_date &lt;- &quot;2011-07&quot;
 end_date   &lt;- &quot;2015-03-01&quot;
 
-generator_periodic_tbl &lt;- function(data, period, start_date, end_date, var_x1, var_x2){
+generator_periodic_tbl &lt;- function(data, 
+                                   period, 
+                                   start_date, 
+                                   end_date, 
+                                   var_x1, 
+                                   var_x2){
   
   var_x1 &lt;- enquo(var_x1)
   var_x2 &lt;- enquo(var_x2)
@@ -466,10 +476,9 @@ generator_periodic_tbl &lt;- function(data, period, start_date, end_date, var_x1
   out_tbl
 }
 
-daily_pur   &lt;- generator_periodic_tbl(trans_df, day, start_date, end_date, amount, date)
-weekly_pur  &lt;- generator_periodic_tbl(trans_df, week, start_date, end_date, amount, date)
-monthly_pur &lt;- generator_periodic_tbl(trans_df, month, start_date, end_date, amount, date)</code></pre>
-<pre class="r"><code>generator_plot_ts &lt;- function(.data, .period, .var_x1){
+generator_plot_ts &lt;- function(.data, 
+                              .period, 
+                              .var_x1){
   
   period_list &lt;- enquo(.period)
   period_name &lt;- quo_name(period_list)
@@ -483,13 +492,23 @@ monthly_pur &lt;- generator_periodic_tbl(trans_df, month, start_date, end_date, 
   plot_time_series(date, value, name,
                    .smooth = FALSE,
                    .interactive = FALSE)
-}
-
-generator_plot_ts(daily_pur, week, sales)</code></pre>
+}</code></pre>
+<p>In here I will like to illustrate traditional statisical method for decomposing time series. STL decomposition</p>
+<p>uncover step-by-step how to</p>
+<p>For these reasons, we first need to remove highly volatile and predictable</p>
+<p>to generalise and interpret evidence for sales quantitative measure.</p>
+<p>The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance.</p>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_periodic_tbl(day, start_date, end_date, amount, date) %&gt;% 
+  generator_plot_ts(week, sales)</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
-<pre class="r"><code>generator_plot_ts(weekly_pur, month, sales)</code></pre>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_periodic_tbl(week, start_date, end_date, amount, date) %&gt;% 
+  generator_plot_ts(month, sales)</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
-<pre class="r"><code>generator_plot_ts(monthly_pur, &quot;3 month&quot;, sales)</code></pre>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %&gt;% 
+  generator_plot_ts(&quot;3 month&quot;, sales)</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-3.png" width="672" /></p>
 <p>Now the monthly revenue time series reveals some useful information</p>
 <ul>
@@ -500,16 +519,15 @@ generator_plot_ts(daily_pur, week, sales)</code></pre>
   x[x &lt; quantile(x, .05, na.rm = T)] 
 }
 
-mon_sd_tbl &lt;- monthly_pur %&gt;%
+trans_df %&gt;% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %&gt;% 
   mutate(revenue       = sales) %&gt;% 
   mutate(revenue_log   = log(sales)) %&gt;% 
   mutate(revenue_sd    = standardize_vec(revenue_log),
          outlier       = ifelse(revenue %in% outlier_detection(revenue) == TRUE, 1, NA),
          revenue_text  = case_when(outlier == 1 ~ revenue, 
                                    TRUE~ outlier),
-         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = &quot;K&quot;))
-
-mon_sd_tbl %&gt;% 
+         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = &quot;K&quot;)) %&gt;% 
   ggplot(aes(x = date, y = (revenue_sd))) +
   geom_line(size = 0.5, linetype = 1) +
   geom_smooth(method   = &quot;lm&quot;, se = FALSE) +
@@ -526,50 +544,106 @@ mon_sd_tbl %&gt;%
   guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
   theme_tq()</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
-<pre class="r"><code>monthly_ts &lt;- ts(monthly_pur$sales, start = c(2011, 7), f = 12)
-weekly_ts &lt;- ts(weekly_pur$sales, start = c(2011, 7), f = 365.25/7)
-daily_ts &lt;- ts(daily_pur$sales, start = c(2011, 7), f = 365)</code></pre>
-<pre class="r"><code>t &lt;- 1:length(monthly_ts)
-fit_monthly_lm &lt;- lm(monthly_ts ~ t)
-fit_monthly_lm$coefficients</code></pre>
-<pre><code>## (Intercept)           t 
-##    177787.9       -67.9</code></pre>
-<pre class="r"><code>anova(fit_monthly_lm)</code></pre>
-<pre><code>## Analysis of Variance Table
-## 
-## Response: monthly_ts
-##           Df     Sum Sq  Mean Sq F value Pr(&gt;F)
-## t          1   34961242 34961242    0.76   0.39
-## Residuals 43 1965597815 45711577</code></pre>
-<pre class="r"><code>trend &lt;- fitted(fit_monthly_lm)
-ts.plot(monthly_ts, trend, col=1:2, lty = 1:2, ylab = &quot;Monthly Sales&quot;, xlab = &quot;time&quot;)
-        legend(&quot;topright&quot;, lty=1:2, col=1:2, c(&quot;Raw Monthly Time series&quot;, &quot;Trend component&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<pre class="r"><code>adjtrend = monthly_ts/trend
-y = factor(cycle(adjtrend))
-fit_monthly_1 &lt;-auto.arima(adjtrend,
+</div>
+<div id="stl-time-series-decomposition" class="section level3">
+<h3>4.3 STL time series decomposition</h3>
+<pre class="r"><code>generator_stl_monthly &lt;- function(data, start_date, end_date){
+  
+  start &lt;- start_date %&gt;% str_split(&quot;-&quot;) %&gt;% unlist()
+  
+  monthly_ts &lt;- data %&gt;% 
+  generator_periodic_tbl(month, start_date, end_date, amount, date) %&gt;% 
+  select(sales) %&gt;% 
+  ts(start = c(start[1], start[2]), f = 12)
+  
+  t &lt;- 1:length(monthly_ts)
+  
+  fit_monthly_lm &lt;- lm(monthly_ts ~ t)
+  trend &lt;- fitted(fit_monthly_lm)
+  
+  adjtrend = monthly_ts/trend
+  y = factor(cycle(adjtrend))
+  fit_monthly_1 &lt;-auto.arima(adjtrend,
                            max.p = 2,
                            xreg=model.matrix(~0 + y)[, -12],
                            seasonal = F, max.d = 0, max.q = 0)
-coef(fit_monthly_1)</code></pre>
-<pre><code>## intercept        y1        y2        y3        y4        y5        y6        y7 
-##   0.99107   0.01686   0.03741  -0.07451   0.03326  -0.01538   0.01981  -0.00377 
-##        y8        y9       y10       y11 
-##   0.02527   0.03930  -0.00623   0.03788</code></pre>
-<pre class="r"><code>seasonal = fit_monthly_1$fitted
-pred = trend*seasonal
-irregular = monthly_ts/pred
-ts.plot(trend)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<pre class="r"><code>ts.plot(seasonal)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-2.png" width="672" /></p>
-<pre class="r"><code>ts.plot(irregular)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-3.png" width="672" /></p>
-<pre class="r"><code>ts.plot(monthly_ts, pred, lty = 1:2, ylab = &quot;Monthly Sales&quot;, col = c(&quot;blue&quot;, &quot;red&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-4.png" width="672" /></p>
-<pre class="r"><code># * Create table for TSl components ----
-date &lt;- ymd(&quot;20110701&quot;) + months(1:length(monthly_ts)-1)
-table4 &lt;- data.frame(date, monthly_ts, trend, seasonal, irregular)</code></pre>
+  
+  seasonal = fit_monthly_1$fitted
+  pred = trend*seasonal
+  irregular = monthly_ts/pred
+
+  date &lt;- ym(start_date) + months(1:length(monthly_ts)-1)
+  table4 &lt;- data.frame(date, monthly_ts, pred, trend, seasonal, irregular) %&gt;% 
+    setNames(c(&quot;date&quot;, &quot;revenue&quot;, &quot;exp_rev&quot;,&quot;trend&quot;, &quot;seasonal&quot;, &quot;irregular&quot;))
+  
+  return(table4)
+}
+
+trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) </code></pre>
+<pre><code>##          date revenue exp_rev  trend seasonal irregular
+## 1  2011-07-01  174527  175463 177720    0.987     0.995
+## 2  2011-08-01  178097  180555 177652    1.016     0.986
+## 3  2011-09-01  188631  182978 177584    1.030     1.031
+## 4  2011-10-01  169173  174824 177516    0.985     0.968
+## 5  2011-11-01  182634  182586 177449    1.029     1.000
+## 6  2011-12-01  166921  175796 177381    0.991     0.950
+## 7  2012-01-01  181405  178718 177313    1.008     1.015
+## 8  2012-02-01  177987  182293 177245    1.028     0.976
+## 9  2012-03-01  170135  162392 177177    0.917     1.048
+## 10 2012-04-01  180453  181418 177109    1.024     0.995
+## 11 2012-05-01  168000  172737 177041    0.976     0.973
+## 12 2012-06-01  178880  178898 176973    1.011     1.000
+## 13 2012-07-01  172933  174659 176906    0.987     0.990
+## 14 2012-08-01  179117  179727 176838    1.016     0.997
+## 15 2012-09-01  179284  182138 176770    1.030     0.984
+## 16 2012-10-01  175045  174022 176702    0.985     1.006
+## 17 2012-11-01  181862  181748 176634    1.029     1.001
+## 18 2012-12-01  179156  174989 176566    0.991     1.024
+## 19 2013-01-01  173747  177897 176498    1.008     0.977
+## 20 2013-02-01  181729  181455 176430    1.028     1.002
+## 21 2013-03-01  160359  161646 176363    0.917     0.992
+## 22 2013-04-01  181491  180584 176295    1.024     1.005
+## 23 2013-05-01  173642  171942 176227    0.976     1.010
+## 24 2013-06-01  185826  178075 176159    1.011     1.044
+## 25 2013-07-01  176813  173855 176091    0.987     1.017
+## 26 2013-08-01  180983  178899 176023    1.016     1.012
+## 27 2013-09-01  180031  181299 175955    1.030     0.993
+## 28 2013-10-01  176830  173220 175888    0.985     1.021
+## 29 2013-11-01  181521  180910 175820    1.029     1.003
+## 30 2013-12-01  177341  174182 175752    0.991     1.018
+## 31 2014-01-01  180802  177077 175684    1.008     1.021
+## 32 2014-02-01  184554  180618 175616    1.028     1.022
+## 33 2014-03-01  154151  160899 175548    0.917     0.958
+## 34 2014-04-01  179804  179750 175480    1.024     1.000
+## 35 2014-05-01  174149  171148 175412    0.976     1.018
+## 36 2014-06-01  169555  177252 175345    1.011     0.957
+## 37 2014-07-01  172741  173051 175277    0.987     0.998
+## 38 2014-08-01  179026  178072 175209    1.016     1.005
+## 39 2014-09-01  178975  180460 175141    1.030     0.992
+## 40 2014-10-01  173385  172418 175073    0.985     1.006
+## 41 2014-11-01  179303  180072 175005    1.029     0.996
+## 42 2014-12-01  174855  173375 174937    0.991     1.009
+## 43 2015-01-01  174010  176256 174869    1.008     0.987
+## 44 2015-02-01  179837  179780 174802    1.028     1.000
+## 45 2015-03-01  160509  160153 174734    0.917     1.002</code></pre>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;% 
+  select(date, revenue, exp_rev) %&gt;% 
+  gather(key = &quot;type_rev&quot;, value = &quot;value&quot;, -date) %&gt;% 
+  ggplot(aes(date, value, group = type_rev)) +
+  geom_line(aes(linetype = type_rev, colour = type_rev)) +
+  scale_color_brewer(palette = &quot;Dark2&quot;) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre class="r"><code>trans_df %&gt;% 
+  generator_stl_monthly(start_date, end_date) %&gt;%
+  mutate(unexp_revenue  = revenue - exp_rev,
+         risk_rev_index = unexp_revenue/revenue*100) %&gt;% 
+  ggplot(aes(date, risk_rev_index)) +
+  geom_line() +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
 <p>Perspective Notes :
 [1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model
 [2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind.</p>
@@ -913,22 +987,22 @@ cmpg_vis_df %&gt;% plot_time_series(week,
                                  revenue_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  revenue_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-2.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_Y_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-3.png" width="672" /></p>
 <pre class="r"><code>cmpg_vis_df %&gt;% plot_time_series(week, 
                                  no_pur_N_cmpg,
                                  .smooth = FALSE,
                                  .interactive = FALSE) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-4.png" width="672" /></p>
 <p>the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance.</p>
 <hr />
 </div>
