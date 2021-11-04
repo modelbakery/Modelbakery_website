@@ -25,7 +25,7 @@ draft: TRUE
 
 ## General notation for Regression model
 
-The general notation:
+Its general notation:
 
 f(x) = E(Y|X =x) 
 
@@ -35,9 +35,9 @@ Thus models, even within Regression, have many uses and those amongst them. Some
 
 Before I begin explore the assumptions and algorithms of different regression models. Lets try to understand the general scheme of ideal function - explained by ...
 
+* Conditional average 
+So is there an ideal f(X)? 
 
-
-So what is the ideal 
 
 ## The ordinary mutiple linear regression function and its loss function 
 

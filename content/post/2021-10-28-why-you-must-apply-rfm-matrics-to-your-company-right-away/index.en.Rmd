@@ -320,6 +320,7 @@ P3_D_dup <- cust_dup_tbl %>%
 gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 
 ```
+
 ### 3.4 Perspective Notes 
 
 * Comparative analysis of potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
@@ -331,6 +332,7 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 
 
 ***
+
 
 ## 4.0 Quick overview on time series visualisation 
 
