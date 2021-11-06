@@ -830,7 +830,9 @@ generator_plot_rfm <- function(data, var1, var2, cmpg, point_size =0.7,
 
 generator_plot_rfm(rfm_score_df, RFM_Score, monetary, campaign)
 generator_plot_rfm(rfm_score_df, recency_days, monetary, campaign)
-generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
+p100 <-  generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
+
+save.image(p100,)
 ```
 
 

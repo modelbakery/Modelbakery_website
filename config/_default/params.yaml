@@ -79,7 +79,7 @@ highlight_languages:
   - r
   - python
   - latex
-math: false
+math: TRUE
 diagram: false
 privacy_pack: false
 edit_page:

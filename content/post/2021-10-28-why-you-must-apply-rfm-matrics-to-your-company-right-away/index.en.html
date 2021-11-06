@@ -1,12 +1,13 @@
 ---
-title: Why you Must apply RFM matrics to your company right away!
+title: K-Nearest Neighbour Diabetes Prediction 
 author: Package Build
 date: '2021-10-26'
-slug: why-you-must-apply-rfm-matrics-to-your-company-right-away
+slug: K-Nearest Neighbour Diabetes Prediction
 categories:
   - R
 tags:
-  - Marketing
+  - Classification 
+  - Health Care
 subtitle: ''
 summary: ''
 authors: []
@@ -21,2833 +22,341 @@ draft: FALSE
 ---
 
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
-<script src="{{< blogdown/postref >}}index.en_files/kePrint/kePrint.js"></script>
-<link href="{{< blogdown/postref >}}index.en_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers’ demographics, desire, and product categories, the power of the leading score can ever so be significant.</p>
-<p>In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution for actionable decision makings.</p>
-<p>There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.</p>
-<hr />
-<div id="menu" class="section level2">
-<h2>Menu</h2>
-<div id="appetizer" class="section level3">
-<h3>Appetizer</h3>
+<p>Contents:</p>
+<p>Study</p>
 <ul>
-<li>What is RFM and why we do feature engineering</li>
-<li>Why Campaign Response important feature for CRM?</li>
-<li>Pareto Principle</li>
-<li>RFM Quantitative Scoring</li>
-</ul>
-</div>
-<div id="main" class="section level3">
-<h3>Main</h3>
+<li>What is K-Nearest Neighbour function
 <ul>
-<li>Data Preparation</li>
-<li>Campaign Response Rate</li>
-<li>Performing RFM Segmentation
+<li>What are K-NN assumptions?</li>
+<li>Parameters</li>
+<li>Variety of distance criteria</li>
+<li>Optimal Number of Neighbors</li>
+</ul></li>
+<li>Cons
 <ul>
-<li>RFM Construction</li>
-<li>RFM Analysis</li>
-<li>RFM Visualisation</li>
+<li>Homogeneous feature</li>
+<li>Curse of Dimensionality</li>
+<li>Imbalanced data problems</li>
+<li>Outlier Sensitivity</li>
+</ul></li>
+<li>Advanced topics
+<ul>
+<li>Kd tree algorithm</li>
 </ul></li>
 </ul>
+<div id="section" class="section level2">
+<h2></h2>
+<p><span class="math display">\[
+\hat{C}_k(x) =  \underset{g}{\mathrm{argmax}} \ \ \hat{p}_{kg}(x)
+\]</span></p>
 </div>
-<div id="desert" class="section level3">
-<h3>Desert</h3>
-<ul>
-<li>Wrap up
-<ul>
-<li>Summary on Perspective Notes</li>
-<li>RFM Limitations</li>
-<li>Future Development</li>
-</ul></li>
-<li>Ready to receive feedback</li>
-</ul>
-<hr />
+<div id="variable-explaination" class="section level2">
+<h2>Variable Explaination</h2>
+<p>[1] npreg : number of pregnancies.</p>
+<p>[2] glu : plasma glucose concentration in an oral glucose tolerance test.</p>
+<p>[3] bp : diastolic blood pressure (mm Hg).</p>
+<p>[4] skin : triceps skin fold thickness (mm).</p>
+<p>[5] bmi : body mass index (weight in kg/(height in m)^2).</p>
+<p>[6] ped : diabetes pedigree function.</p>
+<p>[7] age : age in years</p>
+<p>[8] type : Yes or No, for diabetic according to WHO criteria.</p>
 </div>
-</div>
-<div id="what-is-rfm-and-why-we-do-feature-engineering" class="section level2">
-<h2>1. What is RFM and why we do feature engineering</h2>
-<div id="rfm" class="section level3">
-<h3>1.1 RFM</h3>
-<p>Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the “right” customer will always vary depending on business objectives and business cycle. Having reliable KPI’s for customer value and engagement score will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company’s customer base: <strong>customer purchasing behaviour!</strong></p>
-<blockquote>
-<p>The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model <strong>without compromising its accuracy</strong>.</p>
-</blockquote>
-<p>RFM is essentially a combined measure of customer’s purchasing characteristics; consists three data points: recency, frequency and monetary.</p>
-<ul>
-<li>Recency : <strong>Length</strong> of a time period since the <strong>last</strong> purchase</li>
-<li>Frequency: <strong>Number</strong> of purchase within a customer life-span</li>
-<li>Monetary : <strong>Amount</strong> of money spent within customer transcations</li>
-</ul>
-<p>All of these measures have been proven to be effective predictors of a customer’s willingness to engage in marketing messages and construct their transcation values to the company.</p>
-</div>
-<div id="benefit-of-rfm-analysis" class="section level3">
-<h3>1.2 Benefit of RFM Analysis</h3>
-<p>In-depth KYC (know your customer) on your customer base and framework for iterative campaigns to promising customer (targets) will undoubtfully benefit your organisation in many folds:</p>
-<ul>
-<li><p>Personalisation: By creating effective customer segments, highly relevant and cutomerised offer in personal level can be achieved.</p></li>
-<li><p>Improve Conversion Rates: Personalised marketing will yield higher retention and conversion rate by aid of effective up-sell, cross-sell strategy.</p></li>
-<li><p>ROI: Breaking customers into small buckets effectively reduce business’s missing opportunity (low Risk) and enables objective-oriented target marketing (High return)</p></li>
-</ul>
-</div>
-<div id="feature-engineering" class="section level3">
-<h3>1.3 Feature Engineering</h3>
-<p>Feature engineering is a process of applying domain knowledge to select and transform raw data into new definable features (characteristics, properties, attributes) that better represent the underlying problem to solve or predictive model.</p>
-<p>Depending on how you apply RFM analysis it is also a feature engineering as we are combining customer transcation historical data: latest purchase, how often, in amounts, to new <strong>“Transcations History”</strong> feature. The important question is how well does new feature speaks of its own definition in business. In broad sense, this RFM feature has many usage for segmentation but also input feature in many predictive models (churn, campaign response, likelihood of future purchase). Simply put, in customer analytics, purchasing behaviour is not only dimension of company’s interest. More so, in its best form, I believe the matrics should be flexible to include on various KPI’s and modelling. We will discuss more later in this post.</p>
-<hr />
-</div>
-</div>
-<div id="why-campaign-response-tracking-system-important" class="section level2">
-<h2>2.0 Why Campaign Response Tracking System Important?</h2>
-<p>Tracking responses is one of the important aspects of the campaign life cycle for a marketing analyst. This involves process of collecting data that identifies customers who have responded to a communication from a campaign program via specific channels. Any company would like to automate customer engagement and its campaign performance measure.</p>
-<p>Tracking campaign activities are vital measure for customer engagement management. Effective CRM system can leverage life time value of company’s customers by effectively reducing their churn events. Data scientist and engineers are very well adapted in this field. Every businesses needs to optimise the balance between the cost retention and acquisition as they are essential track for ROI generation.</p>
-<p>The data I will be exploring below contains customer campaign response binary dataset.</p>
-<hr />
-</div>
-<div id="pareto-principle" class="section level2">
-<h2>3.0 Pareto Principle</h2>
-<blockquote>
-<p><strong>For many events, roughly 80% of the effects coe from 20% of the causes.</strong>
-Pareto Principle - The 80/20 Rule</p>
-</blockquote>
-<p>Similarly, 20% customers contribute to 80% of company’s total revenue. The ideology is the people who spent once are more likely to spend again. Likewise, the people for have responded to campaign are likely to respond again. Pareto Principle is at the heart of RFM model; focusing target audience on critical segments of customers is likely to generate higher ROI.</p>
-</div>
-<div id="rfm-quantitative-scoring" class="section level2">
-<h2>4.0 RFM Quantitative Scoring</h2>
-<p>Many system rank search results by means of some form of scoring: each candidate item is given a score measuring in some sense how closely it fits with the <strong>query</strong> and its items are ranked in descending score order. If indeed such a system ranks customers on the basis of transcation behaviour effect on revenue (better option: profitability), organisation will gain quick and actionable decisions to collect their targets by its priority order within the segments. This quantitative RFM scoring approach has multiple benefits:</p>
-<ul>
-<li><p>Gain clear picture on each RFM unique combination values for the company and how to strategically framework future customer journey analysis.</p></li>
-<li><p>The ability distribute RFM combination metrics in size upon their revenue contribution.</p></li>
-<li><p>Hierachical construction of RFM metrics by its importance.</p></li>
-<li><p>The quantitative RFM scoring (Numeric: importance) and RFM metrics (Categorical: behaviour type) will bring more flexibility as part of input feature for further customer analytic prediction models.</p></li>
-</ul>
-<p>In any form of scoring, the importance of its robustness will always be a challenge. For a obvious reasons, conversions within these scores or the segments without the internal explaintary, would not be a reliable system to conduct.</p>
-<p>Having this in mind, we will explore the transcation data in depth and construct RFM metrics and its scoring from a scratch on R. Thank you for reading this far and lets dig in!</p>
-</div>
-<div id="library-load" class="section level2">
-<h2>1.0 library load</h2>
-<pre class="r"><code>library(tidyverse)
-library(dplyr)
-library(lubridate)
-library(skimr)
-library(scales)
-library(psych)
-library(gmodels)
+<div id="feature-engineering-ideas-or" class="section level2">
+<h2>Feature Engineering IDeas or</h2>
+<p>Biological Age: f(BMI)</p>
+<pre class="r"><code>setwd(&quot;/Users/seunghyunsung/Desktop/rdata/ML_basic/SVM_RF/diabetes_prediction&quot;)
 
-library(tidyquant)
-library(timetk)
-library(rsample) 
-library(wesanderson)</code></pre>
-<pre class="r"><code>set.seed(42)
-options(scipen = 100, digits = 3)
+suppressMessages(library(class))
+suppressMessages(library(kknn))
+suppressMessages(library(randomForest))
+suppressMessages(library(e1071))
+suppressMessages(library(caret))
+suppressMessages(library(reshape2))
+suppressMessages(library(ggplot2))
+suppressMessages(library(kernlab))
+suppressMessages(library(MASS))
+suppressMessages(library(skimr))
 
-trans_df_raw &lt;- read_csv(&quot;~/Dropbox/business_insight/df_trans_raw.csv&quot;, col_types = cols())</code></pre>
-<pre class="r"><code>resp_df_raw &lt;- read_csv(&quot;~/Dropbox/business_insight/df_resp_raw.csv&quot;)
-resp_df_raw$X1 &lt;- NULL</code></pre>
+library(ggplot2)
+library(GGally)</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;GGally&#39;:
+##   method from   
+##   +.gg   ggplot2</code></pre>
+<pre class="r"><code># conditions (options &amp; set.seed)
+options(digits = 3, scipen = 100)
+
+set.seed(42)
+# load the data
+data(Pima.tr)
+data(Pima.te)
+
+dim(Pima.tr) # [1] 200   8</code></pre>
+<pre><code>## [1] 200   8</code></pre>
+<pre class="r"><code>dim(Pima.te) # [1] 332   8</code></pre>
+<pre><code>## [1] 332   8</code></pre>
+<div id="combine-train-and-teat-data-set" class="section level3">
+<h3>Combine Train and Teat Data Set</h3>
+<pre class="r"><code># Train dataset 
+Pima.tr$type &lt;- ifelse(Pima.tr$type == &quot;No&quot;, 0, 1)
+prop.table(table(Pima.tr$type))</code></pre>
+<pre><code>## 
+##    0    1 
+## 0.66 0.34</code></pre>
+<pre class="r"><code># Test dataset 
+Pima.te$type &lt;- ifelse(Pima.te$type == &quot;No&quot;, 0, 1)
+prop.table(table(Pima.te$type))</code></pre>
+<pre><code>## 
+##     0     1 
+## 0.672 0.328</code></pre>
+<pre class="r"><code># Combine  
+Pima = rbind(Pima.tr, Pima.te)</code></pre>
 </div>
-<div id="transcational-data" class="section level2">
-<h2>2.0 Transcational data</h2>
-<pre class="r"><code>trans_df_raw %&gt;% head()</code></pre>
-<pre><code>## # A tibble: 6 × 3
-##   customer_id trans_date tran_amount
-##   &lt;chr&gt;       &lt;chr&gt;            &lt;dbl&gt;
-## 1 CS5295      11-Feb-13           35
-## 2 CS4768      15-Mar-15           39
-## 3 CS2122      26-Feb-13           52
-## 4 CS1217      16-Nov-11           99
-## 5 CS1850      20-Nov-13           78
-## 6 CS5539      26-Mar-14           81</code></pre>
-<pre class="r"><code>resp_df_raw %&gt;% head()</code></pre>
-<pre><code>## # A tibble: 6 × 2
-##   customer_id response
-##   &lt;chr&gt;          &lt;dbl&gt;
-## 1 CS1112             0
-## 2 CS1113             0
-## 3 CS1114             1
-## 4 CS1115             1
-## 5 CS1116             1
-## 6 CS1117             0</code></pre>
-<pre class="r"><code>trans_df &lt;- trans_df_raw %&gt;% 
-  mutate(trans_date = lubridate::dmy(trans_date)) %&gt;% 
-  dplyr::rename(
-    date   = trans_date,
-    amount = tran_amount) </code></pre>
 </div>
-<div id="data-preparation" class="section level2">
-<h2>3.0 Data Preparation</h2>
-<div id="checking-for-duplicates" class="section level3">
-<h3>3.1 Checking for duplicates</h3>
+<div id="eda" class="section level2">
+<h2>EDA</h2>
+<p>K-NN classifier algorithm</p>
+<p>To do:</p>
 <ul>
-<li>No duplicated data</li>
-<li>Diagnosed same-day repeated purchase
-<ul>
-<li>10.7% from total customers falls in this category</li>
-<li>0.6% of occurrence within transaction history</li>
-</ul></li>
+<li><p>Feature Scaling: K-NN and many ML algorithm relies on the distance (norm) of the matrix.</p></li>
+<li><p>Outlier detection: K-NN algorithm is highly sensitive to outliers</p></li>
 </ul>
-<p>Question to ask:</p>
-<ul>
-<li>Are these group statistically significant in respect to their revenue?</li>
-<li>Does same-day repeated purchase represent any meanings?</li>
-</ul>
-<pre class="r"><code>format_dollar  &lt;- function(x, ...) {
-  paste0(&quot;$&quot;, formatC(as.numeric(x), format=&quot;f&quot;, digits = 0, big.mark=&quot;,&quot;))
-}
-
-se &lt;- function(x) sqrt(var(x)/length(x))</code></pre>
-<pre class="r"><code>dup_pur_customer &lt;- which(duplicated(trans_df[, c(&quot;customer_id&quot;, &quot;date&quot;)]))
-y_dup_df &lt;- trans_df[dup_pur_customer,]
-n_dup_df &lt;- trans_df[-dup_pur_customer,]
-
-y_dup_df$samday_purchase &lt;- TRUE
-n_dup_df$samday_purchase &lt;- FALSE
-
-
-cust_dup_tbl &lt;- rbind(y_dup_df, n_dup_df) %&gt;% 
-  group_by(customer_id) %&gt;% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()</code></pre>
-<pre class="r"><code>cust_dup_tbl %&gt;% 
-  group_by(samday_purchase) %&gt;% 
-  summarise(count            = n_distinct(customer_id),
-            med_pur_freq     = median(frequency),
-            avg_pur_freq     = mean(frequency),
-            sd_freq          = sd(frequency),
-            se_freq          = se(frequency),
-            med_pur_monetary = median(monetary) %&gt;% format_dollar,
-            avg_pur_monetary = mean(monetary)   %&gt;% format_dollar,
-            sd_monetary      = sd(monetary),
-            se_monetary      = se(monetary)) %&gt;% 
-    kbl() %&gt;% 
-    kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<pre class="r"><code>partition(skim(Pima))</code></pre>
+<p><strong>Variable type: numeric</strong></p>
+<table>
 <thead>
-<tr>
-<th style="text-align:left;">
-samday_purchase
-</th>
-<th style="text-align:right;">
-count
-</th>
-<th style="text-align:right;">
-med_pur_freq
-</th>
-<th style="text-align:right;">
-avg_pur_freq
-</th>
-<th style="text-align:right;">
-sd_freq
-</th>
-<th style="text-align:right;">
-se_freq
-</th>
-<th style="text-align:left;">
-med_pur_monetary
-</th>
-<th style="text-align:left;">
-avg_pur_monetary
-</th>
-<th style="text-align:right;">
-sd_monetary
-</th>
-<th style="text-align:right;">
-se_monetary
-</th>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td style="text-align:left;">
-0
-</td>
-<td style="text-align:right;">
-6152
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-17.8
-</td>
-<td style="text-align:right;">
-5.12
-</td>
-<td style="text-align:right;">
-0.065
-</td>
-<td style="text-align:left;">
-$1,194
-</td>
-<td style="text-align:left;">
-$1,149
-</td>
-<td style="text-align:right;">
-461
-</td>
-<td style="text-align:right;">
-5.88
-</td>
+<tr class="odd">
+<td align="left">npreg</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">3.52</td>
+<td align="right">3.31</td>
+<td align="right">0.00</td>
+<td align="right">1.00</td>
+<td align="right">2.00</td>
+<td align="right">5.00</td>
+<td align="right">17.00</td>
+<td align="left">▇▂▂▁▁</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-1
-</td>
-<td style="text-align:right;">
-737
-</td>
-<td style="text-align:right;">
-21
-</td>
-<td style="text-align:right;">
-21.2
-</td>
-<td style="text-align:right;">
-4.76
-</td>
-<td style="text-align:right;">
-0.175
-</td>
-<td style="text-align:left;">
-$1,486
-</td>
-<td style="text-align:left;">
-$1,436
-</td>
-<td style="text-align:right;">
-426
-</td>
-<td style="text-align:right;">
-15.69
-</td>
+<tr class="even">
+<td align="left">glu</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">121.03</td>
+<td align="right">31.00</td>
+<td align="right">56.00</td>
+<td align="right">98.75</td>
+<td align="right">115.00</td>
+<td align="right">141.25</td>
+<td align="right">199.00</td>
+<td align="left">▂▇▅▃▂</td>
 </tr>
-</tbody>
-</table>
-</div>
-<div id="hypothesis-test-on-same-day-repeated-and-non-repeated-purchase-group" class="section level3">
-<h3>3.2 Hypothesis Test on same-day repeated and non-repeated purchase group</h3>
-<ul>
-<li>Unbalanced Welch Two Sample t-test</li>
-<li>Balanced Welch Two Sample t-test</li>
-</ul>
-<p>Both the hypothesis tests rejects null hypothesis (p-value &lt; 0.05) that the difference in mean of customer “same-day duplicate” and “non-duplicate” groups are not significant.</p>
-<blockquote>
-<p>p &lt; .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
-- Traflmow, editor of the Basic and Applied Social Psychology journal</p>
-</blockquote>
-<p>A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote “statistically significant”. However, we can invoke the result is not by chance.</p>
-<pre class="r"><code>random_n_dup_df &lt;- sample_n(n_dup_df, 737) 
-random_n_dup_df$samday_purchase &lt;- FALSE
-
-sample_dup_tbl &lt;- rbind(y_dup_df, random_n_dup_df) %&gt;% 
-  group_by(customer_id) %&gt;% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %&gt;% ceiling() %&gt;% as.factor()) %&gt;% ungroup()
-
-t.test(monetary~samday_purchase, data = cust_dup_tbl)</code></pre>
-<pre><code>## 
-##  Welch Two Sample t-test
-## 
-## data:  monetary by samday_purchase
-## t = -17, df = 955, p-value &lt;0.0000000000000002
-## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
-## 95 percent confidence interval:
-##  -320 -255
-## sample estimates:
-## mean in group 0 mean in group 1 
-##            1149            1436</code></pre>
-<pre class="r"><code>t.test(monetary~samday_purchase, data = sample_dup_tbl)</code></pre>
-<pre><code>## 
-##  Welch Two Sample t-test
-## 
-## data:  monetary by samday_purchase
-## t = 6, df = 1326, p-value = 0.00000002
-## alternative hypothesis: true difference in means between group 1 and group 0 is not equal to 0
-## 95 percent confidence interval:
-##   7.08 14.64
-## sample estimates:
-## mean in group 1 mean in group 0 
-##            80.3            69.5</code></pre>
-</div>
-<div id="visualisation-on-same-day-repeated-and-non-repeated-customer" class="section level3">
-<h3>3.3 Visualisation on same-day repeated and non-repeated customer</h3>
-<ul>
-<li><p>Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.</p></li>
-<li><p>The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable.</p></li>
-<li><p>Given the same weight on number of customers to these groups, their first quantile density shrinks by factor of ~2.</p></li>
-</ul>
-<p>The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to “confonding” effects it false appearence as if it has some predictive power between these two groups.</p>
-<p>Perhaps it is the <strong>accessibility</strong> upon purchase act as a confounder between monetary value and same-day purchased behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings.</p>
-<pre class="r"><code>P3_C_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_col(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_B_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_V_dup &lt;- cust_dup_tbl %&gt;% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_violin(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_D_dup &lt;- cust_dup_tbl %&gt;% 
-  ggplot(aes(x = monetary, fill = samday_purchase)) +
-  geom_density(alpha = 0.5) +
-  scale_fill_tq() +
-  theme_tq()
-
-gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-</div>
-<div id="perspective-notes" class="section level3">
-<h3>3.4 Perspective Notes</h3>
-<ul>
-<li><p>Comparative analysis of potential aspects on “what is the behind the scene” of customers at low and high monetary regions are needed.</p></li>
-<li><p>In order to identify common characteristics among customers, the “hard” variables such as age, gender, place of residence are needed.</p></li>
-<li><p>Inquire customer information on geographical and payment method from database in order to approach on defining “soft” variables such as “service accessibility” and its scoring board.</p></li>
-</ul>
-<hr />
-</div>
-</div>
-<div id="measure-the-campaign-response-rate" class="section level2">
-<h2>4.0 Measure the Campaign Response Rate</h2>
-<p>The ability to retain engagement customers is a major concern for many businesses. However, their retention is not the only dimension of our interest; the revenue stream associated with these active engagement or persuadable customer is another factor influencing customer profitability.</p>
-<p>What is a good response rate?</p>
-<p>Typically in the field of ecommerce, in average, a good response rate are within 10~13% boundary.</p>
-<p>The average email benchmark by retail industry: 12.6% (open rate), 8.5% (click-to-open rate)</p>
-<pre class="r"><code>resp &lt;- resp_df_raw %&gt;% 
-  select(customer_id, response) %&gt;% 
-  setNames(c(&quot;customer_id&quot;, &quot;campaign&quot;))
-
-cust_df &lt;- trans_df %&gt;% 
-  left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0))</code></pre>
-<p>The average campaign response rate is 9.4%; with the assumption that the company is either retail or ecommerce business this value sits on a good hand. This value could also mean the percentage of persuaders.</p>
-<p>Questions of ask:
-* Campaign responders contribute higher value to the company than the non-responders?
-* Is there a revenue stream by engaging customers?
-+ When has the promotion began?
-+ What is the average expiration rate of campaign effect?</p>
-<pre class="r"><code>cust_df %&gt;% 
-  group_by(customer_id) %&gt;% 
-  summarise(campaign = median(campaign)) %&gt;% ungroup() %&gt;% 
-  count(campaign) %&gt;% 
-  mutate(pct_response = n/n_distinct(cust_df$customer_id)*100)</code></pre>
-<pre><code>## # A tibble: 2 × 3
-##   campaign     n pct_response
-##      &lt;dbl&gt; &lt;int&gt;        &lt;dbl&gt;
-## 1        0  6242        90.6 
-## 2        1   647         9.39</code></pre>
-<div id="quick-t-test-and-visualisation" class="section level3">
-<h3>4.1 Quick t-test and visualisation</h3>
-<pre class="r"><code>campaign_tbl &lt;- cust_df %&gt;% 
-  group_by(customer_id) %&gt;% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            campaign = median(campaign) %&gt;% as.factor()) %&gt;% ungroup()
-
-t.test(monetary~campaign, data = campaign_tbl)</code></pre>
-<pre><code>## 
-##  Welch Two Sample t-test
-## 
-## data:  monetary by campaign
-## t = -21, df = 883, p-value &lt;0.0000000000000002
-## alternative hypothesis: true difference in means between group 0 and group 1 is not equal to 0
-## 95 percent confidence interval:
-##  -359 -298
-## sample estimates:
-## mean in group 0 mean in group 1 
-##            1148            1477</code></pre>
-<pre class="r"><code>P4_C_dup &lt;- campaign_tbl %&gt;% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_col(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_B_dup &lt;- campaign_tbl %&gt;% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_V_dup &lt;- campaign_tbl %&gt;% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_violin(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_D_dup &lt;- campaign_tbl %&gt;% 
-  ggplot(aes(x = monetary, fill = campaign)) +
-  geom_density(alpha = 0.5) +
-  scale_fill_tq() +
-  theme_tq()
-
-gridExtra::grid.arrange(P4_C_dup, P4_B_dup, P4_V_dup, P4_D_dup, ncol = 2)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
-</div>
-<div id="perspective-notes-1" class="section level3">
-<h3>4.2 Perspective Notes</h3>
-<ul>
-<li><p>The monetary value distribution of campaign respond customer is symmetric with low variance; hence desirable to work with.</p></li>
-<li><p>Time series benchmark comparison between campaign respond customer and non-responded customer (benchmark) is needed to assign two things:</p>
-<ul>
-<li>Trend analysis: this variance in mean value (between the group) has fostered by campaign activity.<br />
-</li>
-<li>If TRUE, where in phase are they with the revenue upstream? -&gt; Different engagement strategy needed?</li>
-<li>If NO, can irregular term (Unexpected Revenue Fluctuation) in STL decomposition analysis explain such fortune?</li>
-</ul></li>
-<li><p>Consult the expert on how to measure these revenue contribution and the KPI’s for their worth before iterative engagement strategy.</p>
-<ul>
-<li>Current churn rate?</li>
-<li>Their progressive impact on MRR or ARR?</li>
-</ul></li>
-</ul>
-<hr />
-</div>
-</div>
-<div id="performing-rfm-segmentation-rfm-construction" class="section level2">
-<h2>5.0 Performing RFM Segmentation: RFM Construction</h2>
-<p>I like to note that with aid of package development and software. There are RFM segmentation and k-means built in library available which are quick, sophisticated and with accurate results. That said, building any models or simple matric from scratch is great source and opportunity for anyone’s learning curve - right?. More importantly, I believe it will deliver the ability to understand descriptive statistics in a more practical way. Some of the codes here may not be so easy to interpret as most of them are built from scratch and by me. I will really appreciate any feedback or mistakes I have made.</p>
-<p>Aim:
-* Feature RFM score with acceptable density distribution (0 ~ 100 score in range): Robust Scoring</p>
-<p>Key Task:</p>
-<ul>
-<li>Handling the skewness of the data set</li>
-<li>Weight control for individual RFM components -&gt; consult the expert</li>
-<li>Conduct code workflow for practice.</li>
-</ul>
-<div id="quick-eda" class="section level3">
-<h3>5.1 Quick EDA</h3>
-<p>Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I have added 1 day to all customers which takes account of customer has purchased the day we compute this metric; named it as recency days. This is great trick in case we would like to do log transform later on the analysis.</p>
-<p>recency = date of analysis - latest purchase date</p>
-<p>recency days = tomorrow date - latest purchase date</p>
-<pre class="r"><code>generator_rfm &lt;- function(data){
-  analy_day &lt;- max(data$date) + 1
-
-  data %&gt;% 
-  dplyr::group_by(customer_id) %&gt;% 
-  dplyr::summarise(recency_days = as.numeric(analy_day - max(date)),
-                   frequency = n(), 
-                   monetary = sum(amount)) %&gt;%  ungroup()
-}
-
-cust_df %&gt;% 
-  generator_rfm() %&gt;% select(-customer_id) %&gt;% 
-  psych::describe()</code></pre>
-<pre><code>##              vars    n   mean     sd median trimmed    mad min  max range  skew
-## recency_days    1 6889   81.5  85.38     54    66.5  56.34   1  858   857  2.31
-## frequency       2 6889   18.1   5.19     18    18.1   5.93   4   39    35  0.10
-## monetary        3 6889 1179.3 465.83   1227  1179.6 517.43 149 2933  2784 -0.05
-##              kurtosis   se
-## recency_days     8.49 1.03
-## frequency       -0.24 0.06
-## monetary        -0.75 5.61</code></pre>
-<pre class="r"><code>cust_df %&gt;% 
-  generator_rfm() %&gt;% head(10) %&gt;% 
-  mutate(monetary = sum(monetary) %&gt;% format_dollar()) %&gt;% 
-  set_names(c(&quot;Customer ID&quot;, &quot;Recency Days&quot;, &quot;Frequency&quot;, &quot;Monetary&quot;)) %&gt;%
-  kbl() %&gt;% 
-  kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-Customer ID
-</th>
-<th style="text-align:right;">
-Recency Days
-</th>
-<th style="text-align:right;">
-Frequency
-</th>
-<th style="text-align:left;">
-Monetary
-</th>
+<tr class="odd">
+<td align="left">bp</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">71.51</td>
+<td align="right">12.31</td>
+<td align="right">24.00</td>
+<td align="right">64.00</td>
+<td align="right">72.00</td>
+<td align="right">80.00</td>
+<td align="right">110.00</td>
+<td align="left">▁▂▇▆▁</td>
 </tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-CS1112
-</td>
-<td style="text-align:right;">
-62
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
+<tr class="even">
+<td align="left">skin</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">29.18</td>
+<td align="right">10.52</td>
+<td align="right">7.00</td>
+<td align="right">22.00</td>
+<td align="right">29.00</td>
+<td align="right">36.00</td>
+<td align="right">99.00</td>
+<td align="left">▅▇▁▁▁</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-CS1113
-</td>
-<td style="text-align:right;">
-36
-</td>
-<td style="text-align:right;">
-20
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
+<tr class="odd">
+<td align="left">bmi</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">32.89</td>
+<td align="right">6.88</td>
+<td align="right">18.20</td>
+<td align="right">27.87</td>
+<td align="right">32.80</td>
+<td align="right">36.90</td>
+<td align="right">67.10</td>
+<td align="left">▃▇▃▁▁</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-CS1114
-</td>
-<td style="text-align:right;">
-33
-</td>
-<td style="text-align:right;">
-19
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
+<tr class="even">
+<td align="left">ped</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0.50</td>
+<td align="right">0.34</td>
+<td align="right">0.09</td>
+<td align="right">0.26</td>
+<td align="right">0.42</td>
+<td align="right">0.66</td>
+<td align="right">2.42</td>
+<td align="left">▇▃▁▁▁</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-CS1115
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
+<tr class="odd">
+<td align="left">age</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">31.61</td>
+<td align="right">10.76</td>
+<td align="right">21.00</td>
+<td align="right">23.00</td>
+<td align="right">28.00</td>
+<td align="right">38.00</td>
+<td align="right">81.00</td>
+<td align="left">▇▂▁▁▁</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-CS1116
-</td>
-<td style="text-align:right;">
-204
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1117
-</td>
-<td style="text-align:right;">
-258
-</td>
-<td style="text-align:right;">
-17
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1118
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1119
-</td>
-<td style="text-align:right;">
-12
-</td>
-<td style="text-align:right;">
-15
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1120
-</td>
-<td style="text-align:right;">
-11
-</td>
-<td style="text-align:right;">
-24
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1121
-</td>
-<td style="text-align:right;">
-42
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:left;">
-$13,005
-</td>
+<tr class="even">
+<td align="left">type</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0.33</td>
+<td align="right">0.47</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">0.00</td>
+<td align="right">1.00</td>
+<td align="right">1.00</td>
+<td align="left">▇▁▁▁▃</td>
 </tr>
 </tbody>
 </table>
-</div>
-<div id="rfm-distribution-and-skewness" class="section level3">
-<h3>5.2 RFM distribution and skewness</h3>
-<pre class="r"><code>skimr::partition(skim(cust_df %&gt;% 
-  generator_rfm()))$numeric %&gt;% data.frame %&gt;%
-   kbl() %&gt;% 
-   kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-skim_variable
-</th>
-<th style="text-align:right;">
-n_missing
-</th>
-<th style="text-align:right;">
-complete_rate
-</th>
-<th style="text-align:right;">
-mean
-</th>
-<th style="text-align:right;">
-sd
-</th>
-<th style="text-align:right;">
-p0
-</th>
-<th style="text-align:right;">
-p25
-</th>
-<th style="text-align:right;">
-p50
-</th>
-<th style="text-align:right;">
-p75
-</th>
-<th style="text-align:right;">
-p100
-</th>
-<th style="text-align:left;">
-hist
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-recency_days
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-81.5
-</td>
-<td style="text-align:right;">
-85.38
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-23
-</td>
-<td style="text-align:right;">
-54
-</td>
-<td style="text-align:right;">
-112
-</td>
-<td style="text-align:right;">
-858
-</td>
-<td style="text-align:left;">
-▇▁▁▁▁
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-frequency
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-18.1
-</td>
-<td style="text-align:right;">
-5.19
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-14
-</td>
-<td style="text-align:right;">
-18
-</td>
-<td style="text-align:right;">
-22
-</td>
-<td style="text-align:right;">
-39
-</td>
-<td style="text-align:left;">
-▂▇▇▂▁
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-monetary
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-1179.3
-</td>
-<td style="text-align:right;">
-465.83
-</td>
-<td style="text-align:right;">
-149
-</td>
-<td style="text-align:right;">
-781
-</td>
-<td style="text-align:right;">
-1227
-</td>
-<td style="text-align:right;">
-1520
-</td>
-<td style="text-align:right;">
-2933
-</td>
-<td style="text-align:left;">
-▅▆▇▂▁
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>cust_df %&gt;% 
-  generator_rfm() %&gt;% 
-  select(monetary, frequency:recency_days) %&gt;% 
-  generator_hist_facet(bins = 40, ncol = 3, fct_rev = FALSE) + theme_ben()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<p>_generator_hist_facet() and theme_ben() are customised facet histogram function. It is uploaded on my GitHub and you are more than welcome :) For better understanding I recommend looking into Business Science 101 Course organised by <strong>Matt Dancho</strong> <em>He regularly uploads free tutorials on Youtube as well. Great Stuff!</em></p>
-<p>The recency days dataset is highly right skewed. There are many transformations to handle such skewed distribution, e.g. log transformation for instance. However, inhere, I will like to demonstrate small trick using quantiles binning to effectively split range of customers by organisational profit. - Yes Pareto Principle embeds here.</p>
-<p>Quantile ranges are one of descriptive statistics describing the skewness of the data. The range between Q3-Q2 is larger in magnitude than the Q2-Q1 point in range. The concept of the quantiles (any family of quantiles) are the values located in the dataset in a way that it can split the data uniformly.</p>
-<p>Small example of quantile:</p>
-<pre class="r"><code>rfm_example &lt;- cust_df %&gt;% 
-    generator_rfm()
+<pre class="r"><code>ggpairs(Pima[ ,c(1:8)], aes(color = type %&gt;% as.factor(), alpha =0.75), lower = list(continuous = &quot;smooth&quot;)) + theme_bw() + 
+  labs(title = &quot;Diabetes&quot;) +
+  theme(plot.title = element_text(face =&#39;bold&#39;, color =&#39;black&#39;, hjust=0.5, size =12)) </code></pre>
+<pre><code>## Warning in cor(x, y): the standard deviation is zero
 
-R_quantile &lt;- quantile(rfm_example$recency_days, probs = seq(0,1,0.25))
-F_quantile &lt;- quantile(rfm_example$monetary, probs = seq(0,1,0.25))
-M_quantile &lt;- quantile(rfm_example$frequency, probs = seq(0,1,0.25))
+## Warning in cor(x, y): the standard deviation is zero
 
-cbind(R_quantile, F_quantile, M_quantile)</code></pre>
-<pre><code>##      R_quantile F_quantile M_quantile
-## 0%            1        149          4
-## 25%          23        781         14
-## 50%          54       1227         18
-## 75%         112       1520         22
-## 100%        858       2933         39</code></pre>
-<p>This quantile measure would most likely to preserve the actual customer behaviour distribution; thus the robustness of its score. However, due to the wide range between Q3 (858 recency days) and Q2 (112 recency days), the scope of valuable customers are squeezed making it difficult quantify their differences in their Recency score.</p>
-<p>Hence we will do an opposite approach squeezing the Q3 and Q2 and exposing the range at low recency region. This can be done by relocating the quantiles in data set.</p>
-<pre class="r"><code>result &lt;- c() 
-j &lt;- 0
-for(i in 1:5){
-  j = j + i
-  result[i] = 1 -(j/(1+2+3+4+5))
-  print(result)
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero
+
+## Warning in cor(x, y): the standard deviation is zero</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>Pima_melt &lt;- reshape2::melt(Pima, id.var =&quot;type&quot;)
+
+ggplot2::ggplot(data = Pima_melt,
+                aes(x = type, y = value, group = type)) +
+  geom_boxplot() +
+  facet_wrap(~variable, ncol=2) </code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<div id="eucliden-distance-calculation" class="section level3">
+<h3>Eucliden Distance Calculation</h3>
+<pre class="r"><code>euclideanDist &lt;- function(a, b){
+  d = 0
+  for(i in c(1:(length(a)-1) ))
+  {
+    d = d + (a[[i]]-b[[i]])^2
+  }
+  d = sqrt(d)
+  return(d)
 }</code></pre>
-<pre><code>## [1] 0.933
-## [1] 0.933 0.800
-## [1] 0.933 0.800 0.600
-## [1] 0.933 0.800 0.600 0.333
-## [1] 0.933 0.800 0.600 0.333 0.000</code></pre>
-<pre class="r"><code>R_result &lt;- quantile(rfm_example$recency_days, probs = result)
-F_result &lt;- quantile(rfm_example$frequency, probs = result)
-M_result &lt;- quantile(rfm_example$monetary, probs = result)
-
-cbind(R_result, F_result, M_result)</code></pre>
-<pre><code>##           R_result F_result M_result
-## 93.33333%      221     26.0     1847
-## 80%            129     23.0     1589
-## 60%             73     19.8     1345
-## 33.33333%       32     16.0      980
-## 0%               1      4.0      149</code></pre>
-<p>This is no longer a quantiles; instead of 100% (tip of the iceberg) there is a 93.3%. This new splitting point wraps customers &gt; {recency days over 221} into a single, low scored R group.</p>
-<p>There is one other small problem. The direction of scoreboard for these matrics are opposite: between the R and F,M, which I will take care of in the code below.</p>
-<pre class="r"><code>generator_rfm_metric &lt;- function(data) {
-  
-  analy_day &lt;- max(data$date) + 1
-  
-  step_1 &lt;- data %&gt;% 
-        generator_rfm() 
-  
-  R_level &lt;- quantile(step_1$recency_days,   probs = result)
-  F_level &lt;- quantile(step_1$frequency, probs = result)
-  M_level &lt;- quantile(step_1$monetary,  probs = result)
-  
-  out &lt;- step_1 %&gt;%
-    mutate(R_score = case_when(.$recency_days &gt;= R_level[1] ~ 1,
-                               .$recency_days &gt;= R_level[2] ~ 2,
-                               .$recency_days &gt;= R_level[3] ~ 3,
-                               .$recency_days &gt;= R_level[4] ~ 4,
-                               TRUE ~ 5),
-           F_score = case_when(.$frequency &gt;= F_level[1] ~ 5,
-                               .$frequency &gt;= F_level[2] ~ 4,
-                               .$frequency &gt;= F_level[3] ~ 3,
-                               .$frequency &gt;= F_level[4] ~ 2,
-                               TRUE ~ 1),
-           M_score = case_when(.$monetary &gt;= M_level[1] ~ 5,
-                               .$monetary &gt;= M_level[2] ~ 4,
-                               .$monetary &gt;= M_level[3] ~ 3,
-                               .$monetary &gt;= M_level[4] ~ 2,
-                               TRUE ~ 1))
-  return(out)
-}
-
-
-generator_rev_per_metric &lt;- function(pre_score_data, ...) {
-  
-  pre_score_data %&gt;% 
-    dplyr::group_by(...) %&gt;% 
-    dplyr::summarise(cust = n_distinct(customer_id),
-                     total_monetary = sum(monetary)) %&gt;% ungroup() %&gt;% 
+</div>
+<div id="knn-prediction-function" class="section level3">
+<h3>KNN Prediction Function</h3>
+<pre class="r"><code>knn_predict &lt;- function(test_data, train_data, k_value){
+  pred &lt;- c()  #empty pred vector 
+  #LOOP-1
+  for(i in c(1:nrow(test_data))){   #looping over each record of test data
+    eu_dist =c()          #eu_dist &amp; eu_char empty  vector
+    eu_char = c()
+    good = 0              #good &amp; bad variable initialization with 0 value
+    bad = 0
     
-    dplyr::mutate(rev_per_cus = total_monetary/cust,
-                  prop_cus = cust/sum(cust),
-                  prop_rev = total_monetary/sum(total_monetary),
-                  rev_effect = prop_rev/prop_cus)
+    #LOOP-2-looping over train data 
+    for(j in c(1:nrow(train_data))){
+ 
+      #adding euclidean distance b/w test data point and train data to eu_dist vector
+      eu_dist &lt;- c(eu_dist, euclideanDist(test_data[i,], train_data[j,]))
+ 
+      #adding class variable of training data in eu_char
+      eu_char &lt;- c(eu_char, as.character(train_data[j,][[6]]))
+    }
+    
+    eu &lt;- data.frame(eu_char, eu_dist) #eu dataframe created with eu_char &amp; eu_dist columns
+ 
+    eu &lt;- eu[order(eu$eu_dist),]       #sorting eu dataframe to gettop K neighbors
+    eu &lt;- eu[1:k_value,]               #eu dataframe with top K neighbors
+ 
+    #Loop 3: loops over eu and counts classes of neibhors.
+    for(k in c(1:nrow(eu))){
+      if(as.character(eu[k,&quot;eu_char&quot;]) == &quot;g&quot;){
+        good = good + 1
+      }
+      else
+        bad = bad + 1
+    }
+ 
+    # Compares the no. of neighbors with class label good or bad
+    if(good &gt; bad){          #if majority of neighbors are good then put &quot;g&quot; in pred vector
+ 
+      pred &lt;- c(pred, &quot;g&quot;)
+    }
+    else if(good &lt; bad){
+                   #if majority of neighbors are bad then put &quot;b&quot; in pred vector
+      pred &lt;- c(pred, &quot;b&quot;)
+    }
+    
+  }
+  return(pred) #return pred vector
 }</code></pre>
 </div>
-<div id="rfm-components-weight-control" class="section level3">
-<h3>5.3 RFM components Weight control</h3>
-<p>The next question that arises is: is it fair to average out the individual recency, frequency, and monetary scores for each customers and assign them to RFM score, as per their purchase or engagement behaviour?
-Depending on the nature of the businesses, the relative importance for individual matrics can be adjusted to arrive at their final score.</p>
-<p>For example, for retail business selling customer goods. A customer who searches and purchases product in monthly bases will have higher recency and frequency score than monetary score. Hence the weight can be calculated by giving more importance to the recency and frequency scores.</p>
-<p>This is the area the data analyst would need to contact this domain of an expert. In prior to jumping into conclusions without any certainty.</p>
-<p>Educated Approach:</p>
-<ul>
-<li>Calculate the revenue contribution for each score in individual R, F, M components.
-<ul>
-<li>revenue contribution/ no. customer = Revenue contributed per customer</li>
-<li>{Rev(group)/Rev(total)} / {No. of cust(group)/No. of cust(total)} = Revenue contribution by group</li>
-<li>The sum of revenue contribution by group (score) is revenue effect by its component</li>
-<li>R(Rev effect) + F(Rev effect) + M(Rev effect) = Total Revenue effect</li>
-<li>Weight{R(Rev effect)} + Weight{F(Rev effect)} + Weight{M(Rev effect)} = Weight{Total Revenue effect} = 1</li>
-</ul></li>
-</ul>
-<pre class="r"><code>R_score_table &lt;- cust_df %&gt;% 
-  generator_rfm_metric() %&gt;% 
-  generator_rev_per_metric(R_score); R_score_table %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-R_score
-</th>
-<th style="text-align:right;">
-cust
-</th>
-<th style="text-align:right;">
-total_monetary
-</th>
-<th style="text-align:right;">
-rev_per_cus
-</th>
-<th style="text-align:right;">
-prop_cus
-</th>
-<th style="text-align:right;">
-prop_rev
-</th>
-<th style="text-align:right;">
-rev_effect
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-461
-</td>
-<td style="text-align:right;">
-376503
-</td>
-<td style="text-align:right;">
-817
-</td>
-<td style="text-align:right;">
-0.067
-</td>
-<td style="text-align:right;">
-0.046
-</td>
-<td style="text-align:right;">
-0.693
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-930
-</td>
-<td style="text-align:right;">
-987059
-</td>
-<td style="text-align:right;">
-1061
-</td>
-<td style="text-align:right;">
-0.135
-</td>
-<td style="text-align:right;">
-0.121
-</td>
-<td style="text-align:right;">
-0.900
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-1372
-</td>
-<td style="text-align:right;">
-1586396
-</td>
-<td style="text-align:right;">
-1156
-</td>
-<td style="text-align:right;">
-0.199
-</td>
-<td style="text-align:right;">
-0.195
-</td>
-<td style="text-align:right;">
-0.980
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-1851
-</td>
-<td style="text-align:right;">
-2285361
-</td>
-<td style="text-align:right;">
-1235
-</td>
-<td style="text-align:right;">
-0.269
-</td>
-<td style="text-align:right;">
-0.281
-</td>
-<td style="text-align:right;">
-1.047
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2275
-</td>
-<td style="text-align:right;">
-2888670
-</td>
-<td style="text-align:right;">
-1270
-</td>
-<td style="text-align:right;">
-0.330
-</td>
-<td style="text-align:right;">
-0.356
-</td>
-<td style="text-align:right;">
-1.077
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>F_score_table &lt;- cust_df %&gt;% 
-  generator_rfm_metric() %&gt;% 
-  generator_rev_per_metric(F_score); F_score_table %&gt;% kbl() %&gt;% kable_material_dark() </code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-F_score
-</th>
-<th style="text-align:right;">
-cust
-</th>
-<th style="text-align:right;">
-total_monetary
-</th>
-<th style="text-align:right;">
-rev_per_cus
-</th>
-<th style="text-align:right;">
-prop_cus
-</th>
-<th style="text-align:right;">
-prop_rev
-</th>
-<th style="text-align:right;">
-rev_effect
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-2157
-</td>
-<td style="text-align:right;">
-1433411
-</td>
-<td style="text-align:right;">
-665
-</td>
-<td style="text-align:right;">
-0.313
-</td>
-<td style="text-align:right;">
-0.176
-</td>
-<td style="text-align:right;">
-0.564
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-1976
-</td>
-<td style="text-align:right;">
-2249121
-</td>
-<td style="text-align:right;">
-1138
-</td>
-<td style="text-align:right;">
-0.287
-</td>
-<td style="text-align:right;">
-0.277
-</td>
-<td style="text-align:right;">
-0.965
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-1355
-</td>
-<td style="text-align:right;">
-1945214
-</td>
-<td style="text-align:right;">
-1436
-</td>
-<td style="text-align:right;">
-0.197
-</td>
-<td style="text-align:right;">
-0.239
-</td>
-<td style="text-align:right;">
-1.217
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-840
-</td>
-<td style="text-align:right;">
-1397047
-</td>
-<td style="text-align:right;">
-1663
-</td>
-<td style="text-align:right;">
-0.122
-</td>
-<td style="text-align:right;">
-0.172
-</td>
-<td style="text-align:right;">
-1.410
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-561
-</td>
-<td style="text-align:right;">
-1099196
-</td>
-<td style="text-align:right;">
-1959
-</td>
-<td style="text-align:right;">
-0.081
-</td>
-<td style="text-align:right;">
-0.135
-</td>
-<td style="text-align:right;">
-1.661
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>M_score_table &lt;- cust_df %&gt;% 
-  generator_rfm_metric() %&gt;% 
-  generator_rev_per_metric(M_score); M_score_table %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-M_score
-</th>
-<th style="text-align:right;">
-cust
-</th>
-<th style="text-align:right;">
-total_monetary
-</th>
-<th style="text-align:right;">
-rev_per_cus
-</th>
-<th style="text-align:right;">
-prop_cus
-</th>
-<th style="text-align:right;">
-prop_rev
-</th>
-<th style="text-align:right;">
-rev_effect
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-1
-</td>
-<td style="text-align:right;">
-2297
-</td>
-<td style="text-align:right;">
-1451799
-</td>
-<td style="text-align:right;">
-632
-</td>
-<td style="text-align:right;">
-0.333
-</td>
-<td style="text-align:right;">
-0.179
-</td>
-<td style="text-align:right;">
-0.536
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-1833
-</td>
-<td style="text-align:right;">
-2163269
-</td>
-<td style="text-align:right;">
-1180
-</td>
-<td style="text-align:right;">
-0.266
-</td>
-<td style="text-align:right;">
-0.266
-</td>
-<td style="text-align:right;">
-1.001
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-1380
-</td>
-<td style="text-align:right;">
-2016601
-</td>
-<td style="text-align:right;">
-1461
-</td>
-<td style="text-align:right;">
-0.200
-</td>
-<td style="text-align:right;">
-0.248
-</td>
-<td style="text-align:right;">
-1.239
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-918
-</td>
-<td style="text-align:right;">
-1562466
-</td>
-<td style="text-align:right;">
-1702
-</td>
-<td style="text-align:right;">
-0.133
-</td>
-<td style="text-align:right;">
-0.192
-</td>
-<td style="text-align:right;">
-1.443
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-461
-</td>
-<td style="text-align:right;">
-929854
-</td>
-<td style="text-align:right;">
-2017
-</td>
-<td style="text-align:right;">
-0.067
-</td>
-<td style="text-align:right;">
-0.114
-</td>
-<td style="text-align:right;">
-1.710
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>rfm_effect &lt;- sapply(list(R_score_table$rev_effect, F_score_table$rev_effect, M_score_table$rev_effect), function(x) sum(x))
-
-sum_effect &lt;- sum(rfm_effect)
-weight &lt;- c(rfm_effect[1]/sum_effect, rfm_effect[2]/sum_effect, rfm_effect[3]/sum_effect)
-
-RFM_function &lt;- function(x, y, z, w){
-  RFM_Score &lt;- x*w[1] + y*w[2] + z*w[3]
-  return(RFM_Score)
-}
-
-min_max_normalization &lt;- function(x) {
-  return((x-min(x))/(max(x)-min(x)))
-}
-
-generator_RFM_score &lt;- function(pre_score_data) {
-  pre_score_data %&gt;% 
-  mutate(RFM_Score_norm = RFM_function(.$R_score,
-                                       .$F_score,
-                                       .$M_score,
-                                       w = weight),
-         RFM_Score_norm = min_max_normalization(RFM_Score_norm),
-         RFM_Score      = (RFM_Score_norm)*100,
-         RFM_Score_gr   = ifelse(RFM_Score &gt;= 90, 10,
-                               ifelse(RFM_Score &gt;= 80, 9,
-                                      ifelse(RFM_Score &gt;= 70, 8,
-                                             ifelse(RFM_Score &gt;= 60, 7,
-                                                    ifelse(RFM_Score &gt;= 50, 6,
-                                                           ifelse(RFM_Score &gt;= 40, 5,
-                                                                  ifelse(RFM_Score &gt;= 30, 4,
-                                                                         ifelse(RFM_Score &gt;= 20, 3,
-                                                                                ifelse(RFM_Score &gt;= 10, 2,
-                                                                                       1)))))))))) 
+<div id="accuracy-calculation" class="section level3">
+<h3>Accuracy Calculation</h3>
+<pre class="r"><code>accuracy &lt;- function(test_data){
+  correct = 0
+  for(i in c(1:nrow(test_data))){
+    if(test_data[i,6] == test_data[i,7]){ 
+      correct = correct+1
+    }
+  }
+  accu = correct/nrow(test_data) * 100  
+  return(accu)
 }</code></pre>
 </div>
-</div>
-<div id="performing-rfm-segmentation-rfm-analysis" class="section level2">
-<h2>6.0 Performing RFM Segmentation: RFM Analysis</h2>
-<pre class="r"><code>rfm_score_df &lt;- cust_df %&gt;% 
-  generator_rfm_metric() %&gt;% 
-  generator_RFM_score() %&gt;% 
-  left_join(resp, by = &quot;customer_id&quot;) %&gt;% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0) %&gt;% as.factor()) %&gt;% 
-  mutate(RFM_Score_gr = RFM_Score_gr %&gt;% as.factor) %&gt;%
-  unite(&quot;RFM&quot;, R_score:M_score, sep = &quot;:&quot;, remove = FALSE)</code></pre>
-<pre class="r"><code>rfm_score_df %&gt;% 
-  select(R_score:M_score) %&gt;% 
-  generator_hist_facet(bins = 5, ncol = 1, fct_rev = FALSE) + theme_ben()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
-<pre class="r"><code>rfm_score_df %&gt;% 
-  select(RFM_Score, RFM_Score_gr) %&gt;% 
-  mutate(RFM_Score_gr = as.numeric(RFM_Score_gr)) %&gt;% 
-  generator_hist_facet(bins = 10, ncol = 1, fct_rev = FALSE) + theme_ben()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-26-2.png" width="672" /></p>
-<pre class="r"><code>summary_rfm_score_table &lt;- rfm_score_df %&gt;% 
-  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %&gt;% 
-  dplyr::group_by(RFM_Score_gr) %&gt;% 
-  dplyr::summarise(no_cust           = n(),
-                   campaign          = sum(as.numeric(as.character(campaign))),
-                   avg_RFM_Score     = mean(RFM_Score),
-                   avg_freq          = mean(frequency),
-                   avg_sales         = mean(monetary),
-                   avg_recency_days  = mean(recency_days),
-                   tot_sales         = sum(monetary),
-                   rev_per_cust      = tot_sales/no_cust) %&gt;% ungroup() %&gt;% 
-  arrange(desc(avg_RFM_Score)) %&gt;% 
-  mutate(RFM_Score_gr = RFM_Score_gr %&gt;% fct_reorder(desc(avg_RFM_Score))) %&gt;% 
-  select(avg_RFM_Score, everything()) 
-  
-
-summary_rfm_score_table %&gt;% 
-  mutate(tot_sales = format_dollar(tot_sales),
-         rev_per_cust = format_dollar(rev_per_cust)) %&gt;% 
-  setNames(c(&quot;Avg. RFM Score&quot;, &quot;RFM&quot;, &quot;No. Customer&quot;, &quot;No. Campaign&quot;,&quot;Avg. Frequency&quot;, &quot;Avg. Monetary&quot;, &quot;Avg. Recency&quot;, &quot;Total Revenue&quot;, &quot;Revenue Per Customer&quot;)) %&gt;% kbl() %&gt;% kable_material_dark() </code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-Avg. RFM Score
-</th>
-<th style="text-align:left;">
-RFM
-</th>
-<th style="text-align:right;">
-No. Customer
-</th>
-<th style="text-align:right;">
-No. Campaign
-</th>
-<th style="text-align:right;">
-Avg. Frequency
-</th>
-<th style="text-align:right;">
-Avg. Monetary
-</th>
-<th style="text-align:right;">
-Avg. Recency
-</th>
-<th style="text-align:left;">
-Total Revenue
-</th>
-<th style="text-align:left;">
-Revenue Per Customer
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-95.75
-</td>
-<td style="text-align:left;">
-10
-</td>
-<td style="text-align:right;">
-395
-</td>
-<td style="text-align:right;">
-58
-</td>
-<td style="text-align:right;">
-27.8
-</td>
-<td style="text-align:right;">
-1977
-</td>
-<td style="text-align:right;">
-25.1
-</td>
-<td style="text-align:left;">
-$780,882
-</td>
-<td style="text-align:left;">
-$1,977
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-83.09
-</td>
-<td style="text-align:left;">
-9
-</td>
-<td style="text-align:right;">
-370
-</td>
-<td style="text-align:right;">
-58
-</td>
-<td style="text-align:right;">
-25.2
-</td>
-<td style="text-align:right;">
-1781
-</td>
-<td style="text-align:right;">
-35.7
-</td>
-<td style="text-align:left;">
-$658,934
-</td>
-<td style="text-align:left;">
-$1,781
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-74.72
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:right;">
-400
-</td>
-<td style="text-align:right;">
-72
-</td>
-<td style="text-align:right;">
-24.0
-</td>
-<td style="text-align:right;">
-1699
-</td>
-<td style="text-align:right;">
-49.8
-</td>
-<td style="text-align:left;">
-$679,796
-</td>
-<td style="text-align:left;">
-$1,699
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-65.00
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:right;">
-655
-</td>
-<td style="text-align:right;">
-95
-</td>
-<td style="text-align:right;">
-22.1
-</td>
-<td style="text-align:right;">
-1547
-</td>
-<td style="text-align:right;">
-48.1
-</td>
-<td style="text-align:left;">
-$1,013,378
-</td>
-<td style="text-align:left;">
-$1,547
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-56.28
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:right;">
-527
-</td>
-<td style="text-align:right;">
-84
-</td>
-<td style="text-align:right;">
-20.9
-</td>
-<td style="text-align:right;">
-1452
-</td>
-<td style="text-align:right;">
-59.5
-</td>
-<td style="text-align:left;">
-$765,134
-</td>
-<td style="text-align:left;">
-$1,452
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-46.35
-</td>
-<td style="text-align:left;">
-5
-</td>
-<td style="text-align:right;">
-959
-</td>
-<td style="text-align:right;">
-108
-</td>
-<td style="text-align:right;">
-19.1
-</td>
-<td style="text-align:right;">
-1308
-</td>
-<td style="text-align:right;">
-62.8
-</td>
-<td style="text-align:left;">
-$1,253,966
-</td>
-<td style="text-align:left;">
-$1,308
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-35.25
-</td>
-<td style="text-align:left;">
-4
-</td>
-<td style="text-align:right;">
-1155
-</td>
-<td style="text-align:right;">
-67
-</td>
-<td style="text-align:right;">
-17.1
-</td>
-<td style="text-align:right;">
-1094
-</td>
-<td style="text-align:right;">
-65.0
-</td>
-<td style="text-align:left;">
-$1,263,235
-</td>
-<td style="text-align:left;">
-$1,094
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-24.85
-</td>
-<td style="text-align:left;">
-3
-</td>
-<td style="text-align:right;">
-1221
-</td>
-<td style="text-align:right;">
-53
-</td>
-<td style="text-align:right;">
-13.5
-</td>
-<td style="text-align:right;">
-746
-</td>
-<td style="text-align:right;">
-65.5
-</td>
-<td style="text-align:left;">
-$911,186
-</td>
-<td style="text-align:left;">
-$746
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-15.11
-</td>
-<td style="text-align:left;">
-2
-</td>
-<td style="text-align:right;">
-539
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-13.4
-</td>
-<td style="text-align:right;">
-736
-</td>
-<td style="text-align:right;">
-137.1
-</td>
-<td style="text-align:left;">
-$396,866
-</td>
-<td style="text-align:left;">
-$736
-</td>
-</tr>
-<tr>
-<td style="text-align:right;">
-4.43
-</td>
-<td style="text-align:left;">
-1
-</td>
-<td style="text-align:right;">
-668
-</td>
-<td style="text-align:right;">
-26
-</td>
-<td style="text-align:right;">
-11.7
-</td>
-<td style="text-align:right;">
-600
-</td>
-<td style="text-align:right;">
-249.6
-</td>
-<td style="text-align:left;">
-$400,612
-</td>
-<td style="text-align:left;">
-$600
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>ggplot(rfm_score_df, aes(x = RFM_Score)) +
-  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[1], alpha = 0.7) +
-  stat_function(fun=dnorm, 
-                args = list(mean=mean(rfm_score_df$RFM_Score),
-                              sd=sd(rfm_score_df$RFM_Score)),
-                color=&quot;red&quot;, lwd = 1) +
-  geom_density(color=&quot;black&quot;, lwd =1.5) +
-  theme_tq()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
-</div>
-<div id="performing-rfm-segmentation-rfm-visualisation" class="section level2">
-<h2>7.0 Performing RFM Segmentation: RFM Visualisation</h2>
-<pre class="r"><code>generator_plot_rfm &lt;- function(data, var1, var2, cmpg, point_size =0.7,
-                               colour = wesanderson::wes_palette(name=&quot;Royal1&quot;, 2)){
-  
-  var1 &lt;- enquo(var1)
-  var2 &lt;- enquo(var2)
-  var1_name&lt;- quo_name(var1)
-  var2_name&lt;- quo_name(var2)
-  
-  data %&gt;% 
-    ggplot(aes(x = {{var1}}, y = {{var2}}, color = {{cmpg}})) + 
-    geom_point(position = &quot;jitter&quot;, size = point_size) +
-    theme_bw() + 
-    scale_color_manual(values=colour) +
-    scale_y_continuous(label = scales::dollar) +
-    ggtitle(paste0(&quot;Customer Purchasing Behaviour Plot: &quot;, str_to_upper(var1_name), &quot; and &quot;, str_to_upper(var2_name))) +
-  labs(
-     x        = var1_name %&gt;% str_to_upper(),
-     y        = var2_name %&gt;% str_to_upper(),
-     color    = &quot;Campaign Response&quot;,
-     caption  = &quot;Any prior knowledge to this cause from +2 years of historical data&quot;
-  ) +
-  theme_tq()
-
-}
-
-generator_plot_rfm(rfm_score_df, RFM_Score, monetary, campaign)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
-<pre class="r"><code>generator_plot_rfm(rfm_score_df, recency_days, monetary, campaign)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-2.png" width="672" /></p>
-<pre class="r"><code>generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-29-3.png" width="672" /></p>
-<pre class="r"><code>g_plot &lt;- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) + 
-  geom_point(position = &quot;stack&quot;, size = 3) +
-  theme_bw()+ 
-    labs(
-     title    = &quot;Customer Purchasing Behaviour Plot: Frequency and Monetary&quot;,
-     subtitle = &quot;Uniform Stack Distribution of RFM Score under F and M dimension&quot;,
-     x        = &quot;Frequency&quot;,
-     y        = &quot;Monetary&quot;,
-     color    = &quot;RFM Score&quot;
-  ) + 
-  theme_tq()
-g_plot</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
-<pre class="r"><code>h_plot &lt;- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) +
-  geom_point(position = &quot;jitter&quot;, size = 0.7) +
-  theme_bw() +  
-  labs(
-     title    = &quot;Customer Purchasing Behaviour Plot: Frequency and Monetary&quot;,
-     subtitle = &quot;Two Distinctive Customer Groups visually identified&quot;,
-     x        = &quot;Frequency&quot;,
-     y        = &quot;Monetary&quot;,
-     color    = &quot;RFM Score&quot;
-  ) +
-  theme_tq()
-h_plot</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-30-2.png" width="672" /></p>
-<pre class="r"><code>f_plot &lt;- ggplot(data = rfm_score_df, aes(x = log(monetary/recency_days), y = frequency, color = RFM_Score_gr)) +
-  geom_point(position = &quot;jitter&quot;, size = 1.5) +
-  theme_bw()+   
-  labs(
-     title    = &quot;Customer Purchasing Behaviour Plot: log(M/R) and Frequency&quot;,
-     x        = &quot;log(M/R)&quot;,
-     y        = &quot;Frequency&quot;,
-     color    = &quot;RFM Score&quot;
-  ) +
-  theme_tq()
-f_plot</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-30-3.png" width="672" /></p>
-</div>
-<div id="performing-rfm-segmentation-business-use" class="section level2">
-<h2>8.0 Performing RFM Segmentation: Business Use</h2>
-<p>Having individual R, F, and M scores and these unqiuw combination, customers can be clustered in groups based on their purchase behaviour. On top of that, the RFM score we have generated assigns the profitable priorities of these groups. This is bring an advantage for quick and actionable decision makings in comparison to having just the purchasing behaviour analysis.</p>
-<p>Clustering these groups exceeds my goal in this post hence I would not explore more than illustrating some of the classical examples below.</p>
-<p>At Risk</p>
-<ul>
-<li><p>Customers with high revenue contribution but risk of churn.</p></li>
-<li><p>R_score of 1 means +221 days (8 months) of last purchase -&gt; More likely to be lost customers</p></li>
-<li><p>27.7% of customers in “At Risk” group had previous campaign subscription: Very High (Urgent Action needed)</p></li>
-</ul>
-<pre class="r"><code>risk_cust &lt;- rfm_score_df %&gt;%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %&gt;% 
-  filter(RFM_Score &gt;= 60 &amp; R_score &lt;= 2 &amp; R_score &gt; 1) %&gt;% 
-  arrange(desc(RFM_Score)); risk_cust %&gt;% head(10) %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-customer_id
-</th>
-<th style="text-align:left;">
-RFM
-</th>
-<th style="text-align:right;">
-R_score
-</th>
-<th style="text-align:right;">
-F_score
-</th>
-<th style="text-align:right;">
-M_score
-</th>
-<th style="text-align:right;">
-RFM_Score
-</th>
-<th style="text-align:left;">
-RFM_Score_gr
-</th>
-<th style="text-align:left;">
-campaign
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-CS1145
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1215
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1260
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1332
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1370
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1397
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1541
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1580
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1781
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS2541
-</td>
-<td style="text-align:left;">
-2:5:5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-78.6
-</td>
-<td style="text-align:left;">
-8
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>prop.table(table(risk_cust$campaign))[2]*100</code></pre>
-<pre><code>##    1 
-## 27.7</code></pre>
-<p>Up-sell</p>
-<ul>
-<li><p>Customers with frequent purchase history but does not spend much</p></li>
-<li><p>Personalised Up-sell Recommendations needed</p></li>
-<li><p>20% of customers in “Up-sell” group had previous campaign subscription: High</p></li>
-</ul>
-<pre class="r"><code>upsell_cust &lt;- rfm_score_df %&gt;%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %&gt;% 
-  filter(F_score &gt;= 4 &amp; M_score &lt;= 2) %&gt;% 
-  arrange(desc(RFM_Score)); upsell_cust %&gt;% head(10) %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-customer_id
-</th>
-<th style="text-align:left;">
-RFM
-</th>
-<th style="text-align:right;">
-R_score
-</th>
-<th style="text-align:right;">
-F_score
-</th>
-<th style="text-align:right;">
-M_score
-</th>
-<th style="text-align:right;">
-RFM_Score
-</th>
-<th style="text-align:left;">
-RFM_Score_gr
-</th>
-<th style="text-align:left;">
-campaign
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-CS7394
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS7982
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8310
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8316
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8579
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8682
-</td>
-<td style="text-align:left;">
-5:4:2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-64.1
-</td>
-<td style="text-align:left;">
-7
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS7294
-</td>
-<td style="text-align:left;">
-4:4:2
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-57.0
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8442
-</td>
-<td style="text-align:left;">
-4:4:2
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-57.0
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS8669
-</td>
-<td style="text-align:left;">
-4:4:2
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-57.0
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS7580
-</td>
-<td style="text-align:left;">
-2:5:2
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-51.5
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>prop.table(table(upsell_cust$campaign))[2]*100</code></pre>
-<pre><code>##  1 
-## 20</code></pre>
-<p>Cross-Sell</p>
-<ul>
-<li><p>Customers with good spending amount but less frequent</p></li>
-<li><p>Good R_score needed for cross-selling strategy: recommending products related to their recent purchase.</p></li>
-<li><p>9.7% of customers in “Cross-Sell” group had previous campaign subscription: Average</p></li>
-</ul>
-<pre class="r"><code>crosssell_cust &lt;- rfm_score_df %&gt;%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %&gt;% 
-  filter(M_score &gt;= 3 &amp; F_score &lt;= 2 &amp; R_score &gt;= 4) %&gt;% 
-  arrange(desc(RFM_Score)); crosssell_cust %&gt;% head(10) %&gt;% kbl() %&gt;% kable_material_dark()</code></pre>
-<table class=" lightable-material-dark" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:left;">
-customer_id
-</th>
-<th style="text-align:left;">
-RFM
-</th>
-<th style="text-align:right;">
-R_score
-</th>
-<th style="text-align:right;">
-F_score
-</th>
-<th style="text-align:right;">
-M_score
-</th>
-<th style="text-align:right;">
-RFM_Score
-</th>
-<th style="text-align:left;">
-RFM_Score_gr
-</th>
-<th style="text-align:left;">
-campaign
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-CS3654
-</td>
-<td style="text-align:left;">
-4:2:4
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-4
-</td>
-<td style="text-align:right;">
-57.3
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1133
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1176
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1289
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1312
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1320
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1338
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1358
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1361
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-CS1432
-</td>
-<td style="text-align:left;">
-5:2:3
-</td>
-<td style="text-align:right;">
-5
-</td>
-<td style="text-align:right;">
-2
-</td>
-<td style="text-align:right;">
-3
-</td>
-<td style="text-align:right;">
-55.4
-</td>
-<td style="text-align:left;">
-6
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>prop.table(table(crosssell_cust$campaign))[2]*100</code></pre>
-<pre><code>##   1 
-## 9.7</code></pre>
-</div>
-<div id="wrap-up" class="section level2">
-<h2>Wrap up</h2>
-<div id="summary-on-perspective-note" class="section level3">
-<h3>Summary on Perspective note</h3>
-<ul>
-<li></li>
-<li>Quantiles: Stick to Quantile rules! for better distribution</li>
-</ul>
-</div>
-<div id="limitations-of-rfm-analysis" class="section level3">
-<h3>Limitations of RFM analysis</h3>
-<p>Using RFM modeling can provide valuable insights about customers. But it does not take into account many other factors about the customer.</p>
-<p>In-depth targeted marketing may also use type of item purchased or customer campaign responses as factors. Customer demographics such as age, sex and ethnicity are not covered in RFM analysis either.</p>
-<p>Additionally, RFM only uses historical data about customers and may not predict future customer activity. Predictive methods may be able to identify future customer behavior that RFM analysis cannot.</p>
-</div>
-<div id="future-development" class="section level3">
-<h3>Future development</h3>
-<ul>
-<li><p>Average time span on expirary of campaign</p></li>
-<li><p>Cohort Analysis</p></li>
-<li><p>Time Series: How these RFM Score varies with quartery</p></li>
-</ul>
-</div>
-</div>
-<div id="ready-to-receive-feedback" class="section level2">
-<h2>Ready to receive feedback</h2>
 </div>

@@ -1,12 +1,13 @@
 ---
-title: Why you Must apply RFM matrics to your company right away!
+title: K-Nearest Neighbour Diabetes Prediction 
 author: Package Build
 date: '2021-10-26'
-slug: why-you-must-apply-rfm-matrics-to-your-company-right-away
+slug: K-Nearest Neighbour Diabetes Prediction
 categories:
   - R
 tags:
-  - Marketing
+  - Classification 
+  - Health Care
 subtitle: ''
 summary: ''
 authors: []
@@ -20,949 +21,245 @@ projects: []
 draft: FALSE
 ---
 
-You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers' demographics,  desire, and product categories, the power of the leading score can ever so be significant. 
-
-In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution for actionable decision makings. 
-
-There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.
 
 
-***
-## Menu 
-
-### Appetizer
-* What is RFM and why we do feature engineering 
-* Why Campaign Response important feature for CRM?
-* Pareto Principle 
-* RFM Quantitative Scoring
-
-### Main
-* Data Preparation 
-* Campaign Response Rate
-* Performing RFM Segmentation
-  + RFM Construction
-  + RFM Analysis
-  + RFM Visualisation
-
-### Desert 
-* Wrap up
-  + Summary on Perspective Notes 
-  + RFM Limitations
-  + Future Development 
-* Ready to receive feedback  
-
-***
 
 
-## 1. What is RFM and why we do feature engineering 
 
 
-### 1.1 RFM
+Contents:
 
-Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the "right" customer will always vary depending on business objectives and business cycle. Having reliable KPI's for customer value and engagement score will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company's customer base: __customer purchasing behaviour!__
+Study 
 
->The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model __without compromising its accuracy__.
+* What is K-Nearest Neighbour function 
+  + What are K-NN assumptions?
+  + Parameters
+  + Variety of distance criteria 
+  + Optimal Number of Neighbors 
 
-RFM is essentially a combined measure of customer's purchasing characteristics; consists three data points: recency, frequency and monetary. 
-
-+ Recency  : __Length__ of a time period since the __last__ purchase 
-+ Frequency: __Number__ of purchase within a customer life-span
-+ Monetary : __Amount__ of money spent within customer transcations
-
-All of these measures have been proven to be effective predictors of a customer's willingness to engage in marketing messages and construct their transcation values to the company. 
-
-
-### 1.2 Benefit of RFM Analysis 
-
-In-depth KYC (know your customer) on your customer base and framework for iterative campaigns to promising customer (targets) will undoubtfully benefit your organisation in many folds:
-
-* Personalisation: By creating effective customer segments, highly relevant and cutomerised offer in personal level can be achieved. 
-
-* Improve Conversion Rates: Personalised marketing will yield higher retention and conversion rate by aid of effective up-sell, cross-sell strategy. 
-
-* ROI: Breaking customers into small buckets effectively reduce business's missing opportunity (low Risk) and enables objective-oriented target marketing (High return)
+* Cons 
+  + Homogeneous feature 
+  + Curse of Dimensionality 
+  + Imbalanced data problems 
+  + Outlier Sensitivity 
+  
+* Advanced topics 
+  + Kd tree algorithm
 
 
-### 1.3 Feature Engineering 
-
-Feature engineering is a process of applying domain knowledge to select and transform raw data into new definable features (characteristics, properties, attributes) that better represent the underlying problem to solve or predictive model. 
-
-Depending on how you apply RFM analysis it is also a feature engineering as we are combining customer transcation historical data: latest purchase, how often, in amounts, to new __"Transcations History"__ feature. The important question is how well does new feature speaks of its own definition in business. In broad sense, this RFM feature has many usage for segmentation but also input feature in many predictive models (churn, campaign response, likelihood of future purchase). Simply put, in customer analytics, purchasing behaviour is not only dimension of company's interest. More so, in its best form, I believe the matrics should be flexible to include on various KPI's and modelling. We will discuss more later in this post.  
-
-***
-
-## 2.0 Why Campaign Response Tracking System Important?
-
-Tracking responses is one of the important aspects of the campaign life cycle for a marketing analyst. This involves process of collecting data that identifies customers who have responded to a communication from a campaign program via specific channels. Any company would like to automate customer engagement and its campaign performance measure. 
+## 
 
 
-Tracking campaign activities are vital measure for customer engagement management. Effective CRM system can leverage life time value of company's customers by effectively reducing their churn events. Data scientist and engineers are very well adapted in this field. Every businesses needs to optimise the balance between the cost retention and acquisition as they are essential track for ROI generation. 
+$$
+\hat{C}_k(x) =  \underset{g}{\mathrm{argmax}} \ \ \hat{p}_{kg}(x)
+$$
 
 
-The data I will be exploring below contains customer campaign response binary dataset. 
+## Variable Explaination 
 
-***
+[1] npreg : number of pregnancies.
 
-## 3.0 Pareto Principle 
+[2] glu : plasma glucose concentration in an oral glucose tolerance test.
 
-> __For many events, roughly 80% of the effects coe from 20% of the causes.__
-> Pareto Principle - The 80/20 Rule 
+[3] bp : diastolic blood pressure (mm Hg).
 
-Similarly, 20% customers contribute to 80% of company's total revenue. The ideology is the people who spent once are more likely to spend again. Likewise, the people for have responded to campaign are likely to respond again. Pareto Principle is at the heart of RFM model; focusing target audience on critical segments of customers is likely to generate higher ROI. 
+[4] skin : triceps skin fold thickness (mm).
 
+[5] bmi : body mass index (weight in kg/(height in m)\^2). 
 
-## 4.0 RFM Quantitative Scoring 
+[6] ped : diabetes pedigree function. 
 
-Many system rank search results by means of some form of scoring: each candidate item is given a score measuring in some sense how closely it fits with the __query__ and its items are ranked in descending score order. If indeed such a system ranks customers on the basis of transcation behaviour effect on revenue (better option: profitability), organisation will gain quick and actionable decisions to collect their targets by its priority order within the segments. This quantitative RFM scoring approach has multiple benefits:
+[7] age : age in years
 
-* Gain clear picture on each RFM unique combination values for the company and how to strategically framework future customer journey analysis. 
-
-* The ability distribute RFM combination metrics in size upon their revenue contribution. 
-
-* Hierachical construction of RFM metrics by its importance. 
-
-* The quantitative RFM scoring (Numeric: importance) and RFM metrics (Categorical: behaviour type) will bring more flexibility as part of input feature for further customer analytic prediction models.
-
-In any form of scoring, the importance of its robustness will always be a challenge. For a obvious reasons, conversions within these scores or the segments without the internal explaintary, would not be a reliable system to conduct. 
-
-Having this in mind, we will explore the transcation data in depth and construct RFM metrics and its scoring from a scratch on R. Thank you for reading this far and lets dig in!
+[8] type : Yes or No, for diabetic according to WHO criteria.
 
 
-## 1.0 library load
+## Feature Engineering IDeas or 
 
-```{r, echo = FALSE, message=FALSE, warning=FALSE}
+Biological Age: f(BMI) 
 
-library(readr)
-library(fs) 
-library(tufte)
+```{r}
+setwd("/Users/seunghyunsung/Desktop/rdata/ML_basic/SVM_RF/diabetes_prediction")
 
-library(forecast)
+suppressMessages(library(class))
+suppressMessages(library(kknn))
+suppressMessages(library(randomForest))
+suppressMessages(library(e1071))
+suppressMessages(library(caret))
+suppressMessages(library(reshape2))
+suppressMessages(library(ggplot2))
+suppressMessages(library(kernlab))
+suppressMessages(library(MASS))
+suppressMessages(library(skimr))
 
+library(ggplot2)
 library(GGally)
-library(knitr)
-library(kableExtra)
-
 ```
 
 
-```{r, echo = TRUE, message=FALSE, warning=FALSE}
+```{r}
 
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-library(skimr)
-library(scales)
-library(psych)
-library(gmodels)
+# conditions (options & set.seed)
+options(digits = 3, scipen = 100)
 
-library(tidyquant)
-library(timetk)
-library(rsample) 
-library(wesanderson)
-```
-
-
-```{r, message=FALSE, warning=FALSE}
 set.seed(42)
-options(scipen = 100, digits = 3)
+# load the data
+data(Pima.tr)
+data(Pima.te)
 
-trans_df_raw <- read_csv("~/Dropbox/business_insight/df_trans_raw.csv", col_types = cols())
+dim(Pima.tr) # [1] 200   8
+dim(Pima.te) # [1] 332   8
 
 ```
 
+### Combine Train and Teat Data Set 
 
-```{r, message=FALSE, warning=FALSE}
-resp_df_raw <- read_csv("~/Dropbox/business_insight/df_resp_raw.csv")
-resp_df_raw$X1 <- NULL
+```{r}
+
+# Train dataset 
+Pima.tr$type <- ifelse(Pima.tr$type == "No", 0, 1)
+prop.table(table(Pima.tr$type))
+
+# Test dataset 
+Pima.te$type <- ifelse(Pima.te$type == "No", 0, 1)
+prop.table(table(Pima.te$type))
+
+# Combine  
+Pima = rbind(Pima.tr, Pima.te)
+
+```
+
+## EDA 
+
+K-NN classifier algorithm 
+
+To do:
+
+* Feature Scaling: K-NN and many ML algorithm relies on the distance (norm) of the matrix. 
+
+* Outlier detection: K-NN algorithm is highly sensitive to outliers 
+
+```{r}
+partition(skim(Pima))
 ```
 
 
-## 2.0 Transcational data 
 
-```{r, warning=FALSE}
-trans_df_raw %>% head()
+
+```{r}
+ggpairs(Pima[ ,c(1:8)], aes(color = type %>% as.factor(), alpha =0.75), lower = list(continuous = "smooth")) + theme_bw() + 
+  labs(title = "Diabetes") +
+  theme(plot.title = element_text(face ='bold', color ='black', hjust=0.5, size =12)) 
+```
+```{r}
+Pima_melt <- reshape2::melt(Pima, id.var ="type")
+
+ggplot2::ggplot(data = Pima_melt,
+                aes(x = type, y = value, group = type)) +
+  geom_boxplot() +
+  facet_wrap(~variable, ncol=2) 
+```
+
+### Eucliden Distance Calculation 
+
+```{r}
+euclideanDist <- function(a, b){
+  d = 0
+  for(i in c(1:(length(a)-1) ))
+  {
+    d = d + (a[[i]]-b[[i]])^2
+  }
+  d = sqrt(d)
+  return(d)
+}
+```
+
+
+
+### KNN Prediction Function
+
+```{r}
+knn_predict <- function(test_data, train_data, k_value){
+  pred <- c()  #empty pred vector 
+  #LOOP-1
+  for(i in c(1:nrow(test_data))){   #looping over each record of test data
+    eu_dist =c()          #eu_dist & eu_char empty  vector
+    eu_char = c()
+    good = 0              #good & bad variable initialization with 0 value
+    bad = 0
+    
+    #LOOP-2-looping over train data 
+    for(j in c(1:nrow(train_data))){
  
-resp_df_raw %>% head()
-
-```
-
-
-```{r}
-trans_df <- trans_df_raw %>% 
-  mutate(trans_date = lubridate::dmy(trans_date)) %>% 
-  dplyr::rename(
-    date   = trans_date,
-    amount = tran_amount) 
-```
-
-
-
-## 3.0 Data Preparation 
-
-### 3.1 Checking for duplicates 
-
-* No duplicated data 
-* Diagnosed same-day repeated purchase 
-  + 10.7% from total customers falls in this category 
-  +  0.6% of occurrence within transaction history 
-  
-Question to ask:
-
-* Are these group statistically significant in respect to their revenue?
-* Does same-day repeated purchase represent any meanings?
-
-
-```{r}
-format_dollar  <- function(x, ...) {
-  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
+      #adding euclidean distance b/w test data point and train data to eu_dist vector
+      eu_dist <- c(eu_dist, euclideanDist(test_data[i,], train_data[j,]))
+ 
+      #adding class variable of training data in eu_char
+      eu_char <- c(eu_char, as.character(train_data[j,][[6]]))
+    }
+    
+    eu <- data.frame(eu_char, eu_dist) #eu dataframe created with eu_char & eu_dist columns
+ 
+    eu <- eu[order(eu$eu_dist),]       #sorting eu dataframe to gettop K neighbors
+    eu <- eu[1:k_value,]               #eu dataframe with top K neighbors
+ 
+    #Loop 3: loops over eu and counts classes of neibhors.
+    for(k in c(1:nrow(eu))){
+      if(as.character(eu[k,"eu_char"]) == "g"){
+        good = good + 1
+      }
+      else
+        bad = bad + 1
+    }
+ 
+    # Compares the no. of neighbors with class label good or bad
+    if(good > bad){          #if majority of neighbors are good then put "g" in pred vector
+ 
+      pred <- c(pred, "g")
+    }
+    else if(good < bad){
+                   #if majority of neighbors are bad then put "b" in pred vector
+      pred <- c(pred, "b")
+    }
+    
+  }
+  return(pred) #return pred vector
 }
 
-se <- function(x) sqrt(var(x)/length(x))
-
-```
-
-```{r}
-
-dup_pur_customer <- which(duplicated(trans_df[, c("customer_id", "date")]))
-y_dup_df <- trans_df[dup_pur_customer,]
-n_dup_df <- trans_df[-dup_pur_customer,]
-
-y_dup_df$samday_purchase <- TRUE
-n_dup_df$samday_purchase <- FALSE
-
-
-cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>% 
-  group_by(customer_id) %>% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
-
-```
-
-```{r}
-cust_dup_tbl %>% 
-  group_by(samday_purchase) %>% 
-  summarise(count            = n_distinct(customer_id),
-            med_pur_freq     = median(frequency),
-            avg_pur_freq     = mean(frequency),
-            sd_freq          = sd(frequency),
-            se_freq          = se(frequency),
-            med_pur_monetary = median(monetary) %>% format_dollar,
-            avg_pur_monetary = mean(monetary)   %>% format_dollar,
-            sd_monetary      = sd(monetary),
-            se_monetary      = se(monetary)) %>% 
-    kbl() %>% 
-    kable_material_dark()
-
-```
-
-### 3.2 Hypothesis Test on same-day repeated and non-repeated purchase group  
-
-* Unbalanced Welch Two Sample t-test
-* Balanced Welch Two Sample t-test
-
-Both the hypothesis tests rejects null hypothesis (p-value < 0.05) that the difference in mean of customer "same-day duplicate" and "non-duplicate" groups are not significant. 
-
-> p < .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
-- Traflmow, editor of the Basic and Applied Social Psychology journal 
-
-A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote "statistically significant". However, we can invoke the result is not by chance. 
-
-```{r}
-random_n_dup_df <- sample_n(n_dup_df, 737) 
-random_n_dup_df$samday_purchase <- FALSE
-
-sample_dup_tbl <- rbind(y_dup_df, random_n_dup_df) %>% 
-  group_by(customer_id) %>% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
-
-t.test(monetary~samday_purchase, data = cust_dup_tbl)
-t.test(monetary~samday_purchase, data = sample_dup_tbl)
-```
-
-### 3.3 Visualisation on same-day repeated and non-repeated customer 
-
-* Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.
-
-* The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable. 
-
-* Given the same weight on number of customers to these groups, their first quantile density shrinks by factor of ~2.  
-
-The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
-
-Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchased behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings. 
-
-```{r}
-
-P3_C_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_col(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_B_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_V_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_violin(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_D_dup <- cust_dup_tbl %>% 
-  ggplot(aes(x = monetary, fill = samday_purchase)) +
-  geom_density(alpha = 0.5) +
-  scale_fill_tq() +
-  theme_tq()
-
-gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
-
-```
-
-### 3.4 Perspective Notes 
-
-* Comparative analysis of potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
-  
-* In order to identify common characteristics among customers, the "hard" variables such as age, gender, place of residence are needed. 
-  
-* Inquire customer information on geographical and payment method from database in order to approach on defining "soft" variables such as "service accessibility" and its scoring board. 
-
-***
-
-## 4.0 Measure the Campaign Response Rate
-
-The ability to retain engagement customers is a major concern for many businesses. However, their retention is not the only dimension of our interest; the revenue stream associated with these active engagement or persuadable customer is another factor influencing customer profitability. 
-
-What is a good response rate? 
-
-Typically in the field of ecommerce, in average, a good response rate are within 10~13% boundary. 
-
-The average email benchmark by retail industry: 12.6% (open rate), 8.5% (click-to-open rate)
-
-
-```{r}
-resp <- resp_df_raw %>% 
-  select(customer_id, response) %>% 
-  setNames(c("customer_id", "campaign"))
-
-cust_df <- trans_df %>% 
-  left_join(resp, by = "customer_id") %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0))
-```
-
-The average campaign response rate is 9.4%; with the assumption that the company is either retail or ecommerce business this value sits on a good hand. This value could also mean the percentage of persuaders.  
-
-Questions of ask:
-* Campaign responders contribute higher value to the company than the non-responders?
-* Is there a revenue stream by engaging customers? 
-  + When has the promotion began? 
-  + What is the average expiration rate of campaign effect?
-
-```{r}
-cust_df %>% 
-  group_by(customer_id) %>% 
-  summarise(campaign = median(campaign)) %>% ungroup() %>% 
-  count(campaign) %>% 
-  mutate(pct_response = n/n_distinct(cust_df$customer_id)*100)
 ```
 
 
-### 4.1 Quick t-test and visualisation 
+
+### Accuracy Calculation 
 
 ```{r}
 
-campaign_tbl <- cust_df %>% 
-  group_by(customer_id) %>% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            campaign = median(campaign) %>% as.factor()) %>% ungroup()
-
-t.test(monetary~campaign, data = campaign_tbl)
-
-```
-
-
-```{r}
-P4_C_dup <- campaign_tbl %>% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_col(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_B_dup <- campaign_tbl %>% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_V_dup <- campaign_tbl %>% ggplot(aes(x = campaign, y = monetary, fill = campaign)) +
-  geom_violin(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P4_D_dup <- campaign_tbl %>% 
-  ggplot(aes(x = monetary, fill = campaign)) +
-  geom_density(alpha = 0.5) +
-  scale_fill_tq() +
-  theme_tq()
-
-gridExtra::grid.arrange(P4_C_dup, P4_B_dup, P4_V_dup, P4_D_dup, ncol = 2)
-```
-
-### 4.2 Perspective Notes 
-
-* The monetary value distribution of campaign respond customer is symmetric with low variance; hence desirable to work with.
-
-* Time series benchmark comparison between campaign respond customer and non-responded customer (benchmark) is needed to assign two things:
-  + Trend analysis: this variance in mean value (between the group) has fostered by campaign activity.  
-  + If TRUE, where in phase are they with the revenue upstream? -> Different engagement strategy needed?
-  + If NO, can irregular term (Unexpected Revenue Fluctuation) in STL decomposition analysis explain such fortune?
-  
-* Consult the expert on how to measure these revenue contribution and the KPI's for their worth before iterative engagement strategy. 
-  + Current churn rate?
-  + Their progressive impact on MRR or ARR?
-
-
-***
-## 5.0 Performing RFM Segmentation: RFM Construction 
-
-I like to note that with aid of package development and software. There are RFM segmentation and k-means built in library available which are quick, sophisticated and with accurate results. That said, building any models or simple matric from scratch is great source and opportunity for anyone's learning curve - right?. More importantly, I believe it will deliver the ability to understand descriptive statistics in a more practical way. Some of the codes here may not be so easy to interpret as most of them are built from scratch and by me. I will really appreciate any feedback or mistakes I have made. 
-
-
-Aim: 
-* Feature RFM score with acceptable density distribution (0 ~ 100 score in range): Robust Scoring 
-
-Key Task: 
-
-* Handling the skewness of the data set 
-* Weight control for individual RFM components -> consult the expert
-* Conduct code workflow for practice. 
-
-
-### 5.1 Quick EDA 
-
-Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I have added 1 day to all customers which takes account of customer has purchased the day we compute this metric; named it as recency days. This is great trick in case we would like to do log transform later on the analysis. 
-
-recency = date of analysis - latest purchase date 
-
-recency days =  tomorrow date - latest purchase date
- 
-```{r}
-generator_rfm <- function(data){
-  analy_day <- max(data$date) + 1
-
-  data %>% 
-  dplyr::group_by(customer_id) %>% 
-  dplyr::summarise(recency_days = as.numeric(analy_day - max(date)),
-                   frequency = n(), 
-                   monetary = sum(amount)) %>%  ungroup()
+accuracy <- function(test_data){
+  correct = 0
+  for(i in c(1:nrow(test_data))){
+    if(test_data[i,6] == test_data[i,7]){ 
+      correct = correct+1
+    }
+  }
+  accu = correct/nrow(test_data) * 100  
+  return(accu)
 }
-
-cust_df %>% 
-  generator_rfm() %>% select(-customer_id) %>% 
-  psych::describe()
-
-```
-
-
-```{r}
-cust_df %>% 
-  generator_rfm() %>% head(10) %>% 
-  mutate(monetary = sum(monetary) %>% format_dollar()) %>% 
-  set_names(c("Customer ID", "Recency Days", "Frequency", "Monetary")) %>%
-  kbl() %>% 
-  kable_material_dark()
-
 ```
 
 
 ```{r, echo = FALSE}
-
-generator_hist_facet <- function(data, bins = 20, ncol = 5,
-                                 fct_reorder = FALSE, 
-                                 fct_rev = FALSE,
-                                 fill = palette_light()[[3]],
-                                 color = "white", scale = "free") {
-      data_factored <- data %>% 
-        gather(key = key, value = value, factor_key = TRUE) 
-      
-    if(fct_reorder) {
-      data_factored <- data_factored %>% 
-        # Trick to get variables in alphabetical order 
-        mutate(key = as.character(key) %>% as.factor())
-    }
-      
-    if(fct_rev) {
-      data_factored <- data_factored %>% 
-        mutate(key = fct_rev(key))
-    }
-      
-    g <- data_factored %>% 
-      ggplot(aes(x = value, group = key)) +
-      geom_histogram(bins = bins, fill = fill, color = color) +
-      facet_wrap(~key, ncol = ncol, scale = scale) +
-      theme_tq()
-    
-    return(g)
-}
-
-theme_ben <- function(base_size = 14) {theme_bw(base_size = base_size) %+replace%
-    theme(
-      # L'ensemble de la figure
-      plot.title = element_text(size = rel(1), face = "bold", margin = margin(0,0,5,0), hjust = 0),
-      # Zone où se situe le graphique
-      panel.grid.minor = element_blank(),
-      panel.border = element_blank(),
-      # Les axes
-      axis.title = element_text(size = rel(0.85), face = "bold"),
-      axis.text = element_text(size = rel(0.70), face = "bold"),
-      axis.line = element_line(color = "black", arrow = arrow(length = unit(0.3, "lines"), type = "closed")),
-      # La légende
-      legend.title = element_text(size = rel(0.85), face = "bold"),
-      legend.text = element_text(size = rel(0.70), face = "bold"),
-      legend.key = element_rect(fill = "transparent", colour = NA),
-      legend.key.size = unit(1.5, "lines"),
-      legend.background = element_rect(fill = "transparent", colour = NA),
-      # Les étiquettes dans le cas d'un facetting
-      strip.background = element_rect(fill = "#17252D", color = "#17252D"),
-      strip.text = element_text(size = rel(0.85), face = "bold", color = "white", margin = margin(5,0,5,0))
-    )
-}
-
-```
-
-### 5.2 RFM distribution and skewness 
-
-```{r}
-
-skimr::partition(skim(cust_df %>% 
-  generator_rfm()))$numeric %>% data.frame %>%
-   kbl() %>% 
-   kable_material_dark()
-
-cust_df %>% 
-  generator_rfm() %>% 
-  select(monetary, frequency:recency_days) %>% 
-  generator_hist_facet(bins = 40, ncol = 3, fct_rev = FALSE) + theme_ben()
-  
-```
-
-_generator_hist_facet() and theme_ben() are customised facet histogram function. It is uploaded on my GitHub and you are more than welcome :) For better understanding I recommend looking into Business Science 101 Course organised by __Matt Dancho__ _He regularly uploads free tutorials on Youtube as well. Great Stuff!_
-
-The recency days dataset is highly right skewed. There are many transformations to handle such skewed distribution, e.g. log transformation for instance. However, inhere, I will like to demonstrate small trick using quantiles binning to effectively split range of customers by organisational profit. - Yes Pareto Principle embeds here. 
-
-Quantile ranges are one of descriptive statistics describing the skewness of the data. The range between Q3-Q2 is larger in magnitude than the Q2-Q1 point in range. The concept of the quantiles (any family of quantiles) are the values located in the dataset in a way that it can split the data uniformly. 
-
-
-Small example of quantile:
-
-```{r}
-rfm_example <- cust_df %>% 
-    generator_rfm()
-
-R_quantile <- quantile(rfm_example$recency_days, probs = seq(0,1,0.25))
-F_quantile <- quantile(rfm_example$monetary, probs = seq(0,1,0.25))
-M_quantile <- quantile(rfm_example$frequency, probs = seq(0,1,0.25))
-
-cbind(R_quantile, F_quantile, M_quantile)
-```
-
-This quantile measure would most likely to preserve the actual customer behaviour distribution; thus the robustness of its score. However, due to the wide range between Q3 (858 recency days) and Q2 (112 recency days), the scope of valuable customers are squeezed making it difficult quantify their differences in their Recency score. 
-
-Hence we will do an opposite approach squeezing the Q3 and Q2 and exposing the range at low recency region. This can be done by relocating the quantiles in data set. 
-
-
-```{r}
-result <- c() 
-j <- 0
-for(i in 1:5){
-  j = j + i
-  result[i] = 1 -(j/(1+2+3+4+5))
-  print(result)
-}
-
-
-R_result <- quantile(rfm_example$recency_days, probs = result)
-F_result <- quantile(rfm_example$frequency, probs = result)
-M_result <- quantile(rfm_example$monetary, probs = result)
-
-cbind(R_result, F_result, M_result)
-
-```
-
-This is no longer a quantiles; instead of 100% (tip of the iceberg) there is a 93.3%. This new splitting point wraps customers > {recency days over 221} into a single, low scored R group. 
-
-There is one other small problem. The direction of scoreboard for these matrics are opposite: between the R and F,M, which I will take care of in the code below.  
-
-
-```{r}
-
-generator_rfm_metric <- function(data) {
-  
-  analy_day <- max(data$date) + 1
-  
-  step_1 <- data %>% 
-        generator_rfm() 
-  
-  R_level <- quantile(step_1$recency_days,   probs = result)
-  F_level <- quantile(step_1$frequency, probs = result)
-  M_level <- quantile(step_1$monetary,  probs = result)
-  
-  out <- step_1 %>%
-    mutate(R_score = case_when(.$recency_days >= R_level[1] ~ 1,
-                               .$recency_days >= R_level[2] ~ 2,
-                               .$recency_days >= R_level[3] ~ 3,
-                               .$recency_days >= R_level[4] ~ 4,
-                               TRUE ~ 5),
-           F_score = case_when(.$frequency >= F_level[1] ~ 5,
-                               .$frequency >= F_level[2] ~ 4,
-                               .$frequency >= F_level[3] ~ 3,
-                               .$frequency >= F_level[4] ~ 2,
-                               TRUE ~ 1),
-           M_score = case_when(.$monetary >= M_level[1] ~ 5,
-                               .$monetary >= M_level[2] ~ 4,
-                               .$monetary >= M_level[3] ~ 3,
-                               .$monetary >= M_level[4] ~ 2,
-                               TRUE ~ 1))
-  return(out)
-}
-
-
-generator_rev_per_metric <- function(pre_score_data, ...) {
-  
-  pre_score_data %>% 
-    dplyr::group_by(...) %>% 
-    dplyr::summarise(cust = n_distinct(customer_id),
-                     total_monetary = sum(monetary)) %>% ungroup() %>% 
-    
-    dplyr::mutate(rev_per_cus = total_monetary/cust,
-                  prop_cus = cust/sum(cust),
-                  prop_rev = total_monetary/sum(total_monetary),
-                  rev_effect = prop_rev/prop_cus)
-}
-
-```
-
-
-### 5.3 RFM components Weight control 
-
-The next question that arises is: is it fair to average out the individual recency, frequency, and monetary scores for each customers and assign them to RFM score, as per their purchase or engagement behaviour?
-Depending on the nature of the businesses, the relative importance for individual matrics can be adjusted to arrive at their final score. 
-
-For example, for retail business selling customer goods. A customer who searches and purchases product in monthly bases will have higher recency and frequency score than monetary score. Hence the weight can be calculated by giving more importance to the recency and frequency scores. 
-
-This is the area the data analyst would need to contact this domain of an expert. In prior to jumping into conclusions without any certainty. 
-
-
-Educated Approach: 
-
-* Calculate the revenue contribution for each score in individual R, F, M components. 
-  + revenue contribution/ no. customer  = Revenue contributed per customer
-  + {Rev(group)/Rev(total)} / {No. of cust(group)/No. of cust(total)} = Revenue contribution by group
-  + The sum of revenue contribution by group (score) is revenue effect by its component
-  + R(Rev effect) + F(Rev effect) + M(Rev effect) = Total Revenue effect 
-  + Weight{R(Rev effect)} + Weight{F(Rev effect)} + Weight{M(Rev effect)} = Weight{Total Revenue effect} = 1
-
-
-```{r}
-
-R_score_table <- cust_df %>% 
-  generator_rfm_metric() %>% 
-  generator_rev_per_metric(R_score); R_score_table %>% kbl() %>% kable_material_dark()
-
-F_score_table <- cust_df %>% 
-  generator_rfm_metric() %>% 
-  generator_rev_per_metric(F_score); F_score_table %>% kbl() %>% kable_material_dark() 
-
-M_score_table <- cust_df %>% 
-  generator_rfm_metric() %>% 
-  generator_rev_per_metric(M_score); M_score_table %>% kbl() %>% kable_material_dark()
-  
+# calling knn_predict()
+# K = 5
+# predictions <- knn_predict(test.df, train.df, K) 
+ 
+#Adding predictions in test data as 7th column
+# test.df[,7] <- predictions 
+# print(accuracy(test.df))
 ```
 
 
 
 
-```{r}
-
-rfm_effect <- sapply(list(R_score_table$rev_effect, F_score_table$rev_effect, M_score_table$rev_effect), function(x) sum(x))
-
-sum_effect <- sum(rfm_effect)
-weight <- c(rfm_effect[1]/sum_effect, rfm_effect[2]/sum_effect, rfm_effect[3]/sum_effect)
-
-RFM_function <- function(x, y, z, w){
-  RFM_Score <- x*w[1] + y*w[2] + z*w[3]
-  return(RFM_Score)
-}
-
-min_max_normalization <- function(x) {
-  return((x-min(x))/(max(x)-min(x)))
-}
-
-generator_RFM_score <- function(pre_score_data) {
-  pre_score_data %>% 
-  mutate(RFM_Score_norm = RFM_function(.$R_score,
-                                       .$F_score,
-                                       .$M_score,
-                                       w = weight),
-         RFM_Score_norm = min_max_normalization(RFM_Score_norm),
-         RFM_Score      = (RFM_Score_norm)*100,
-         RFM_Score_gr   = ifelse(RFM_Score >= 90, 10,
-                               ifelse(RFM_Score >= 80, 9,
-                                      ifelse(RFM_Score >= 70, 8,
-                                             ifelse(RFM_Score >= 60, 7,
-                                                    ifelse(RFM_Score >= 50, 6,
-                                                           ifelse(RFM_Score >= 40, 5,
-                                                                  ifelse(RFM_Score >= 30, 4,
-                                                                         ifelse(RFM_Score >= 20, 3,
-                                                                                ifelse(RFM_Score >= 10, 2,
-                                                                                       1)))))))))) 
-}
-  
-
-```
-
-
-## 6.0 Performing RFM Segmentation: RFM Analysis 
-
-
-
-```{r}
-rfm_score_df <- cust_df %>% 
-  generator_rfm_metric() %>% 
-  generator_RFM_score() %>% 
-  left_join(resp, by = "customer_id") %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0) %>% as.factor()) %>% 
-  mutate(RFM_Score_gr = RFM_Score_gr %>% as.factor) %>%
-  unite("RFM", R_score:M_score, sep = ":", remove = FALSE)
-
-```
-
-```{r}
-rfm_score_df %>% 
-  select(R_score:M_score) %>% 
-  generator_hist_facet(bins = 5, ncol = 1, fct_rev = FALSE) + theme_ben()
-
-rfm_score_df %>% 
-  select(RFM_Score, RFM_Score_gr) %>% 
-  mutate(RFM_Score_gr = as.numeric(RFM_Score_gr)) %>% 
-  generator_hist_facet(bins = 10, ncol = 1, fct_rev = FALSE) + theme_ben()
-
-```
-
-
-```{r}
-summary_rfm_score_table <- rfm_score_df %>% 
-  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %>% 
-  dplyr::group_by(RFM_Score_gr) %>% 
-  dplyr::summarise(no_cust           = n(),
-                   campaign          = sum(as.numeric(as.character(campaign))),
-                   avg_RFM_Score     = mean(RFM_Score),
-                   avg_freq          = mean(frequency),
-                   avg_sales         = mean(monetary),
-                   avg_recency_days  = mean(recency_days),
-                   tot_sales         = sum(monetary),
-                   rev_per_cust      = tot_sales/no_cust) %>% ungroup() %>% 
-  arrange(desc(avg_RFM_Score)) %>% 
-  mutate(RFM_Score_gr = RFM_Score_gr %>% fct_reorder(desc(avg_RFM_Score))) %>% 
-  select(avg_RFM_Score, everything()) 
-  
-
-summary_rfm_score_table %>% 
-  mutate(tot_sales = format_dollar(tot_sales),
-         rev_per_cust = format_dollar(rev_per_cust)) %>% 
-  setNames(c("Avg. RFM Score", "RFM", "No. Customer", "No. Campaign","Avg. Frequency", "Avg. Monetary", "Avg. Recency", "Total Revenue", "Revenue Per Customer")) %>% kbl() %>% kable_material_dark() 
-  
-```
-
-
-```{r}
-
-ggplot(rfm_score_df, aes(x = RFM_Score)) +
-  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[1], alpha = 0.7) +
-  stat_function(fun=dnorm, 
-                args = list(mean=mean(rfm_score_df$RFM_Score),
-                              sd=sd(rfm_score_df$RFM_Score)),
-                color="red", lwd = 1) +
-  geom_density(color="black", lwd =1.5) +
-  theme_tq()
-
-```
-
-## 7.0 Performing RFM Segmentation: RFM Visualisation  
-
-```{r}
-
-generator_plot_rfm <- function(data, var1, var2, cmpg, point_size =0.7,
-                               colour = wesanderson::wes_palette(name="Royal1", 2)){
-  
-  var1 <- enquo(var1)
-  var2 <- enquo(var2)
-  var1_name<- quo_name(var1)
-  var2_name<- quo_name(var2)
-  
-  data %>% 
-    ggplot(aes(x = {{var1}}, y = {{var2}}, color = {{cmpg}})) + 
-    geom_point(position = "jitter", size = point_size) +
-    theme_bw() + 
-    scale_color_manual(values=colour) +
-    scale_y_continuous(label = scales::dollar) +
-    ggtitle(paste0("Customer Purchasing Behaviour Plot: ", str_to_upper(var1_name), " and ", str_to_upper(var2_name))) +
-  labs(
-     x        = var1_name %>% str_to_upper(),
-     y        = var2_name %>% str_to_upper(),
-     color    = "Campaign Response",
-     caption  = "Any prior knowledge to this cause from +2 years of historical data"
-  ) +
-  theme_tq()
-
-}
-
-generator_plot_rfm(rfm_score_df, RFM_Score, monetary, campaign)
-generator_plot_rfm(rfm_score_df, recency_days, monetary, campaign)
-generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
-```
-
-
-```{r}
-
-g_plot <- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) + 
-  geom_point(position = "stack", size = 3) +
-  theme_bw()+ 
-    labs(
-     title    = "Customer Purchasing Behaviour Plot: Frequency and Monetary",
-     subtitle = "Uniform Stack Distribution of RFM Score under F and M dimension",
-     x        = "Frequency",
-     y        = "Monetary",
-     color    = "RFM Score"
-  ) + 
-  theme_tq()
-g_plot
-
-
-h_plot <- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) +
-  geom_point(position = "jitter", size = 0.7) +
-  theme_bw() +  
-  labs(
-     title    = "Customer Purchasing Behaviour Plot: Frequency and Monetary",
-     subtitle = "Two Distinctive Customer Groups visually identified",
-     x        = "Frequency",
-     y        = "Monetary",
-     color    = "RFM Score"
-  ) +
-  theme_tq()
-h_plot
-
-f_plot <- ggplot(data = rfm_score_df, aes(x = log(monetary/recency_days), y = frequency, color = RFM_Score_gr)) +
-  geom_point(position = "jitter", size = 1.5) +
-  theme_bw()+   
-  labs(
-     title    = "Customer Purchasing Behaviour Plot: log(M/R) and Frequency",
-     x        = "log(M/R)",
-     y        = "Frequency",
-     color    = "RFM Score"
-  ) +
-  theme_tq()
-f_plot
-
-```
-
-
-
-## 8.0 Performing RFM Segmentation: Business Use
-
-Having individual R, F, and M scores and these unqiuw combination, customers can be clustered in groups based on their purchase behaviour. On top of that, the RFM score we have generated assigns the profitable priorities of these groups. This is bring an advantage for quick and actionable decision makings in comparison to having just the purchasing behaviour analysis. 
-
-Clustering these groups exceeds my goal in this post hence I would not explore more than illustrating some of the classical examples below. 
-
-
-At Risk
-
-* Customers with high revenue contribution but risk of churn. 
-
-* R_score of 1 means +221 days (8 months) of last purchase -> More likely to be lost customers
-
-* 27.7% of customers in "At Risk" group had previous campaign subscription: Very High (Urgent Action needed)  
-
-```{r}
-risk_cust <- rfm_score_df %>%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
-  filter(RFM_Score >= 60 & R_score <= 2 & R_score > 1) %>% 
-  arrange(desc(RFM_Score)); risk_cust %>% head(10) %>% kbl() %>% kable_material_dark()
-
-prop.table(table(risk_cust$campaign))[2]*100
-```
-
-Up-sell
-
-* Customers with frequent purchase history but does not spend much 
-
-* Personalised Up-sell Recommendations needed 
-
-* 20% of customers in "Up-sell" group had previous campaign subscription: High
-
-```{r}
-upsell_cust <- rfm_score_df %>%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
-  filter(F_score >= 4 & M_score <= 2) %>% 
-  arrange(desc(RFM_Score)); upsell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
-
-prop.table(table(upsell_cust$campaign))[2]*100
-```
-
-Cross-Sell 
-
-* Customers with good spending amount but less frequent
-
-* Good R_score needed for cross-selling strategy: recommending products related to their recent purchase. 
-
-* 9.7% of customers in "Cross-Sell" group had previous campaign subscription: Average
-
-```{r}
-crosssell_cust <- rfm_score_df %>%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
-  filter(M_score >= 3 & F_score <= 2 & R_score >= 4) %>% 
-  arrange(desc(RFM_Score)); crosssell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
-
-prop.table(table(crosssell_cust$campaign))[2]*100
-```
-
-
-
-
-## Wrap up
-
-### Summary on Perspective note
-
-* 
-* Quantiles: Stick to Quantile rules! for better distribution 
-
-### Limitations of RFM analysis
-
-Using RFM modeling can provide valuable insights about customers. But it does not take into account many other factors about the customer.
-
-In-depth targeted marketing may also use type of item purchased or customer campaign responses as factors. Customer demographics such as age, sex and ethnicity are not covered in RFM analysis either.
-
-Additionally, RFM only uses historical data about customers and may not predict future customer activity. Predictive methods may be able to identify future customer behavior that RFM analysis cannot.
-
-### Future development 
-
-* Average time span on expirary of campaign 
-
-* Cohort Analysis 
-
-* Time Series: How these RFM Score varies with quartery 
-
-
-## Ready to receive feedback 
 
 
 
