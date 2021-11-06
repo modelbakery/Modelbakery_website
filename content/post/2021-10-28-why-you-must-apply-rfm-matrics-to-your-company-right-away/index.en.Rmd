@@ -200,10 +200,10 @@ trans_df <- trans_df_raw %>%
   + 10.7% from total customers falls in this category 
   +  0.6% of occurrence within transaction history 
   
-Important question to ask:
+Question to ask:
 
 * Are these group statistically significant in respect to their revenue?
-* Does same-day repeated purchase represent any meaning?
+* Does same-day repeated purchase represent any meanings?
 
 
 ```{r}
@@ -250,7 +250,7 @@ cust_dup_tbl %>%
 
 ```
 
-### 3.2 Hypothesis Test on same-day repeated and non-repeated customer 
+### 3.2 Hypothesis Test on same-day repeated and non-repeated purchase group  
 
 * Unbalanced Welch Two Sample t-test
 * Balanced Welch Two Sample t-test
@@ -259,7 +259,6 @@ Both the hypothesis tests rejects null hypothesis (p-value < 0.05) that the diff
 
 > p < .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
 - Traflmow, editor of the Basic and Applied Social Psychology journal 
-- Mentioned by Ashutosh Nandeshwar 
 
 A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote "statistically significant". However, we can invoke the result is not by chance. 
 
@@ -279,8 +278,6 @@ t.test(monetary~samday_purchase, data = sample_dup_tbl)
 
 ### 3.3 Visualisation on same-day repeated and non-repeated customer 
 
-The visualisation here provides more insights. 
-
 * Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.
 
 * The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable. 
@@ -289,7 +286,7 @@ The visualisation here provides more insights.
 
 The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
 
-Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchase customer behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings. 
+Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchased behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings. 
 
 ```{r}
 
@@ -324,7 +321,6 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 ### 3.4 Perspective Notes 
 
 * Comparative analysis of potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
-  + Their revenue contributes (MRR or ARR) and churn rate needs to be modeled in order to measure their worth (risk measure) before the engagement strategy.
   
 * In order to identify common characteristics among customers, the "hard" variables such as age, gender, place of residence are needed. 
   
@@ -334,7 +330,9 @@ gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
 
 ## 4.0 Measure the Campaign Response Rate
 
-What is a good response rate? The response rate varies with industries, company size, type of campaign, time and more. The ability to retain engagement customers is a major concern for many businesses. However, retention is not the only dimension of our interest; the revenue stream associated with these actively engaging or persuadable customer is another factor influencing customer profitability. 
+The ability to retain engagement customers is a major concern for many businesses. However, their retention is not the only dimension of our interest; the revenue stream associated with these active engagement or persuadable customer is another factor influencing customer profitability. 
+
+What is a good response rate? 
 
 Typically in the field of ecommerce, in average, a good response rate are within 10~13% boundary. 
 
@@ -352,11 +350,13 @@ cust_df <- trans_df %>%
                                 TRUE ~ 0))
 ```
 
-We noticed the average campaign response rate is 9.4%. Under the assumption that the company is either retail or ecommerce business the value sits on a good hand. This value to could also mean the percentage of persuaders. 
+The average campaign response rate is 9.4%; with the assumption that the company is either retail or ecommerce business this value sits on a good hand. This value could also mean the percentage of persuaders.  
 
 Questions of ask:
 * Campaign responders contribute higher value to the company than the non-responders?
-* When has the promotion began? What is the average time decay (rate) upon campagin effect expiration?
+* Is there a revenue stream by engaging customers? 
+  + When has the promotion began? 
+  + What is the average expiration rate of campaign effect?
 
 ```{r}
 cust_df %>% 
@@ -368,6 +368,7 @@ cust_df %>%
 
 
 ### 4.1 Quick t-test and visualisation 
+
 ```{r}
 
 campaign_tbl <- cust_df %>% 
@@ -408,29 +409,45 @@ P4_D_dup <- campaign_tbl %>%
 
 gridExtra::grid.arrange(P4_C_dup, P4_B_dup, P4_V_dup, P4_D_dup, ncol = 2)
 ```
+
 ### 4.2 Perspective Notes 
 
-* The monetary value distribution of campaign respond customer is symmetric with low variance; desirable to work with and thus predict. 
-  + How many of these customers can we retain for x period of month or years?
+* The monetary value distribution of campaign respond customer is symmetric with low variance; hence desirable to work with.
 
-* This difference in mean value of monetary/sales (shift in distribution) fostered by campaign activity?
-  + Having time series visualisation and STL decomposition comparison of campaign respond customer and non-responded customer (benchmark) would supply more information on pricing control upon campaign budgeting. 
+* Time series benchmark comparison between campaign respond customer and non-responded customer (benchmark) is needed to assign two things:
+  + Trend analysis: this variance in mean value (between the group) has fostered by campaign activity.  
+  + If TRUE, where in phase are they with the revenue upstream? -> Different engagement strategy needed?
+  + If NO, can irregular term (Unexpected Revenue Fluctuation) in STL decomposition analysis explain such fortune?
+  
+* Consult the expert on how to measure these revenue contribution and the KPI's for their worth before iterative engagement strategy. 
+  + Current churn rate?
+  + Their progressive impact on MRR or ARR?
 
 
+***
+## 5.0 Performing RFM Segmentation: RFM Construction 
 
-## 5.0 RFM feature engineering 
+I like to note that with aid of package development and software. There are RFM segmentation and k-means built in library available which are quick, sophisticated and with accurate results. That said, building any models or simple matric from scratch is great source and opportunity for anyone's learning curve - right?. More importantly, I believe it will deliver the ability to understand descriptive statistics in a more practical way. Some of the codes here may not be so easy to interpret as most of them are built from scratch and by me. I will really appreciate any feedback or mistakes I have made. 
 
-Main dish for this post umm..
 
-Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I have added 1 value to all customers which takes account of customer has purchased the day we compute this metric; named it as recency days. This is great trick in case we would like to do log transform later on our analysis :) 
+Aim: 
+* Feature RFM score with acceptable density distribution (0 ~ 100 score in range): Robust Scoring 
 
-recency      = date of analysis - latest purchase date 
+Key Task: 
+
+* Handling the skewness of the data set 
+* Weight control for individual RFM components -> consult the expert
+* Conduct code workflow for practice. 
+
+
+### 5.1 Quick EDA 
+
+Often, in most of the quantitative analysis and toward predictions, having too many zero values can effect on the transformation and its distribution. For this reason, I have added 1 day to all customers which takes account of customer has purchased the day we compute this metric; named it as recency days. This is great trick in case we would like to do log transform later on the analysis. 
+
+recency = date of analysis - latest purchase date 
 
 recency days =  tomorrow date - latest purchase date
-
-
-In full honesty this few lines of code + ntile() function is all we need for RFM scoring. 
-
+ 
 ```{r}
 generator_rfm <- function(data){
   analy_day <- max(data$date) + 1
@@ -443,14 +460,15 @@ generator_rfm <- function(data){
 }
 
 cust_df %>% 
-  generator_rfm()
+  generator_rfm() %>% select(-customer_id) %>% 
+  psych::describe()
 
 ```
 
 
 ```{r}
 cust_df %>% 
-  generator_rfm() %>% head() %>% 
+  generator_rfm() %>% head(10) %>% 
   mutate(monetary = sum(monetary) %>% format_dollar()) %>% 
   set_names(c("Customer ID", "Recency Days", "Frequency", "Monetary")) %>%
   kbl() %>% 
@@ -514,8 +532,10 @@ theme_ben <- function(base_size = 14) {theme_bw(base_size = base_size) %+replace
 
 ```
 
+### 5.2 RFM distribution and skewness 
 
 ```{r}
+
 skimr::partition(skim(cust_df %>% 
   generator_rfm()))$numeric %>% data.frame %>%
    kbl() %>% 
@@ -524,14 +544,33 @@ skimr::partition(skim(cust_df %>%
 cust_df %>% 
   generator_rfm() %>% 
   select(monetary, frequency:recency_days) %>% 
-  generator_hist_facet(bins = 40, ncol = 5, fct_rev = FALSE) + theme_ben()
+  generator_hist_facet(bins = 40, ncol = 3, fct_rev = FALSE) + theme_ben()
   
 ```
 
-We can see that the recency days data is highly right skewed. There are many transformations to handle skewed distribution. In the case, I do not intend to incorporate Machine Learning for customer segmentation thus I will try to modify quantile range in order to overcome this distributional problem on scoring.
+_generator_hist_facet() and theme_ben() are customised facet histogram function. It is uploaded on my GitHub and you are more than welcome :) For better understanding I recommend looking into Business Science 101 Course organised by __Matt Dancho__ _He regularly uploads free tutorials on Youtube as well. Great Stuff!_
 
-generator_hist_facet() and theme_ben() are customised facet histogram function. We can find it on my github or for better understanding I recommend looking into Business Science 101 Course organised by Matt Dancho. He regularly uploads free tutorials on youtube as well :) 
+The recency days dataset is highly right skewed. There are many transformations to handle such skewed distribution, e.g. log transformation for instance. However, inhere, I will like to demonstrate small trick using quantiles binning to effectively split range of customers by organisational profit. - Yes Pareto Principle embeds here. 
 
+Quantile ranges are one of descriptive statistics describing the skewness of the data. The range between Q3-Q2 is larger in magnitude than the Q2-Q1 point in range. The concept of the quantiles (any family of quantiles) are the values located in the dataset in a way that it can split the data uniformly. 
+
+
+Small example of quantile:
+
+```{r}
+rfm_example <- cust_df %>% 
+    generator_rfm()
+
+R_quantile <- quantile(rfm_example$recency_days, probs = seq(0,1,0.25))
+F_quantile <- quantile(rfm_example$monetary, probs = seq(0,1,0.25))
+M_quantile <- quantile(rfm_example$frequency, probs = seq(0,1,0.25))
+
+cbind(R_quantile, F_quantile, M_quantile)
+```
+
+This quantile measure would most likely to preserve the actual customer behaviour distribution; thus the robustness of its score. However, due to the wide range between Q3 (858 recency days) and Q2 (112 recency days), the scope of valuable customers are squeezed making it difficult quantify their differences in their Recency score. 
+
+Hence we will do an opposite approach squeezing the Q3 and Q2 and exposing the range at low recency region. This can be done by relocating the quantiles in data set. 
 
 
 ```{r}
@@ -543,28 +582,32 @@ for(i in 1:5){
   print(result)
 }
 
-rfm_example <- cust_df %>% 
-    generator_rfm() 
 
 R_result <- quantile(rfm_example$recency_days, probs = result)
 F_result <- quantile(rfm_example$frequency, probs = result)
 M_result <- quantile(rfm_example$monetary, probs = result)
 
-cbind(R_result,F_result, M_result)
+cbind(R_result, F_result, M_result)
+
 ```
+
+This is no longer a quantiles; instead of 100% (tip of the iceberg) there is a 93.3%. This new splitting point wraps customers > {recency days over 221} into a single, low scored R group. 
+
+There is one other small problem. The direction of scoreboard for these matrics are opposite: between the R and F,M, which I will take care of in the code below.  
+
 
 ```{r}
 
-generator_rfm_score <- function(data) {
+generator_rfm_metric <- function(data) {
   
   analy_day <- max(data$date) + 1
   
   step_1 <- data %>% 
         generator_rfm() 
   
-  R_level <- quantile(step_1$recency_days, probs = result)
-  F_level <- quantile(step_1$frequency,    probs = result)
-  M_level <- quantile(step_1$monetary,     probs = result)
+  R_level <- quantile(step_1$recency_days,   probs = result)
+  F_level <- quantile(step_1$frequency, probs = result)
+  M_level <- quantile(step_1$monetary,  probs = result)
   
   out <- step_1 %>%
     mutate(R_score = case_when(.$recency_days >= R_level[1] ~ 1,
@@ -585,41 +628,65 @@ generator_rfm_score <- function(data) {
   return(out)
 }
 
-generator_per_metric <- function(pre_score_data, ...) {
+
+generator_rev_per_metric <- function(pre_score_data, ...) {
   
   pre_score_data %>% 
     dplyr::group_by(...) %>% 
     dplyr::summarise(cust = n_distinct(customer_id),
                      total_monetary = sum(monetary)) %>% ungroup() %>% 
     
-    dplyr::mutate(per_cus = total_monetary/cust,
-                  effect = per_cus/per_cus[1],
+    dplyr::mutate(rev_per_cus = total_monetary/cust,
                   prop_cus = cust/sum(cust),
-                  prop_money = total_monetary/sum(total_monetary),
-                  effect = prop_money/prop_cus)
+                  prop_rev = total_monetary/sum(total_monetary),
+                  rev_effect = prop_rev/prop_cus)
 }
 
 ```
 
+
+### 5.3 RFM components Weight control 
+
+The next question that arises is: is it fair to average out the individual recency, frequency, and monetary scores for each customers and assign them to RFM score, as per their purchase or engagement behaviour?
+Depending on the nature of the businesses, the relative importance for individual matrics can be adjusted to arrive at their final score. 
+
+For example, for retail business selling customer goods. A customer who searches and purchases product in monthly bases will have higher recency and frequency score than monetary score. Hence the weight can be calculated by giving more importance to the recency and frequency scores. 
+
+This is the area the data analyst would need to contact this domain of an expert. In prior to jumping into conclusions without any certainty. 
+
+
+Educated Approach: 
+
+* Calculate the revenue contribution for each score in individual R, F, M components. 
+  + revenue contribution/ no. customer  = Revenue contributed per customer
+  + {Rev(group)/Rev(total)} / {No. of cust(group)/No. of cust(total)} = Revenue contribution by group
+  + The sum of revenue contribution by group (score) is revenue effect by its component
+  + R(Rev effect) + F(Rev effect) + M(Rev effect) = Total Revenue effect 
+  + Weight{R(Rev effect)} + Weight{F(Rev effect)} + Weight{M(Rev effect)} = Weight{Total Revenue effect} = 1
+
+
 ```{r}
 
 R_score_table <- cust_df %>% 
-  generator_rfm_score() %>% 
-  generator_per_metric(R_score); R_score_table %>% kbl() %>% kable_material_dark()
+  generator_rfm_metric() %>% 
+  generator_rev_per_metric(R_score); R_score_table %>% kbl() %>% kable_material_dark()
 
 F_score_table <- cust_df %>% 
-  generator_rfm_score() %>% 
-  generator_per_metric(F_score); F_score_table %>% kbl() %>% kable_material_dark() 
+  generator_rfm_metric() %>% 
+  generator_rev_per_metric(F_score); F_score_table %>% kbl() %>% kable_material_dark() 
 
 M_score_table <- cust_df %>% 
-  generator_rfm_score() %>% 
-  generator_per_metric(M_score); M_score_table %>% kbl() %>% kable_material_dark()
+  generator_rfm_metric() %>% 
+  generator_rev_per_metric(M_score); M_score_table %>% kbl() %>% kable_material_dark()
   
 ```
 
+
+
+
 ```{r}
 
-rfm_effect <- sapply(list(R_score_table$effect, F_score_table$effect, M_score_table$effect), function(x) sum(x))
+rfm_effect <- sapply(list(R_score_table$rev_effect, F_score_table$rev_effect, M_score_table$rev_effect), function(x) sum(x))
 
 sum_effect <- sum(rfm_effect)
 weight <- c(rfm_effect[1]/sum_effect, rfm_effect[2]/sum_effect, rfm_effect[3]/sum_effect)
@@ -636,12 +703,12 @@ min_max_normalization <- function(x) {
 generator_RFM_score <- function(pre_score_data) {
   pre_score_data %>% 
   mutate(RFM_Score_norm = RFM_function(.$R_score,
-                                  .$F_score,
-                                  .$M_score,
-                                  w = weight),
+                                       .$F_score,
+                                       .$M_score,
+                                       w = weight),
          RFM_Score_norm = min_max_normalization(RFM_Score_norm),
-         RFM_Score = (RFM_Score_norm)*100,
-         RFM_Score_gr = ifelse(RFM_Score >= 90, 10,
+         RFM_Score      = (RFM_Score_norm)*100,
+         RFM_Score_gr   = ifelse(RFM_Score >= 90, 10,
                                ifelse(RFM_Score >= 80, 9,
                                       ifelse(RFM_Score >= 70, 8,
                                              ifelse(RFM_Score >= 60, 7,
@@ -650,29 +717,81 @@ generator_RFM_score <- function(pre_score_data) {
                                                                   ifelse(RFM_Score >= 30, 4,
                                                                          ifelse(RFM_Score >= 20, 3,
                                                                                 ifelse(RFM_Score >= 10, 2,
-                                                                                       1))))))))))
+                                                                                       1)))))))))) 
 }
   
 
 ```
 
+
+## 6.0 Performing RFM Segmentation: RFM Analysis 
+
+
+
 ```{r}
 rfm_score_df <- cust_df %>% 
-  generator_rfm_score() %>% 
+  generator_rfm_metric() %>% 
   generator_RFM_score() %>% 
   left_join(resp, by = "customer_id") %>% 
   mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0) %>% as.factor())
+                                TRUE ~ 0) %>% as.factor()) %>% 
+  mutate(RFM_Score_gr = RFM_Score_gr %>% as.factor) %>%
+  unite("RFM", R_score:M_score, sep = ":", remove = FALSE)
 
+```
+
+```{r}
 rfm_score_df %>% 
   select(R_score:M_score) %>% 
-  generator_hist_facet(bins = 5, ncol = 5, fct_rev = FALSE) + theme_ben()
+  generator_hist_facet(bins = 5, ncol = 1, fct_rev = FALSE) + theme_ben()
 
 rfm_score_df %>% 
   select(RFM_Score, RFM_Score_gr) %>% 
   mutate(RFM_Score_gr = as.numeric(RFM_Score_gr)) %>% 
-  generator_hist_facet(bins = 10, ncol = 5, fct_rev = FALSE) + theme_ben()
+  generator_hist_facet(bins = 10, ncol = 1, fct_rev = FALSE) + theme_ben()
+
 ```
+
+
+```{r}
+summary_rfm_score_table <- rfm_score_df %>% 
+  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %>% 
+  dplyr::group_by(RFM_Score_gr) %>% 
+  dplyr::summarise(no_cust           = n(),
+                   campaign          = sum(as.numeric(as.character(campaign))),
+                   avg_RFM_Score     = mean(RFM_Score),
+                   avg_freq          = mean(frequency),
+                   avg_sales         = mean(monetary),
+                   avg_recency_days  = mean(recency_days),
+                   tot_sales         = sum(monetary),
+                   rev_per_cust      = tot_sales/no_cust) %>% ungroup() %>% 
+  arrange(desc(avg_RFM_Score)) %>% 
+  mutate(RFM_Score_gr = RFM_Score_gr %>% fct_reorder(desc(avg_RFM_Score))) %>% 
+  select(avg_RFM_Score, everything()) 
+  
+
+summary_rfm_score_table %>% 
+  mutate(tot_sales = format_dollar(tot_sales),
+         rev_per_cust = format_dollar(rev_per_cust)) %>% 
+  setNames(c("Avg. RFM Score", "RFM", "No. Customer", "No. Campaign","Avg. Frequency", "Avg. Monetary", "Avg. Recency", "Total Revenue", "Revenue Per Customer")) %>% kbl() %>% kable_material_dark() 
+  
+```
+
+
+```{r}
+
+ggplot(rfm_score_df, aes(x = RFM_Score)) +
+  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[1], alpha = 0.7) +
+  stat_function(fun=dnorm, 
+                args = list(mean=mean(rfm_score_df$RFM_Score),
+                              sd=sd(rfm_score_df$RFM_Score)),
+                color="red", lwd = 1) +
+  geom_density(color="black", lwd =1.5) +
+  theme_tq()
+
+```
+
+## 7.0 Performing RFM Segmentation: RFM Visualisation  
 
 ```{r}
 
@@ -709,468 +828,117 @@ generator_plot_rfm(rfm_score_df, frequency, monetary, campaign)
 
 ```{r}
 
+g_plot <- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) + 
+  geom_point(position = "stack", size = 3) +
+  theme_bw()+ 
+    labs(
+     title    = "Customer Purchasing Behaviour Plot: Frequency and Monetary",
+     subtitle = "Uniform Stack Distribution of RFM Score under F and M dimension",
+     x        = "Frequency",
+     y        = "Monetary",
+     color    = "RFM Score"
+  ) + 
+  theme_tq()
+g_plot
 
 
-```
-
-```{r}
-ggplot(rfm_score_df, aes(x = RFM_Score)) +
-  geom_density(aes(x = RFM_Score, y = ..density..), fill = palette_light()[6]) +
-  stat_function(fun=dnorm, 
-                args = list(mean=mean(rfm_score_df$RFM_Score),
-                              sd=sd(rfm_score_df$RFM_Score)),
-                color="red", lwd = 1) +
-  geom_density(color="black", lwd =1.5) +
-  theme_minimal()
-```
-
-```{r}
-summary_rfm_table <- rfm_score_df %>% 
-  mutate(RFM_Score_gr = RFM_Score_gr %>% as.factor) %>% 
-  select(RFM_Score_gr, recency_days:monetary, campaign, RFM_Score) %>% 
-  dplyr::group_by(RFM_Score_gr) %>% 
-  dplyr::summarise(no_cust           = n(),
-                   avg_RFM_Score     = mean(RFM_Score),
-                   avg_freq          = mean(frequency),
-                   avg_sales         = mean(monetary),
-                   avg_recency_days  = mean(recency_days),
-                   tot_freq          = sum(frequency),
-                   tot_sales         = sum(monetary)) %>% ungroup() %>% 
-  arrange(desc(avg_RFM_Score)) %>% 
-  mutate(RFM_Score_gr = RFM_Score_gr %>% fct_reorder(desc(avg_RFM_Score))) %>% 
-  select(avg_RFM_Score, everything())
-```
-
-
-
-## 4.0 Quick overview on time series visualisation 
-
-In this section I will explore and study on revenue time series visualisation and TSL (Trend, Seasonal, Irregular) components. Unfortunately, I would not be able to throw any punch line of my task here. Especially I wish not to deliver any miss interpreted knowledge to anyone. Hence I will be only clarifying the techniques and quotes supplied by professionals and codes with real thoughts. 
-
-
-Key questions to ask: 
-
-* What phase are we in with revenue growth? 
-  + Is there noticeable trend?
-  + Periodic revenue fluctuation found in the customer activity
-    + Seasonal?
-    + Cycle? 
-  + How the campaign responded consumption patterns are evolving? 
-    + Positive - How we should fine-tune campaign strategies accordingly?
-    + Negative - What could be the key influential factor (e.g. competitors, lack of recent customer engagement)?
-  
-
-### 4.1 Why time series?
-
-Depending on where businesses are with their business cycle, of course, the companies priorities and spending cost needs to be adjusted accordingly. Depending on the phase, the scope of the target customer may regulate stricter or lesser policy (risk measurement). 
-
-What's more, visualising time series supplies valuable boundary to the company's goal. The ability to scale and formulate a value where the business falls within a High <--> Low risk spectrum is spectacularly important before scoring any business/finance matrices. I can not wait to study this more for future blog post on credit loan default risk prediction modelling.  
-
-```{r}
-timespan_day <- max(trans_df$date) - min(trans_df$date)
-
-timespan_year <- format(as.numeric(timespan_day/365.24), digits = 3)
-
-cat("There is",paste0(timespan_year),"annual cycle worth of data")
-
-```
-
-
-### 4.2 Data frame of daily, weekly, monthly time stamps + time series visualisation 
-
-Above three years of revenue annual cycle is sufficient collection of data to predict its future revenue and sales. According to Amazon's time series forecasting principles, also mentioned by Lucas Soares on _towards data science blog post_, forecasting is a hard problem for two reasons:
-
-* Incorporating large volumes of historical data, which can lead to missing important information about the past of the target data dynamics.
-
-* Incorporating related yet independent data (holidays/event, locations, marketing promotions)
-
-Beside that, sales forecasting is likely to depend on the economic situation, the competition, consumer behaviour and many other external factors. For these reasons the concept of relaxing assumption will remain a key for quantitatively measuring the issues influencing on the revenue metrics. Again, too generic. 
-
-```{r}
-# Tidy eval + time series visualisation function 
-start_date <- "2011-07"
-end_date   <- "2015-03-01"
-
-generator_periodic_tbl <- function(data, 
-                                   period, 
-                                   start_date, 
-                                   end_date, 
-                                   var_x1, 
-                                   var_x2){
-  
-  var_x1 <- enquo(var_x1)
-  var_x2 <- enquo(var_x2)
-  start_date <- enquo(start_date)
-  end_date   <- enquo(end_date)
-  
-  period_list   <- enquo(period)
-  period_quote  <- quo_name(period_list)
-  
-  out_tbl <- data %>%
-    mutate(foo = ceiling_date(!!var_x2, unit = !!period_quote)) %>% 
-    filter_by_time(.start_date = !!start_date, 
-                   .end_date = !!end_date,
-                   .date_var = foo)  %>% 
-    dplyr::group_by(foo) %>%
-    dplyr::summarise(frequency = n(),
-                     sales     = sum(!!var_x1)) %>% ungroup()
-  
-  names(out_tbl)[1] <- "date"
-  out_tbl
-}
-
-generator_plot_ts <- function(.data, 
-                              .period, 
-                              .var_x1){
-  
-  period_list <- enquo(.period)
-  period_name <- quo_name(period_list)
-  var_x1_list  <- enquo(.var_x1)
-  var_x1_name  <- quo_name(var_x1_list)
-  
-  .data %>% 
-  mutate_by_time(.by = period_name,
-                 sales_mean = mean(!!var_x1_list)) %>% 
-  pivot_longer(contains(!!var_x1_name))  %>%  
-  plot_time_series(date, value, name,
-                   .smooth = FALSE,
-                   .interactive = FALSE)
-}
-
-
-```
-In here I will like to illustrate traditional statisical method for decomposing time series. STL decomposition 
-
-uncover step-by-step how to 
-
-For these reasons, we first need to remove highly volatile and predictable 
-
-to generalise and interpret evidence for sales quantitative measure. 
-
-The volatility of daily and weekly transcation data can bury many useful information such as trend or activity variance. 
-
-```{r, warning = FALSE, message=FALSE}
-
-trans_df %>% 
-  generator_periodic_tbl(day, start_date, end_date, amount, date) %>% 
-  generator_plot_ts(week, sales)
-
-trans_df %>% 
-  generator_periodic_tbl(week, start_date, end_date, amount, date) %>% 
-  generator_plot_ts(month, sales)
-
-trans_df %>% 
-  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
-  generator_plot_ts("3 month", sales)
-
-```
-
-Now the monthly revenue time series reveals some useful information 
-
-* 
-revenues with its worst performance. shows +3 years overall descending trend. 
-
-```{r, warning = FALSE, message=FALSE}
-
-outlier_detection <- function(x) {
-  x[x > quantile(x, .95, na.rm = T)] 
-  x[x < quantile(x, .05, na.rm = T)] 
-}
-
-trans_df %>% 
-  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
-  mutate(revenue       = sales) %>% 
-  mutate(revenue_log   = log(sales)) %>% 
-  mutate(revenue_sd    = standardize_vec(revenue_log),
-         outlier       = ifelse(revenue %in% outlier_detection(revenue) == TRUE, 1, NA),
-         revenue_text  = case_when(outlier == 1 ~ revenue, 
-                                   TRUE~ outlier),
-         revenue_text  = scales::dollar(revenue_text, scale = 1e-3, suffix = "K")) %>% 
-  ggplot(aes(x = date, y = (revenue_sd))) +
-  geom_line(size = 0.5, linetype = 1) +
-  geom_smooth(method   = "lm", se = FALSE) +
-  geom_label(aes(label = revenue_text,
-             frontface = "bold",
-             vjust     = 0.5,
-             hjust     = 1.2,
-             color     = "red")) +
+h_plot <- ggplot(data = rfm_score_df, aes(x = frequency, y = monetary, color = RFM_Score_gr)) +
+  geom_point(position = "jitter", size = 0.7) +
+  theme_bw() +  
   labs(
-     title    = "Monthly Revenue Time Series: We are at the end of seasonal downturn!",
-     x        = "Year",
-     y        = "Revenue"
+     title    = "Customer Purchasing Behaviour Plot: Frequency and Monetary",
+     subtitle = "Two Distinctive Customer Groups visually identified",
+     x        = "Frequency",
+     y        = "Monetary",
+     color    = "RFM Score"
   ) +
-  guides(fill = FALSE, color = FALSE, linetype = FALSE, shape = FALSE) +
   theme_tq()
+h_plot
+
+f_plot <- ggplot(data = rfm_score_df, aes(x = log(monetary/recency_days), y = frequency, color = RFM_Score_gr)) +
+  geom_point(position = "jitter", size = 1.5) +
+  theme_bw()+   
+  labs(
+     title    = "Customer Purchasing Behaviour Plot: log(M/R) and Frequency",
+     x        = "log(M/R)",
+     y        = "Frequency",
+     color    = "RFM Score"
+  ) +
+  theme_tq()
+f_plot
 
 ```
 
 
-### 4.3 STL time series decomposition 
 
- 
+## 8.0 Performing RFM Segmentation: Business Use
+
+Having individual R, F, and M scores and these unqiuw combination, customers can be clustered in groups based on their purchase behaviour. On top of that, the RFM score we have generated assigns the profitable priorities of these groups. This is bring an advantage for quick and actionable decision makings in comparison to having just the purchasing behaviour analysis. 
+
+Clustering these groups exceeds my goal in this post hence I would not explore more than illustrating some of the classical examples from below. 
+
+Champions: 	Bought recently, buy often and spend the most	
+Loyal:  Customers	Spend good money. Responsive to promotions	
+Potential Loyalist:	Recent customers, spent good amount, bought more than once	
+New Customers: 	Bought more recently, but not often
+Promising:	Recent shoppers, but haven’t spent much	
+Need Attention: Above average recency, frequency & monetary values
+About To Sleep: Below average recency, frequency & monetary values	
+At Risk:	Spent big money, purchased often but long time ago	
+Can’t Lose Them:	Made big purchases and often, but long time ago	
+Hibernating:	Low spenders, low frequency, purchased long time ago	
+Lost:	Lowest recency, frequency & monetary scores	
+
+
+At Risk
+* Customers with high revenue contribution but risk of churn. 
+* R_score of 1 means +221 days (8 months) of last purchase -> More likely to be lost customers
+* 27.7% of customers in "At Risk" group had previous campaign subscription: Very High (Urgent Action needed)  
 
 ```{r}
+risk_cust <- rfm_score_df %>%
+  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
+  filter(RFM_Score >= 60 & R_score <= 2 & R_score > 1) %>% 
+  arrange(desc(RFM_Score)); risk_cust %>% head(10) %>% kbl() %>% kable_material_dark()
 
-generator_stl_monthly <- function(data, start_date, end_date){
-  
-  start <- start_date %>% str_split("-") %>% unlist()
-  
-  monthly_ts <- data %>% 
-  generator_periodic_tbl(month, start_date, end_date, amount, date) %>% 
-  select(sales) %>% 
-  ts(start = c(start[1], start[2]), f = 12)
-  
-  t <- 1:length(monthly_ts)
-  
-  fit_monthly_lm <- lm(monthly_ts ~ t)
-  trend <- fitted(fit_monthly_lm)
-  
-  adjtrend = monthly_ts/trend
-  y = factor(cycle(adjtrend))
-  fit_monthly_1 <-auto.arima(adjtrend,
-                           max.p = 2,
-                           xreg=model.matrix(~0 + y)[, -12],
-                           seasonal = F, max.d = 0, max.q = 0)
-  
-  seasonal = fit_monthly_1$fitted
-  pred = trend*seasonal
-  irregular = monthly_ts/pred
-
-  date <- ym(start_date) + months(1:length(monthly_ts)-1)
-  table4 <- data.frame(date, monthly_ts, pred, trend, seasonal, irregular) %>% 
-    setNames(c("date", "revenue", "exp_rev","trend", "seasonal", "irregular"))
-  
-  return(table4)
-}
-
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) 
-
+prop.table(table(risk_cust$campaign))[2]*100
 ```
+
+Up-sell
+* Customers with frequent purchase history but does not spend much 
+* Personalised Up-sell Recommendations needed 
+* 20% of customers in "Up-sell" group had previous campaign subscription: High
 
 ```{r}
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) %>% 
-  select(date, revenue, exp_rev) %>% 
-  gather(key = "type_rev", value = "value", -date) %>% 
-  ggplot(aes(date, value, group = type_rev)) +
-  geom_line(aes(linetype = type_rev, colour = type_rev)) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_tq()
+upsell_cust <- rfm_score_df %>%
+  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
+  filter(F_score >= 4 & M_score <= 2) %>% 
+  arrange(desc(RFM_Score)); upsell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
 
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) %>%
-  mutate(unexp_revenue  = revenue - exp_rev,
-         risk_rev_index = unexp_revenue/revenue*100) %>% 
-  ggplot(aes(date, risk_rev_index)) +
-  geom_line() +
-  theme_tq()
-
-
+prop.table(table(upsell_cust$campaign))[2]*100
 ```
+
+Cross-Sell 
+* Customers with good spending amount but less frequent
+* Good R_score needed for cross-selling strategy: recommending products related to their recent purchase. 
+* 9.7% of customers in "Cross-Sell" group had previous campaign subscription: Average
 
 ```{r}
-resp <- resp_df_raw %>% 
-  select(customer_id, response) %>% 
-  setNames(c("customer_id", "campaign"))
+crosssell_cust <- rfm_score_df %>%
+  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
+  filter(M_score >= 3 & F_score <= 2 & R_score >= 4) %>% 
+  arrange(desc(RFM_Score)); crosssell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
 
-cust_df <- trans_df %>% 
-  left_join(resp, by = "customer_id") %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0))
-
-cust_df %>% 
-  filter(campaign == 0) %>% 
-  generator_stl_monthly(start_date, end_date) %>% 
-  ggplot(aes(date, seasonal)) +
-  geom_line() +
-  theme_tq()
-  
-  
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) %>% 
-  ggplot(aes(date, seasonal)) +
-  geom_line() +
-  theme_tq()
-
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) 
-
-cust_df %>% 
-  filter(campaign == 0) %>% 
-  generator_stl_monthly(start_date, end_date)
-
-
+prop.table(table(crosssell_cust$campaign))[2]*100
 ```
+
+
+New Customer 
 
 ```{r}
-
-
-cust_norespo_df <- cust_df %>% 
-  filter(campaign ==0) %>% 
-  generator_stl_monthly(start_date, end_date) %>% 
-  mutate(campaign = 0 %>% as.factor())
-
-cust_yesrespo_df <- cust_df %>% 
-  filter(campaign ==1 ) %>% 
-  generator_stl_monthly(start_date, end_date) %>% 
-  mutate(campaign = 1 %>% as.factor())
-
-cust_norespo_df %>% 
-  rbind(cust_yesrespo_df) %>%   
-  mutate(unexp_revenue  = revenue - exp_rev) %>% 
-  ggplot(aes(date, seasonal, group = campaign)) +
-  geom_line(aes(linetype = campaign)) +
-  theme_tq()
-
-trans_df %>% 
-  generator_stl_monthly(start_date, end_date) %>%
-  mutate(unexp_revenue  = revenue - exp_rev) %>% 
-  ggplot(aes(date, unexp_revenue)) +
-  geom_line() +
-  theme_tq()
-
-cust_yesrespo_df %>% 
-  ggplot(aes(date, revenue)) +
-  geom_line() +
-  theme_tq()
-
-cust_yesrespo_df %>% 
-  mutate(unexp_revenue  = revenue - exp_rev) %>% 
-  ggplot(aes(date, unexp_revenue)) +
-  geom_line() +
-  theme_tq()
-
-cust_norespo_df %>% 
-  ggplot(aes(date, revenue)) +
-  geom_line() +
-  theme_tq()
-
-cust_norespo_df %>% 
-  mutate(unexp_revenue  = revenue - exp_rev) %>% 
-  ggplot(aes(date, unexp_revenue)) +
-  geom_line() +
-  theme_tq()
+potential_new_cust <- rfm_score_df %>%
+  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
+  filter(M_score >= 2 & F_score == 1 & R_score >= 5) %>% 
+  arrange(desc(RFM_Score)); crosssell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
 ```
 
-Perspective Notes : 
-[1] The historical data shows there are hardly any correlation between date and customer behaviour, likely to be a random walk model 
-[2] There is a noticeable correlation between customer id and their purchasing behaviour. I anticipate could be due to number of reasons, perhaps, the primary key was organised by geographical manner, time, or other possible useful information held behind. 
-
-
-### 4.3 Comonents for Time Series Analysis 
-
-
-```{r}
-
-```
-
-
-
-```{r}
-trans_df %>%
-  mutate(quarter = quarter(date)) %>% 
-  dplyr::group_by(quarter) %>%
-  dplyr::summarise(frequency = n(),
-                   sales     = sum(amount) %>% format_dollar()) %>% 
-  set_names(c("Quarter", "Frequency", "Revenue")) %>%
-  kbl() %>% 
-  kable_material_dark()
-
-trans_df %>%
-  mutate(month = month(date, label = TRUE, abbr = FALSE)) %>% 
-  dplyr::group_by(month) %>%
-  dplyr::summarise(frequency   = n(),
-                   tot_revenue = sum(amount) %>% format_dollar()) %>%  
-  set_names(c("Month", "Total No Purchase", "Total Revenue")) %>%
-  kbl() %>% 
-  kable_material_dark()
-```
-
-
-
-```{r}
-resp <- resp_df_raw %>% 
-  select(customer_id, response) %>% 
-  setNames(c("customer_id", "campaign"))
-
-pre_rfm_df <- trans_df %>% 
-  left_join(resp, by = "customer_id") %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0))
-  
-
-```
-
-
-```{r}
-pre_rfm_df %>% 
-  mutate(month = month(date)) %>%
-  group_by(campaign) %>% 
-  summarise(no_pur  = n(),
-            avg_pur = mean(amount)   %>% format_dollar(),
-            med_pur = median(amount) %>% format_dollar(),
-            sd_pur  = sd(amount)     %>% format_dollar()) %>% 
-  ungroup() %>% 
-  set_names(c("Campaign", "No Purchase", "Averge Purchase", "Median Purchase", "Std Purchase")) %>%
-  kbl() %>% 
-  kable_material_dark()
-
-```
-
-
-```{r}
-library(reshape2)
-cmpg_df <- pre_rfm_df %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0),
-         week = ceiling_date(date, unit = "week")) %>%
-  group_by(week, campaign) %>% 
-  summarise(no_pur = n(),
-            revenue = sum(amount))
-
-
-cmpg_pur_df <- cmpg_df %>% 
-  dcast(week ~ campaign, value.var = "no_pur") 
-cmpg_rev_df <- cmpg_df %>% 
-  dcast(week ~ campaign, value.var = "revenue") 
-
-cmpg_vis_df <- left_join(cmpg_pur_df, cmpg_rev_df, by = "week") %>% 
-  set_names(c("week", "no_pur_N", "no_pur_Y", "sales_N", "sales_Y")) %>% 
-  filter_by_time(.start_date = "2011-07", 
-                   .end_date = "2015-03-01",
-                   .date_var = week) %>% 
-  
-  group_by(week) %>%
-  summarise(no_pur_N_cmpg  = sum(no_pur_N),
-            no_pur_Y_cmpg  = sum(no_pur_Y),
-            revenue_N_cmpg = sum(sales_N),
-            revenue_Y_cmpg = sum(sales_Y)) %>% ungroup()
-  
-cmpg_vis_df %>% plot_time_series(week, 
-                                 revenue_Y_cmpg,
-                                 .smooth = FALSE,
-                                 .interactive = FALSE) 
-
-cmpg_vis_df %>% plot_time_series(week, 
-                                 revenue_N_cmpg,
-                                 .smooth = FALSE,
-                                 .interactive = FALSE) 
-
-cmpg_vis_df %>% plot_time_series(week, 
-                                 no_pur_Y_cmpg,
-                                 .smooth = FALSE,
-                                 .interactive = FALSE) 
-
-cmpg_vis_df %>% plot_time_series(week, 
-                                 no_pur_N_cmpg,
-                                 .smooth = FALSE,
-                                 .interactive = FALSE) 
-
-  
-```
-
-
-the RFM scoring possess less weight on customer next purchasing prediction value. By means, although RFM metrics yet remain its purpose of segmenting superior to sleeping customer but it would be a good predictor index for estimating who would be most likely to purchase in given time period. As the stationary means it occurs by chance. 
-
-***
