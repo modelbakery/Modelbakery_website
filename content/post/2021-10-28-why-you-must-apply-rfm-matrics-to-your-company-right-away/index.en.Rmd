@@ -45,9 +45,10 @@ There are many excellent books and course materials with technical details on st
   + RFM Visualisation
 
 ### Desert 
-* Summary on Perspective note
-* Wrap up: What I have learned
-* Future development 
+* Wrap up
+  + Summary on Perspective Notes 
+  + RFM Limitations
+  + Future Development 
 * Ready to receive feedback  
 
 ***
@@ -132,7 +133,7 @@ Having this in mind, we will explore the transcation data in depth and construct
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
 library(readr)
-library(fs)
+library(fs) 
 library(tufte)
 
 library(forecast)
