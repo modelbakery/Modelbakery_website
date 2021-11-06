@@ -20,93 +20,80 @@ projects: []
 draft: FALSE
 ---
 
+You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers' demographics,  desire, and product categories, the power of the leading score can ever so be significant. 
 
-You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers' demographics,  desire, and product categories, the power of the leading score can ever so be significant. In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.
+In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution for actionable decision makings. 
+
+There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.
 
 ***
 ## Menu 
 
 ### Appetizer
-+ Motivation: Segmentation is "Divide and Conquer"
-+ What is RFM and why we do feature engineering 
-+ Why Campaign Response important feature for CRM?
-+ Power of Quantile and Pareto Principle 
-+ Robust Scoring Rules 
+* What is RFM and why we do feature engineering 
+* Why Campaign Response important feature for CRM?
+* Power of Quantile and Pareto Principle 
+* Robust Scoring Rules 
 
 ### Main
-+ Time Series Visualisation + seasonal effect
-+ Data splitting 
-+ RFM Scoring 
-+ Visualisation for business report 
+* Data Preparation 
+* Campaign Response Rate
+* Performing RFM Segmentation
+  + RFM Construction
+  + RFM Analysis
+  + RFM Visualisation
 
 ### Desert 
-+ Perspective note 
-+ To take action
-+ Wrap up: What I have learned
-+ Ready to receive feedback  
-
-***
-
-## Motivation: Segmentation is "Divide and Conquer"
-
-As many consulting companies, e.g. McKenzie and PwC, have claimed, well-defined customer segmentation has the ability to cut through to the heart of business strategy. Perhaps, segmentation can be simply understood by a picture of a top-down mechanism. I like to bring the concept of the decision tree algorithm in two folds. First, the "complexity" of function depends on the depth and second, more splits provide a finer-grained partitioning; hence more homogeneous groups would result. Despite many caveats to this model and its concept (e.g. robustness of these segments), the model cannot avoid that this is an opportunity-seeking model. It is breaking through defined groups and uncovering potential leading customers with unmet needs, the one of era analytic marketers should strive and provide solution to effectively reduce such Type 1 error. This took time to sink into me. I hope the message is not about what model we should consider. It is the necessity to plan for both actionable short-term and robust long-term bulk scoring ... leverage CRM system. 
-
-In this post I would like to illustrate example on actionable target marketing with RFM model, emphasizing on the Pareto Principle. Now lets break down its components in details. 
-
+* Summary on Perspective note
+* Wrap up: What I have learned
+* Future development 
+* Ready to receive feedback  
 
 ***
 
 
 ## What is RFM and why we do feature engineering 
 
-Past history, Marketers realised that targeting the right audience is just as important as what you send. The phrase "right" customer is too general. The RFM sets a trick here. It is well known statistical model to develope a sense of company's customer base. Top of this, due to its high adaptibility in various industries it serves as good starting point of your customer segmentation journey. 
 
-RFM is essentially a combined measure of customer's purchasing characteristics; a method that lets business to pin down their most valuable customers and in what degree in differs as the score board progressively descends. RFM consists three customer behviour data points: recency, frequency and monetary. 
+### RFM
+
+Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the "right" customer will always vary depending on business objectives and business cycle. Having reliable KPI's for customer score board and their activities will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company's customer base: __customer purchasing behaviour!__
+
+>The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model __without compromising its accuracy__.
+
+RFM is essentially a combined measure of customer's purchasing characteristics; consists three data points: recency, frequency and monetary. 
 
 + Recency  : __Length__ of a time period since the __last__ purchase 
 + Frequency: __Number__ of purchase within a customer life-span
 + Monetary : __Amount__ of money spent within customer transcations
 
-There are various approaches to these weight control and customerised metrics but at its basic, 
-In data science world RFM is a type of feature engineering.
+All of these measures have been proven to be effective predictors of a customer's willingness to engage in marketing messages and construct their specific values to the company. 
 
->The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model __without compromising its accuracy__.
 
-is a process of applying domain knowledge to select and transform raw data into new definable features (characterisitcs, properties, attributes) that better represent the underlying problem to solve or predict with improve model performance. 
+### Benefit of RFM Analysis 
 
-Decision makings starts with assumptions: hypothesis. When I make a strong assumptions, I bring that idea and paint it on 2D canvas; this is a model. Yes - there will be restrictions and some of the excluded information can be important. It is almost too scary to see what may be behind that canvas.
+In-depth KYC (know your customer) on your customer base and framework for iterative campaigns to promising customer (targets) will undoubtfully benefit your organisation in many folds:
 
-Feature engineering is a trick that brings some of this hidden layers of information. Because I force them wear on a similar colour. Hence a prior knowledge at this specific domain gains more opportunity to be creative and ... upon the assumptions made. 
+* Personalisation: By creating effective customer segments, highly relevant and cutomerised offer in personal level can be achieved. 
+
+* Improve Conversion Rates: Personalised marketing will yield higher retention and conversion rate by aid of effective up-sell, cross-sell strategy. 
+
+* ROI: Breaking customers into small buckets effectively reduce business's missing opportunity (low Risk) and enables objective-oriented target marketing (High return)
+
+
+### Feature Engineering 
+
+Feature engineering is a process of applying domain knowledge to select and transform raw data into new definable features (characteristics, properties, attributes) that better represent the underlying problem to solve or predictive model. 
+
+Depending on how you apply RFM analysis it is also a feature engineering as we are combining customer transcation historical data: latest purchase, how often, in amounts, to new __"Transcations History"__ feature. The important question is how well does new feature speaks of its own definition in business. In broad sense, this RFM feature has many usage for segmentation but also input feature in many predictive models (churn, campaign response, likelihood of future purchase). Simply put, in customer analytics, purchasing behaviour is not only dimension of company's interest. More so, in its best form, I believe the matrics should be flexible to include on various KPI's and modelling. We will discuss more later in this post.  
 
 ***
 
+## Why Campaign Response Tracking System Important?
+
+Tracking responses is one of the important aspects of the campaign life cycle for a marketing analyst. This involves process of collecting data that identifies customers who have responded to a communication from a campaign program via specific channels. Any company would like to automate customer engagement and its campaign performance measure. 
 
 
-RFM metrics traditional marketing trick to segment customer based on their purchasing behaviours. Past history, Marketers realised that targeting the right audience is just as important as what you send. The idea behind a target marketing can be defined as "anyone interested in our service". Short understandings and certainity on their values for the future put more risk on your marketing decisions. 
-
-$$ 
-\ E(Sales) = \frac{Sales + Cost\ of\ goods\ sold}{Risk} 
-$$
-
-
-Having said, well-defined customer-life value is not easy calculations, in fact, it should not be ran by company's operational convience. In my opinion, the "Target" will ever be general and the key will always be a simplifications. 
-
-
-So why are we doing RFM? To find customer priorities? for better customer organisation? - Yes these may all remain true. But, I would like to interpret differently, the heart of scoring and segmentation is to 
-
-There is no doubt having expert knowlegde in the domain of business has a capability to reveal tangible insights and priorties business initiative. 
-
-In opinion its message is clear. There are no one-way scoring mechanism 
-
-
-In-depth KYC (know your customer) ensures  only can leverage ROI from  
-it may give the feel of understanding your customer better, as you are almost personalising their uniquness. However, this holds two caveats, 
-
-
-Small Segment of customers -> reduce costs 
-
-
-## Why Campaign Response important feature for CRM?
 
 A campaign has variety of strategy and some examples are as follow:
 
@@ -121,6 +108,17 @@ Tracking campaign activities are vital measure for customer engagement managemen
 The data I will be exploring below contains customer campaign response binary dataset. 
 
 ***
+
+
+Having said, well-defined customer-life value is not easy calculations, in fact, it should not be ran by company's operational convience. In my opinion, the "Target" will ever be general and the key will always be a simplifications. 
+
+
+So why are we doing RFM? To find customer priorities? for better customer organisation? - Yes these may all remain true. But, I would like to interpret differently, the heart of scoring and segmentation is to 
+
+In opinion its message is clear. There are no one-way scoring mechanism 
+
+
+## Power of Quantile and Pareto Principle 
 
 ## 1.0 library load
 
@@ -875,24 +873,15 @@ f_plot
 
 Having individual R, F, and M scores and these unqiuw combination, customers can be clustered in groups based on their purchase behaviour. On top of that, the RFM score we have generated assigns the profitable priorities of these groups. This is bring an advantage for quick and actionable decision makings in comparison to having just the purchasing behaviour analysis. 
 
-Clustering these groups exceeds my goal in this post hence I would not explore more than illustrating some of the classical examples from below. 
-
-Champions: 	Bought recently, buy often and spend the most	
-Loyal:  Customers	Spend good money. Responsive to promotions	
-Potential Loyalist:	Recent customers, spent good amount, bought more than once	
-New Customers: 	Bought more recently, but not often
-Promising:	Recent shoppers, but haven’t spent much	
-Need Attention: Above average recency, frequency & monetary values
-About To Sleep: Below average recency, frequency & monetary values	
-At Risk:	Spent big money, purchased often but long time ago	
-Can’t Lose Them:	Made big purchases and often, but long time ago	
-Hibernating:	Low spenders, low frequency, purchased long time ago	
-Lost:	Lowest recency, frequency & monetary scores	
+Clustering these groups exceeds my goal in this post hence I would not explore more than illustrating some of the classical examples below. 
 
 
 At Risk
+
 * Customers with high revenue contribution but risk of churn. 
+
 * R_score of 1 means +221 days (8 months) of last purchase -> More likely to be lost customers
+
 * 27.7% of customers in "At Risk" group had previous campaign subscription: Very High (Urgent Action needed)  
 
 ```{r}
@@ -905,8 +894,11 @@ prop.table(table(risk_cust$campaign))[2]*100
 ```
 
 Up-sell
+
 * Customers with frequent purchase history but does not spend much 
+
 * Personalised Up-sell Recommendations needed 
+
 * 20% of customers in "Up-sell" group had previous campaign subscription: High
 
 ```{r}
@@ -919,8 +911,11 @@ prop.table(table(upsell_cust$campaign))[2]*100
 ```
 
 Cross-Sell 
+
 * Customers with good spending amount but less frequent
+
 * Good R_score needed for cross-selling strategy: recommending products related to their recent purchase. 
+
 * 9.7% of customers in "Cross-Sell" group had previous campaign subscription: Average
 
 ```{r}
@@ -933,12 +928,4 @@ prop.table(table(crosssell_cust$campaign))[2]*100
 ```
 
 
-New Customer 
-
-```{r}
-potential_new_cust <- rfm_score_df %>%
-  select(-c(recency_days:monetary, RFM_Score_norm)) %>% 
-  filter(M_score >= 2 & F_score == 1 & R_score >= 5) %>% 
-  arrange(desc(RFM_Score)); crosssell_cust %>% head(10) %>% kbl() %>% kable_material_dark()
-```
 
