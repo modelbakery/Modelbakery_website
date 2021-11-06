@@ -36,8 +36,8 @@ draft: FALSE
 <ul>
 <li>What is RFM and why we do feature engineering</li>
 <li>Why Campaign Response important feature for CRM?</li>
-<li>Power of Quantile and Pareto Principle</li>
-<li>Robust Scoring Rules</li>
+<li>Pareto Principle</li>
+<li>RFM Quantitative Scoring</li>
 </ul>
 </div>
 <div id="main" class="section level3">
@@ -65,10 +65,10 @@ draft: FALSE
 </div>
 </div>
 <div id="what-is-rfm-and-why-we-do-feature-engineering" class="section level2">
-<h2>What is RFM and why we do feature engineering</h2>
+<h2>1. What is RFM and why we do feature engineering</h2>
 <div id="rfm" class="section level3">
-<h3>RFM</h3>
-<p>Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the “right” customer will always vary depending on business objectives and business cycle. Having reliable KPI’s for customer score board and their activities will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company’s customer base: <strong>customer purchasing behaviour!</strong></p>
+<h3>1.1 RFM</h3>
+<p>Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the “right” customer will always vary depending on business objectives and business cycle. Having reliable KPI’s for customer value and engagement score will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company’s customer base: <strong>customer purchasing behaviour!</strong></p>
 <blockquote>
 <p>The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model <strong>without compromising its accuracy</strong>.</p>
 </blockquote>
@@ -78,10 +78,10 @@ draft: FALSE
 <li>Frequency: <strong>Number</strong> of purchase within a customer life-span</li>
 <li>Monetary : <strong>Amount</strong> of money spent within customer transcations</li>
 </ul>
-<p>All of these measures have been proven to be effective predictors of a customer’s willingness to engage in marketing messages and construct their specific values to the company.</p>
+<p>All of these measures have been proven to be effective predictors of a customer’s willingness to engage in marketing messages and construct their transcation values to the company.</p>
 </div>
 <div id="benefit-of-rfm-analysis" class="section level3">
-<h3>Benefit of RFM Analysis</h3>
+<h3>1.2 Benefit of RFM Analysis</h3>
 <p>In-depth KYC (know your customer) on your customer base and framework for iterative campaigns to promising customer (targets) will undoubtfully benefit your organisation in many folds:</p>
 <ul>
 <li><p>Personalisation: By creating effective customer segments, highly relevant and cutomerised offer in personal level can be achieved.</p></li>
@@ -90,31 +90,38 @@ draft: FALSE
 </ul>
 </div>
 <div id="feature-engineering" class="section level3">
-<h3>Feature Engineering</h3>
+<h3>1.3 Feature Engineering</h3>
 <p>Feature engineering is a process of applying domain knowledge to select and transform raw data into new definable features (characteristics, properties, attributes) that better represent the underlying problem to solve or predictive model.</p>
 <p>Depending on how you apply RFM analysis it is also a feature engineering as we are combining customer transcation historical data: latest purchase, how often, in amounts, to new <strong>“Transcations History”</strong> feature. The important question is how well does new feature speaks of its own definition in business. In broad sense, this RFM feature has many usage for segmentation but also input feature in many predictive models (churn, campaign response, likelihood of future purchase). Simply put, in customer analytics, purchasing behaviour is not only dimension of company’s interest. More so, in its best form, I believe the matrics should be flexible to include on various KPI’s and modelling. We will discuss more later in this post.</p>
 <hr />
 </div>
 </div>
 <div id="why-campaign-response-tracking-system-important" class="section level2">
-<h2>Why Campaign Response Tracking System Important?</h2>
+<h2>2.0 Why Campaign Response Tracking System Important?</h2>
 <p>Tracking responses is one of the important aspects of the campaign life cycle for a marketing analyst. This involves process of collecting data that identifies customers who have responded to a communication from a campaign program via specific channels. Any company would like to automate customer engagement and its campaign performance measure.</p>
-<p>A campaign has variety of strategy and some examples are as follow:</p>
-<ul>
-<li>A time bound offer</li>
-<li>To specific set of target group e.g. location, age and payment methods etc.</li>
-<li>For a specific purchasing behaviour</li>
-<li>A specific reward for the same</li>
-</ul>
 <p>Tracking campaign activities are vital measure for customer engagement management. Effective CRM system can leverage life time value of company’s customers by effectively reducing their churn events. Data scientist and engineers are very well adapted in this field. Every businesses needs to optimise the balance between the cost retention and acquisition as they are essential track for ROI generation.</p>
 <p>The data I will be exploring below contains customer campaign response binary dataset.</p>
 <hr />
-<p>Having said, well-defined customer-life value is not easy calculations, in fact, it should not be ran by company’s operational convience. In my opinion, the “Target” will ever be general and the key will always be a simplifications.</p>
-<p>So why are we doing RFM? To find customer priorities? for better customer organisation? - Yes these may all remain true. But, I would like to interpret differently, the heart of scoring and segmentation is to</p>
-<p>In opinion its message is clear. There are no one-way scoring mechanism</p>
 </div>
-<div id="power-of-quantile-and-pareto-principle" class="section level2">
-<h2>Power of Quantile and Pareto Principle</h2>
+<div id="pareto-principle" class="section level2">
+<h2>3.0 Pareto Principle</h2>
+<blockquote>
+<p><strong>For many events, roughly 80% of the effects coe from 20% of the causes.</strong>
+Pareto Principle - The 80/20 Rule</p>
+</blockquote>
+<p>Similarly, 20% customers contribute to 80% of company’s total revenue. The ideology is the people who spent once are more likely to spend again. Likewise, the people for have responded to campaign are likely to respond again. Pareto Principle is at the heart of RFM model; focusing target audience on critical segments of customers is likely to generate higher ROI.</p>
+</div>
+<div id="rfm-quantitative-scoring" class="section level2">
+<h2>4.0 RFM Quantitative Scoring</h2>
+<p>Many system rank search results by means of some form of scoring: each candidate item is given a score measuring in some sense how closely it fits with the <strong>query</strong> and its items are ranked in descending score order. If indeed such a system ranks customers on the basis of transcation behaviour effect on revenue (better option: profitability), organisation will gain quick and actionable decisions to collect their targets by its priority order within the segments. This quantitative RFM scoring approach has multiple benefits:</p>
+<ul>
+<li><p>Gain clear picture on each RFM unique combination values for the company and how to strategically framework future customer journey analysis.</p></li>
+<li><p>The ability distribute RFM combination metrics in size upon their revenue contribution.</p></li>
+<li><p>Hierachical construction of RFM metrics by its importance.</p></li>
+<li><p>The quantitative RFM scoring (Numeric: importance) and RFM metrics (Categorical: behaviour type) will bring more flexibility as part of input feature for further customer analytic prediction models.</p></li>
+</ul>
+<p>In any form of scoring, the importance of its robustness will always be a challenge. For a obvious reasons, conversions within these scores or the segments without the internal explaintary, would not be a reliable system to conduct.</p>
+<p>Having this in mind, we will explore the transcation data in depth and construct RFM metrics and its scoring from a scratch on R. Thank you for reading this far and lets dig in!</p>
 </div>
 <div id="library-load" class="section level2">
 <h2>1.0 library load</h2>
@@ -2813,4 +2820,31 @@ CS1432
 <pre class="r"><code>prop.table(table(crosssell_cust$campaign))[2]*100</code></pre>
 <pre><code>##   1 
 ## 9.7</code></pre>
+</div>
+<div id="wrap-up" class="section level2">
+<h2>Wrap up</h2>
+<div id="summary-on-perspective-note" class="section level3">
+<h3>Summary on Perspective note</h3>
+<ul>
+<li></li>
+<li>Quantiles: Stick to Quantile rules! for better distribution</li>
+</ul>
+</div>
+<div id="limitations-of-rfm-analysis" class="section level3">
+<h3>Limitations of RFM analysis</h3>
+<p>Using RFM modeling can provide valuable insights about customers. But it does not take into account many other factors about the customer.</p>
+<p>In-depth targeted marketing may also use type of item purchased or customer campaign responses as factors. Customer demographics such as age, sex and ethnicity are not covered in RFM analysis either.</p>
+<p>Additionally, RFM only uses historical data about customers and may not predict future customer activity. Predictive methods may be able to identify future customer behavior that RFM analysis cannot.</p>
+</div>
+<div id="future-development" class="section level3">
+<h3>Future development</h3>
+<ul>
+<li><p>Average time span on expirary of campaign</p></li>
+<li><p>Cohort Analysis</p></li>
+<li><p>Time Series: How these RFM Score varies with quartery</p></li>
+</ul>
+</div>
+</div>
+<div id="ready-to-receive-feedback" class="section level2">
+<h2>Ready to receive feedback</h2>
 </div>
