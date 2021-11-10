@@ -11,13 +11,13 @@ education:
 email: ""
 highlight_name: false
 interests:
-- Artificial Intelligence
-- Computational Linguistics
-- Information Retrieval
+- Problem Solving 
+- Statistics 
+- Visual Art 
 # organizations:
 # - name: Stanford University
 #   url: https://www.stanford.edu/
-# role: Professor of Artificial Intelligence
+# role: 
 social:
 - icon: envelope
   icon_pack: fas
@@ -38,8 +38,10 @@ superuser: true
 title: Seung Hyun Sung 
 ---
 
-Alice Bighetti is a professor of artificial intelligence at the Stanford AI Lab. Her research interests include distributed robotics, mobile computing and programmable matter. She leads the Robotic Neurobiology group, which develops self-reconfiguring robots, systems of self-organizing robots, and mobile sensor networks.
+Welcome to modelbakery personal website! I am a passionate R User with a strong background in Chemistry, Statistics and Analytics. I pursue a Master in Science at Warwick University major in Polymer Chemistry. Please check out my Resume for more details and some of my works here and GitHub consisting __Case Studies__ with Codes, Papers and Blogs.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed neque elit, tristique placerat feugiat ac, facilisis vitae arcu. Proin eget egestas augue. Praesent ut sem nec arcu pellentesque aliquet. Duis dapibus diam vel metus tempus vulputate.
+I have always been lucky to find great mentors to shape my problem-solving mindset and grit. With this school of thought, I wish to supply the same and follow the motive of the “Pay it Forward” spirit. This portfolio will provide my willingness to adopt new skills, and ability to implement business acumen and logical reasonings to data.
+
+Thank you for visiting and have a nice day!  
 
 {{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/resume.pdf" "newtab" >}}resumé{{< /staticref >}}.

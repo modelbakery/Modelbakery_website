@@ -21,10 +21,7 @@ projects: []
 draft: FALSE
 ---
 
-
-
-
-
+In this post, we will learn and absorb k-nearest neighbour classification Machine Learning with the diabetes prediction case study. Despite the simplicity, the k-nearest neighbour classification is very power technique to have in our tool bag. To recall from Prof. Steven from Standford University - it is known that 1/3 of the classification problems the best tool will be k-NN classification. My aim here is to investigate and deliver why that is and, more importantly, what aspects of data that can make kNN classifiers more challenging and unattractive in comparison to other ML classifiers.  
 
 
 Contents:
@@ -46,8 +43,96 @@ Study
 * Advanced topics 
   + Kd tree algorithm
 
+Objective of Analysis: 
 
-## 
+
+
+## 1.0 What is K-Nearest Neighbour function 
+
+__Description:__ For given test point, the k-NN algorithm identifies the __k__ most similar training points and finds the most common label amongst them. This label is used as a prediction for the test point.
+
+$$
+(x_1, y_1), ..., (x_n, y_n)\\
+x_i \in R^d, y_i \in \{0, 1\}
+$$
+
+k-NN is called a lazy learner algorithm. Instead of function learning from the training set, it stores all the available data and at the time of new data appears, it performs a classification into a category label.
+
+When performing classification, the new data points are classified based on the similarity measure (i.e closeness, proximity, or distance) of neighbouring classes within the radius of vector space given as k parameter. 
+
+* Majority Vote of k nearest neighbours so the algorithm will unanimously decide bases on the neighbouring classes.
+
+
+### 1A Application of k-NN
+
+k-NN can be used in both regression and classification predictive problems. However, when it comes to industrial problems, the classification usage is highly advised. 
+
+k-NN, as well as perceptron, is often used as a benchmark for more complex classifiers like the SVM and the ANN. 
+
+#### Recommnedation System 
+
+Companies like Amazon or Netflix use KNN when recommending books or movies for us to read and watch. 
+
+#### Complex Image Classification 
+
+Beside one thing that is lately becoming  very fashionable is to learn a distance matrix. Use of deep convolutional neural networks to learn representations for images, then from what is learned k-NN algorithm is applied. This is how face classification algorithms work at Facebook, Google and more. 
+
+$$
+\hat{Y}(x) = \frac{1}{k} \sum_{x_i \in N_{k(x)}} y_i 
+$$
+
+
+$$
+d(x_i,x_j)^2 = ||x_i - x_j||^2 = \sum_{k=1}^d (x_{ik} - x_{jk})^2
+$$
+
+### 1B What are K-NN assumptions?
+
+"Similar inputs have similar labels"; k-NN assumes that the user has a way to compute distances that reflect meaningful dissimilarities. 
+
+
+> When Choosing kNN algorithm, the distance metric using to identify the k-Nearest Neighbour 
+
+
+### Parameters
+
+The k-NN algorthum has one parameter, __k__, the number of the local nearest neighbour (i.e. size of the neighbourhood). Changing this parameter will affect the algorithm's classification accuracy and can also help to mange noisy data. 
+
+* k is a measure of complexity 
+
+* Typical choice of k is an odd numbers: ranges from 1 upto 15 or about.
+
+* Directly influence the decision boundary: 
+  + k = 1, can be jiggly as it picks up on any kind of little movement in the data set. 
+  + Higher the k, the smoother the decision boundary will be. 
+
+
+Key point to notate 
+
+* k is a measure of complexity 
+  + Lower the k  -> more complexed decision boundary; many islands may appear
+  + Higher the k -> smoother decision boundary; more susceptible to noise 
+
+
+### Variety of distance criteria 
+
+he key behind the k-NN is to use appropriate distance matrix ; most typical distance functions are:
+
+$$
+dist(x,z) = (\sum_{x =1}^d |(x_{\perp}))
+$$
+* Euclidean distance (Natural Choice) 
+
+* Mahalanobis distance
+
+* Minkowski distance
+
+
+*Diabetes Predcition on kNN algorithm 
+
+
+Berif Description: 
+
 
 
 $$
@@ -74,9 +159,6 @@ $$
 [8] type : Yes or No, for diabetic according to WHO criteria.
 
 
-## Feature Engineering IDeas or 
-
-Biological Age: f(BMI) 
 
 ```{r}
 setwd("/Users/seunghyunsung/Desktop/rdata/ML_basic/SVM_RF/diabetes_prediction")
@@ -91,7 +173,8 @@ suppressMessages(library(ggplot2))
 suppressMessages(library(kernlab))
 suppressMessages(library(MASS))
 suppressMessages(library(skimr))
-
+library(tidyverse)
+library(dplyr)
 library(ggplot2)
 library(GGally)
 ```
@@ -112,8 +195,10 @@ dim(Pima.te) # [1] 332   8
 
 ```
 
+
 ### Combine Train and Teat Data Set 
 
+* Algorithm cannot get a glimpse of the future (Test data for this case)
 ```{r}
 
 # Train dataset 
@@ -128,6 +213,7 @@ prop.table(table(Pima.te$type))
 Pima = rbind(Pima.tr, Pima.te)
 
 ```
+2
 
 ## EDA 
 
@@ -135,24 +221,202 @@ K-NN classifier algorithm
 
 To do:
 
-* Feature Scaling: K-NN and many ML algorithm relies on the distance (norm) of the matrix. 
 
-* Outlier detection: K-NN algorithm is highly sensitive to outliers 
+### Feature Scaling
+
+K-NN and many ML algorithm relies on the distance (norm) of the matrix. Hence if want all features to contribute equally we first need to scale them.
+
+
 
 ```{r}
-partition(skim(Pima))
+
+robustscale <- function(data, dim=2, center=TRUE, scale=TRUE,
+                        preserveScale = TRUE){
+  medians = NULL
+  if(center){
+    medians <- apply(data,dim,median,na.rm=TRUE)
+    data = sweep(data,dim,medians,"-")
+  }
+  mads=NULL
+  if(scale){
+    mads <- apply(data,dim, mad,na.rm =TRUE)
+    if(preserveScale){
+      mads <- mads/mean(mads)
+    }
+    data = (sweep(data,dim,mads,"/"))
+  }
+  return(list(data=data,medians=medians,mads=mads))
+}
+
+target_tibble <- Pima %>% dplyr::select(type)
+
+Pima_robust <- robustscale(Pima %>% dplyr::select(-type))
+Pima_robust <- bind_cols(Pima_robust$data, target_tibble)
+```
+
+
+### Outlier treatment: K-NN algorithm is highly sensitive to outliers 
+
+```{r}
+outlier_treatment <- function(x, na.rm = TRUE) {
+  x[x > quantile(x,.95,na.rm = na.rm)]<- quantile(x, .95,na.rm = na.rm)
+  x[x < quantile(x,.05,na.rm = na.rm)]<- quantile(x, .05,na.rm = na.rm)
+  x 
+}
+
+Pima_ot <- Pima_norm %>% mutate_at(vars, outlier_treatment)
+```
+
+### Hypothesis testing: chi-square 
+
+```{r}
+numeric_vars <- vars[vars != "type"]
+target_var   <- vars[vars == "type"]
+
+my_fun <- function(x,y) {
+  Table<-table(y, x)
+  Test<-chisq.test(Table, corr = TRUE)
+  out <- data.frame("Chi.Square" = round(Test$statistic,3),
+                    "df" = Test$parameter,
+                    "p.value" = round(Test$p.value, 10)
+  )
+}
+
+chisq_results <- ldply(Pima_norm %>% 
+  dplyr::select(-type), my_fun, y = Pima_norm$type)
+
+chisq_ot_results <- ldply(Pima_outlierT %>% 
+  dplyr::select(-type), my_fun, y = Pima_outlierT$type)
+```
+
+### Hypothesis testing: aov
+
+```{r}
+anova <- aov(type~., Pima_norm); summary(anova)
+anova_ot <- aov(type~., Pima_outlierT); summary(anova_ot)
+
+grmean <- Pima_norm %>% group_by(type) %>% summarize_all(list(mean))
+grmean_outlierT <- Pima_norm %>% mutate_at(vars, outlier_treatment) %>% group_by(type) %>% summarize_all(list(mean))
+
+grmean$outlier_treat <- "No"
+grmean_outlierT$outlier_treat <- "Yes"
+bind_rows(grmean, grmean_outlierT) %>% 
+  arrange(desc(type))
+
+skimr::skim(Pima_outlierT)
+```
+
+* Visualisation 
+
+```{r}
+Pima_skim <- partition(skim(Pima))
+vars <- Pima_skim$numeric$skim_variable
+
+min_max_normalization <- function(x) {
+  return((x-min(x))/(max(x)-min(x)))
+}
+
+Pima_norm <- Pima %>% 
+  mutate_at(vars(-type), min_max_normalization)
+
+
+glu_fit <- lm(glu ~., Pima_ot); summary(glu_fit)
+step(glu_fit)
+# - age   1     71.0 635
+# - bp    1     71.4 635
+# - type  1     86.8 651
+npreg_fit <- lm(npreg ~.-age, Pima_ot, family = "binomial"); summary(npreg_fit)
+step(npreg_fit)
+# - type  1     66.2 319
+# - glu   1     66.5 320
+# - age   1    105.6 359
+bp_fit <- lm(bp ~., Pima_ot, family = "binomial"); summary(bp_fit)
+step(bp_fit)
+# - type  1     66.2 319
+# - glu   1     66.5 320
+# - age   1    105.6 359
+skin_fit <- lm(skin ~., Pima_ot, family = "binomial"); summary(skin_fit)
+#bmi           3.0309     0.9119    3.32  0.00089 ***
+step(skin_fit)
+# <none>        18.4 299
+# - bmi   1     32.7 312
+bmi_fit <- lm(bmi ~., Pima_ot, family = "binomial"); summary(bmi_fit)
+step(bmi_fit) 
+# - type   1     21.5 429
+# - bp     1     21.8 430
+# - skin   1     34.6 443
+# skin           3.648      1.009    3.62   0.0003 ***
+ped_fit <- lm(ped ~., Pima_ot, family = "binomial"); summary(ped_fit)
+step(ped_fit) # type
+# - type  1     54.5 207
+age_fit <- lm(age ~.-bp -skin-bmi-npreg, Pima_ot, family = "binomial"); summary(age_fit)
+age_fit <- lm(age ~.-bp -npreg, Pima_ot, family = "binomial"); summary(age_fit)
+step(age_fit)
+# - glu    1     54.5 287
+# - bp     1     55.5 288
+# - npreg  1     85.5 318
+AIC=-1989
+
+age_fit <- glm(type ~.-bp -bmi-npreg, Pima_ot, family = "binomial"); summary(age_fit)
+step(age_fit)
+
+# Residual Deviance: 464 	AIC: 476: glu, bmi, ped, age, npreg
+# Residual Deviance: 468 	AIC: 478: glu, age, bmi, ped
+# Residual Deviance: 468 	AIC: 479: glu, npreg, bmi, ped
+# Residual Deviance: 486 	AIC: 496 : glu, age, bmi, ped
+# Residual Deviance: 486 	AIC: 496 : glu, ped, age, npreg
+
+# age and npreg 
+# bmi and skin
+
 ```
 
 
 
+```{r}
+Pima_obese <- Pima %>% 
+  dplyr::select(age, bmi, skin, type) %>% 
+  mutate(age_gr = ntile(age, 5)) %>% 
+  group_by(age) %>% 
+  arrange(desc(skin))
+
+Pima_obese_melt <- reshape2::melt(Pima_obese, id.var ="age_gr")
+
+Pima_obese_melt %>% 
+  
+```
+
 
 ```{r}
-ggpairs(Pima[ ,c(1:8)], aes(color = type %>% as.factor(), alpha =0.75), lower = list(continuous = "smooth")) + theme_bw() + 
+ggpairs(Pima_norm[ ,c(1:8)], aes(color = type %>% as.factor(), alpha =0.75), lower = list(continuous = "smooth")) + theme_bw() + 
+  labs(title = "Diabetes") +
+  theme(plot.title = element_text(face ='bold', color ='black', hjust=0.5, size =12)) 
+
+ggpairs(Pima_outlierT[ ,c(1:8)], aes(color = type %>% as.factor(), alpha =0.75), lower = list(continuous = "smooth")) + theme_bw() + 
   labs(title = "Diabetes") +
   theme(plot.title = element_text(face ='bold', color ='black', hjust=0.5, size =12)) 
 ```
+
 ```{r}
-Pima_melt <- reshape2::melt(Pima, id.var ="type")
+generator_boxplot <- function(data, cat_var, continuous_var){
+  data %>% 
+  ggplot(aes(x = {{cat_var}}, y = {{continuous_var}}, group = {{cat_var}})) +
+  geom_boxplot()
+}
+generator_boxplot(Pima_norm, type, age)
+generator_boxplot(Pima_ot, type, age)
+
+generator_boxplot(Pima_norm, type, npreg)
+generator_boxplot(Pima_ot, type, npreg)
+
+```
+
+```{r}
+psych::describe(Pima_norm)
+```
+
+```{r}
+Pima_melt <- reshape2::melt(Pima_norm, id.var ="type")
 
 ggplot2::ggplot(data = Pima_melt,
                 aes(x = type, y = value, group = type)) +
@@ -257,6 +521,14 @@ accuracy <- function(test_data){
 # print(accuracy(test.df))
 ```
 
+
+
+
+
+confusion of correlation with the cause 
+Just seeing the correlation by not the cause (dependency) -> leads to false interpretation (mistake) 
+
+string togehter these events into narratives 
 
 
 

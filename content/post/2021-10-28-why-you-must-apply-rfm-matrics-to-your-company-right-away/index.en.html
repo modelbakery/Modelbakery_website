@@ -24,6 +24,7 @@ draft: FALSE
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
 
 
+<p>In this post, we will learn and absorb k-nearest neighbour classification Machine Learning with the diabetes prediction case study. Despite the simplicity, the k-nearest neighbour classification is very power technique to have in our tool bag. To recall from Prof. Steven from Standford University - it is known that 1/3 of the classification problems the best tool will be k-NN classification. My aim here is to investigate and deliver why that is and, more importantly, what aspects of data that can make kNN classifiers more challenging and unattractive in comparison to other ML classifiers.</p>
 <p>Contents:</p>
 <p>Study</p>
 <ul>
@@ -46,11 +47,87 @@ draft: FALSE
 <li>Kd tree algorithm</li>
 </ul></li>
 </ul>
-<div id="section" class="section level2">
-<h2></h2>
+<p>Objective of Analysis:</p>
+<div id="what-is-k-nearest-neighbour-function" class="section level2">
+<h2>1.0 What is K-Nearest Neighbour function</h2>
+<p><strong>Description:</strong> For given test point, the k-NN algorithm identifies the <strong>k</strong> most similar training points and finds the most common label amongst them. This label is used as a prediction for the test point.</p>
+<p><span class="math display">\[
+(x_1, y_1), ..., (x_n, y_n)
+\]</span></p>
+<p><span class="math display">\[
+x_i \in R^d, y_i \in \{0, 1\}
+\]</span></p>
+<p>k-NN is called a lazy learner algorithm. Instead of function learning from the training set, it stores all the available data and at the time of new data appears, it performs a classification into a category label.</p>
+<p>When performing classification, the new data points are classified based on the similarity measure (i.e closeness, proximity, or distance) of neighbouring classes within the radius of vector space given as k parameter.</p>
+<p>*Majority Vote of k nearest neighbours so the algorithm will unanimously decide bases on the neighbouring classes.</p>
+<p>For every training data points within the local boundary set by k (size or number of nearest neighbour), their distance to<br />
+The distance from test data can be lower or equal to distance of<br />
+The data points within the boundary of selected k parameter,</p>
+</div>
+<div id="application-of-k-nn" class="section level2">
+<h2>Application of k-NN</h2>
+<p>k-NN can be used in both regression and classification predictive problems. However, when it comes to industrial problems, the classification usage is highly advised.</p>
+<p>k-NN, as well as perceptron, is often used as a benchmark for more complex classifiers like the SVM and the ANN.</p>
+<div id="recommnedation-system" class="section level3">
+<h3>Recommnedation System</h3>
+<p>Companies like Amazon or Netflix use KNN when recommending books or movies for us to read and watch.</p>
+</div>
+<div id="complex-image-classification" class="section level3">
+<h3>Complex Image Classification</h3>
+<p>Beside one thing that is lately becoming very fashionable is to learn a distance matrix. Use of deep convolutional neural networks to learn representations for images, then from what is learned k-NN algorithm is applied. This is how face classification algorithms work at Facebook, Google and more.</p>
+<p><span class="math display">\[
+\hat{Y}(x) = \frac{1}{k} \sum_{x_i \in N_{k(x)}} y_i 
+\]</span></p>
+<p><span class="math display">\[
+d(x_i,x_j)^2 = ||x_i - x_j||^2 = \sum_{k=1}^d (x_{ik} - x_{jk})^2
+\]</span></p>
+</div>
+<div id="what-are-k-nn-assumptions" class="section level3">
+<h3>What are K-NN assumptions?</h3>
+<p>“Similar inputs have similar labels”; k-NN assumes that the user has a way to compute distances that reflect meaningful dissimilarities.</p>
+<p>In its basic level,</p>
+<blockquote>
+<p>When Choosing kNN algorithm, the distance metric using to identify the k-Nearest Neighbour</p>
+</blockquote>
+</div>
+<div id="parameters" class="section level3">
+<h3>Parameters</h3>
+<p>The k-NN algorthum has one parameter, <strong>k</strong>, the number of the local nearest neighbour (i.e. size of the neighbourhood). Changing this parameter will affect the algorithm’s classification accuracy and can also help to mange noisy data.</p>
+<ul>
+<li><p>k is a measure of complexity</p></li>
+<li><p>Typical choice of k is an odd numbers: ranges from 1 upto 15 or about.</p></li>
+<li><p>Directly influence the decision boundary:</p>
+<ul>
+<li>k = 1, can be jiggly as it picks up on any kind of little movement in the data set.</li>
+<li>Higher the k, the smoother the decision boundary will be.</li>
+</ul></li>
+</ul>
+<p>Key point to notate</p>
+<ul>
+<li>k is a measure of complexity
+<ul>
+<li>Lower the k -&gt; more complexed decision boundary; many islands may appear</li>
+<li>Higher the k -&gt; smoother decision boundary; more susceptible to noise</li>
+</ul></li>
+</ul>
+</div>
+<div id="variety-of-distance-criteria" class="section level3">
+<h3>Variety of distance criteria</h3>
+<p>he key behind the k-NN is to use appropriate distance matrix ; most typical distance functions are:</p>
+<p><span class="math display">\[
+dist(x,z) = (\sum_{x =1}^d |(x_{\perp}))
+\]</span>
+* Euclidean distance (Natural Choice)</p>
+<ul>
+<li><p>Mahalanobis distance</p></li>
+<li><p>Minkowski distance</p></li>
+</ul>
+<p>*Diabetes Predcition on kNN algorithm</p>
+<p>Berif Description:</p>
 <p><span class="math display">\[
 \hat{C}_k(x) =  \underset{g}{\mathrm{argmax}} \ \ \hat{p}_{kg}(x)
 \]</span></p>
+</div>
 </div>
 <div id="variable-explaination" class="section level2">
 <h2>Variable Explaination</h2>
@@ -98,6 +175,9 @@ dim(Pima.tr) # [1] 200   8</code></pre>
 <pre><code>## [1] 332   8</code></pre>
 <div id="combine-train-and-teat-data-set" class="section level3">
 <h3>Combine Train and Teat Data Set</h3>
+<ul>
+<li>Algorithm cannot get a glimpse of the future (Test data for this case)</li>
+</ul>
 <pre class="r"><code># Train dataset 
 Pima.tr$type &lt;- ifelse(Pima.tr$type == &quot;No&quot;, 0, 1)
 prop.table(table(Pima.tr$type))</code></pre>
@@ -358,5 +438,8 @@ ggplot2::ggplot(data = Pima_melt,
   accu = correct/nrow(test_data) * 100  
   return(accu)
 }</code></pre>
+<p>confusion of correlation with the cause
+Just seeing the correlation by not the cause (dependency) -&gt; leads to false interpretation (mistake)</p>
+<p>string togehter these events into narratives</p>
 </div>
 </div>
