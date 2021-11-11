@@ -69,13 +69,9 @@ k-NN can be used in both regression and classification predictive problems. Howe
 
 k-NN, as well as perceptron, is often used as a benchmark for more complex classifiers like the SVM and the ANN. 
 
-#### Recommnedation System 
-
-Companies like Amazon or Netflix use KNN when recommending books or movies for us to read and watch. 
-
 #### Complex Image Classification 
 
-Beside one thing that is lately becoming  very fashionable is to learn a distance matrix. Use of deep convolutional neural networks to learn representations for images, then from what is learned k-NN algorithm is applied. This is how face classification algorithms work at Facebook, Google and more. 
+Beside one thing that is lately becoming very fashionable is to learn a distance matrix. Use of deep convolutional neural networks to learn representations for images, then from what is learned k-NN algorithm is applied. This is how face classification algorithms work at Facebook, Google and more. 
 
 $$
 \hat{Y}(x) = \frac{1}{k} \sum_{x_i \in N_{k(x)}} y_i 
@@ -116,7 +112,7 @@ Key point to notate
 
 ### Variety of distance criteria 
 
-he key behind the k-NN is to use appropriate distance matrix ; most typical distance functions are:
+he key behind the k-NN is to use appropriate distance matrix; most typical distance functions are:
 
 $$
 dist(x,z) = (\sum_{x =1}^d |(x_{\perp}))

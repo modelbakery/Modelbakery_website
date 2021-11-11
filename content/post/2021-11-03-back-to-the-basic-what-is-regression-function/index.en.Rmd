@@ -1,5 +1,5 @@
 ---
-title: 'Back to the Basic: What is Regression function'
+title: 'Back to the Basic: Multiple Linear Regression'
 author: Package Build
 date: '2021-11-03'
 slug: back-to-the-basic-what-is-regression-function
@@ -23,7 +23,34 @@ projects: []
 draft: TRUE
 ---
 
-## General notation for Regression model
+Simple is great.
+
+The concept I first learnt about linear regression was too strong of an assumption to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simple is great, linear regression is great, and not because of its simplicity but because of its strong assumption: assuming there is a linear relationship between the dependent variable Y and each of the independent variable, independently. 
+
+I always had this wonder. How do we know in what situation, the linear approximation is reasonable? - Yes, all the time. In any given problems, we first need to establish the "true" relationship between target Y variable and X's, in a way that we can interpret and track down the possible non-indenpendent relationship between the X's and their effects on Y. It is all about top-down approach. The more complicated the problem is, the more important its interpretation becomes. In other words, we should simplify the problem first (variable selection) and then relax the assumption with more flexible functions to increase the accuracy. That said, this process should be iterative. 
+
+>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
+>—Albert Einstein
+
+
+Contents:
+
+Study 
+
+* What is multiple linear regression function 
+  + What are its assumptions and difference with linear regression?
+  + Estimation of the parameters by least squares
+  + Assessing the accuracy of the Coefficient Estimates
+  + Hypothesis Testing (t-test)
+  + Assessing the Overall Accuracy of the Model 
+  + Variable Selection 
+  + Model Selection 
+
+* Business Case Study 
+  + Variable Interaction (Synergy Effect: Feature Engineering & Business Strategy)
+
+
+## General notation for 
 
 Its general notation:
 
@@ -39,11 +66,560 @@ Before I begin explore the assumptions and algorithms of different regression mo
 So is there an ideal f(X)? 
 
 
-## The ordinary mutiple linear regression function and its loss function 
 
+## Regression verus correlation 
+
+```{r, message=FALSE}
+library(MASS)
+library(ISLR)
+
+library(tidyverse)
+library(psych)
+library(skimr)
+library(car)
+library(janitor)
+library(tidyquant)
+library(lares)
+library(leaps)
+
+library(hrbrthemes)
+library(GGally)
+library(viridis)
+```
+
+## Load Data 
+
+crim: per capita crime rate by town.
+
+zn: proportion of residential land zoned for lots over 25,000 sq.ft.
+
+indus: proportion of non-retail business acres per town.
+
+chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+
+nox: nitrogen oxides concentration (parts per 10 million).
+
+rm: average number of rooms per dwelling.
+
+age: proportion of owner-occupied units built prior to 1940.
+
+dis: weighted mean of distances to five Boston employment centres.
+
+rad: index of accessibility to radial highways.
+
+tax: full-value property-tax rate per \$10,000.
+
+ptratio: pupil-teacher ratio by town.
+
+black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+
+lstat: lower status of the population (percent).
+
+medv: median value of owner-occupied homes in \$1000s.
+
+```{r}
+data(Boston)
+
+describe(Boston)
+```
+
+## Divide the data 
+
+[1] Direct (size)
+rm: average number of rooms per dwelling.
+age: proportion of owner-occupied units built prior to 1940.
+
+[2] External Influence 
+
+* Size/distance/accessibility
+zn: proportion of residential land zoned for lots over 25,000 sq.ft.
+indus: proportion of non-retail business acres per town.
+dis: weighted mean of distances to five Boston employment centres.
+chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
+rad: index of accessibility to radial highways.
+
+* Population 
+black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+ptratio: pupil-teacher ratio by town.
+lstat: lower status of the population (percent).
+
+[3] Others 
+tax: full-value property-tax rate per \$10,000.
+crim: per capita crime rate by town.
+nox: nitrogen oxides concentration (parts per 10 million).
+
+
+```{r}
+# The direct influence has: 
+# Multiple R-squared:  0.5303,	Adjusted R-squared:  0.5284; explains ~50% of the TSS
+lm_fit_dir <- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)
+```
+
+```{r}
+# The external influence (Size/distance/accessibility) has: 
+# Multiple R-squared:  0.3506,	Adjusted R-squared:  0.3441 ; explains ~35% of the TSS
+lm_fit_exSDA <- lm(medv~zn + indus+ dis + chas + rad, data = Boston); summary(lm_fit_exSDA)
+lm_fit_exSDA <- lm(medv~indus, data = Boston); summary(lm_fit_exSDA)
+```
+
+```{r}
+# The external influence (population) has: 
+# Multiple R-squared:  0.6098,	Adjusted R-squared:  0.6075; explains ~60% of the TSS 
+lm_fit_exPOP <- lm(medv~lstat+ptratio+black, data = Boston); summary(lm_fit_exPOP)
+```
+[3] Others 
+tax: tax variable is the cause of expense to the property 
+crim: per capita crime rate by town.
+nox: nitrogen oxides concentration (parts per 10 million).
+
+```{r}
+# The Others influence has: 
+# Multiple R-squared:  0.2611,	Adjusted R-squared:  0.2567; explains ~25% of the TSS 
+lm_fit_other <- lm(medv~nox+crim+tax, data = Boston); summary(lm_fit_other)
+step(lm_fit_other)
+```
+
+## Distribution of Target Variable 
+
+```{r}
+lBoston <- Boston %>% 
+  mutate(log_medv = log(medv + 1))
+  
+
+# Distribution of target medv 
+ggplot(Boston, aes(x = medv)) +
+  geom_density(aes(x = medv, y = ..density..)) +
+    geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
+    stat_function(fun=dnorm, 
+                args = list(mean=mean(Boston$medv),
+                            sd=sd(Boston$medv)),
+                color="red", lwd = 1) +
+  theme_minimal()
+
+# Distribution of logarithm target medv 
+lBoston %>% 
+  ggplot(aes(x = log_medv)) +
+  geom_density(aes(x = log_medv, y = ..density..)) +
+    geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
+    stat_function(fun=dnorm, 
+                args = list(mean=mean(lBoston$log_medv),
+                            sd=sd(lBoston$log_medv)),
+                color="red", lwd = 1) +
+  theme_minimal()
+
+shapiro.test(Boston$medv)
+shapiro.test(lBoston$log_medv)
+```
+
+```{r}
+lBoston_pre_fit <- lBoston %>% 
+  mutate(lcrim = log(crim)) %>% 
+  dplyr::select(-medv, -crim) 
+
+boxplot(Boston)
+boxplot(lBoston_pre_fit)
+boxplot(lBoston_pre_fit)
+
+```
+## GGally Visualisation 
+
+```{r}
+# Data preparation for GGally visualisation with observation split at meidan Y value. 
+Boston_medv_median <- Boston %>% 
+  mutate(median_medv_cutoff = ifelse(medv > median(medv), 1, 0),
+         median_medv_cutoff = as.factor(median_medv_cutoff)) 
+
+# GGally ggpairs plot for variables upto age 
+GGally::ggpairs(Boston_medv_median[ ,c(14,1:7, 15)],
+                aes(color=median_medv_cutoff, alpha = 0.75),
+                lower = list(continous = "smooth")) +
+  theme_bw() +
+  labs(title = "prostate cancer") +
+  theme(plot.title = element_text(face = 'bold',
+                                  colour = 'black',
+                                  hjust = 0.5, size = 12))
+# GGally ggpairs plot for variables from dis ~ lstat 
+GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
+                aes(color=median_medv_cutoff, alpha = 0.75),
+                lower = list(continous = "smooth")) +
+  theme_bw() +
+  labs(title = "prostate cancer") +
+  theme(plot.title = element_text(face = 'bold',
+                                  colour = 'black',
+                                  hjust = 0.5, size = 12))
+
+# Gally parallel coordinates plot 
+Boston_medv_median %>%
+  arrange(desc(median_medv_cutoff)) %>%
+  ggparcoord(
+    columns = 1:14, groupColumn = 15,
+    scale="uniminmax",
+    showPoints = FALSE,
+    alphaLines = 1
+    ) + 
+  scale_color_viridis(discrete=TRUE)+
+    labs(
+    title = "Parallel Coordinates Plot for Boston House Price: Minmax Standardised",
+    subtitle = "Strong negative connection observed between lstat & medv, rm & age",
+    caption = "medv > median(medv): Yellow
+               medv ≤ meidan(medv): Purple",
+    y = "Minmax scaled medv",
+    x = "") +
+  theme_ipsum()+
+  theme(
+    legend.position="default",
+    plot.title = element_text(size=15)
+  )
+
+```
+In order to highlight the relation of medv (target Y) to the remaining 13 variables, I have split the observations with medv > median(medv) as __yellow__ lines and rest as the __purple__ line. Some of the variables seem to be strongly related. The most obvious relation is the negative dependence between lstat and medv.For better graphical representations, the variables have been minmax scaled over the interval [0,1]. There are variables where the observations are highly concnetrated at the low region, close to zero. By means, it makes sense to consider transformation of the original data. 
+
+* crim -> lcrim (logarithm)
+  + Taking the logarithm makes the variable's distribution more symmetric. Its median and the mean have moved closer to each other then they were for the original crim. 
+
+* zn -> zn (logarithm)
+  + There is a large number of zero values. 
+  + There is a noticable non-linear negative relationship with crim. Almost all the observations for which zn = 0, have a high percapita crime rate, and vice versa. 
+  + On the concern of house price prediction, the correlation says that there seems to be no clear linear relationshipship with medv. However, the residential land over its common size would obviously lead to higher property price. 
+  
+* indus -> lindus (logarithm)
+  + Negative correlation with target medv observed. The relationship between the logarithums of both variables seems to be almost linear. The negative relation might result from the noise non-retail business sometimes generates and other pollution aspects. 
+  + Strong linear correlation with nox. Greater the proportion of non-retail business, more likely to cause a pollution hence the high nox concentration. 
+  
+* chas -> 
+  + There are some doubt that Charles River influences the house price. That said, the districts close to the Charles River would likely to influence other factors such as the pupil/teacher ratio or the proportion of non-retail business acres. Hence, their relation may be pure coincidence or some form of hierchical interaction. 
+  
+* rm -> 
+  + The number of rooms per dwelling is a direct measure of the size of the houses. Thus, I suspect rm to be strongly correlated with the target medv.  
+  + Outlier treatment needed. 
+  
+* age -> Removal candidate 
+  + There is no clear sign of rlationship with the house price. On top of that, usually the time, date, age factor has connection with multiple variables, which likely to inflate the VIF factor and rise multicollinearity issue. 
+  
+* dis -> 
+  + The scatterplot shows hardly any connection with the target, house price. I believe that this distance factor is upto workers preference and taste. 
+  
+* rad -> 
+```{r, echo = FALSE}
+generator_hist_facet <- function(data, bins = 20, ncol = 5,
+                                 fct_reorder = FALSE, 
+                                 fct_rev = FALSE,
+                                 fill = palette_light()[[3]],
+                                 color = "white", scale = "free") {
+      data_factored <- data %>% 
+        gather(key = key, value = value, factor_key = TRUE) 
+      
+    if(fct_reorder) {
+      data_factored <- data_factored %>% 
+        # Trick to get variables in alphabetical order 
+        mutate(key = as.character(key) %>% as.factor())
+    }
+      
+    if(fct_rev) {
+      data_factored <- data_factored %>% 
+        mutate(key = fct_rev(key))
+    }
+      
+    g <- data_factored %>% 
+      ggplot(aes(x = value, group = key)) +
+      geom_histogram(bins = bins, fill = fill, color = color) +
+      facet_wrap(~key, ncol = ncol, scale = scale) +
+      theme_tq()
+    
+    return(g)
+}
+```
+
+
+```{r}
+# Customised facet histogram: can be found on my GitHub :)  
+generator_hist_facet(lBoston)
+
+summary(Boston$crim)
+Boston %>% 
+  mutate(zn_bin   = ifelse(zn == 0, 0, 1)) %>% 
+  dplyr::select(crim, zn_bin, medv) %>% 
+  group_by(zn_bin) %>% 
+  summarise(count = n(),
+            avg_crim = mean(crim),
+            avg_medv = mean(medv))
+
+Boston %>% 
+  ggplot(aes(nox*indus,log(medv), colour = nox))+
+  geom_point()
+
+Boston %>% 
+  ggplot(aes(nox, log(indus), colour = nox))+
+  geom_point()
+
+plot(log(Boston$crim), log(Boston$medv))
+
+
+boxplot(Boston$rm)
+
+lm_fit_other <- lm(medv~I(nox*log(indus)), data = Boston); summary(lm_fit_other)
+lm_fit_other <- lm(medv~nox+log(indus), data = Boston); summary(lm_fit_other)
+```
+
+```{r}
+corr_info <- corr_var(lBoston, # name of dataset
+  medv # name of variable to focus on
+) 
+corr_tbl <- corr_info$data %>% dplyr::select(variables, corr)
+
+corr_cross_info <- corr_cross(lBoston %>% dplyr::select(-medv), # name of dataset
+  max_pvalue = 0.05, # display only significant correlations (at 5% level)
+  top = 15, # display top 10 couples of variables (by correlation coefficient)
+  rm.na = FALSE
+)
+
+corr_cross_tbl <-corr_cross_info$data %>% dplyr::select(key, label, corr)
+```
+
+```{r}
+lm_fit_00edit <- lm(medv~., data = lBoston); summary(lm_fit_00edit)
+var_names <- colnames(lBoston %>% dplyr::select(medv, everything()))
+
+summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3)] %>% 
+  as_tibble() %>% 
+  cbind(var_names) %>% 
+  dplyr::select(var_names, everything()) %>% 
+  left_join(corr_tbl, by = c("var_names" = "variables")) %>% 
+  left_join(corr_cross_tbl, by = c("var_names" = "key")) %>% 
+  setNames(c("var_names", "Estimate", "t_stats", "corr", "label", "cross_corr")) %>% 
+  arrange(desc(t_stats, cross_corr))
+```
+
+Multicollinearity suspect: Promising variables (Severe)
+```{r}
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "lstat"))
+
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "dis"))
+
+# No sign of singificant collinearity :) 
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "ptratio"))
+```
+
+Multicollinearity suspect: High entanglment in multiple dimension (variable removal candidate)
+
+indus variable is the most problematic 
+
+```{r}
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "indus"))
+
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "age"))
+
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "nox"))
+```
+
+The regsubsets() function (part of the leaps library) performs best subset selection by identifying the best model that contains a given number of predictors, where best is quantified using RSS. The syntax is the same as for lm(). The summary() command outputs the best set of variables for each model size.
+
+An asterisk ("*") indicates that a given variable is included in the corresponding model. For instance, this output indicates that the best two-variable model contains only Hits and CRBI. By default, regsubsets() only reports results up to the best eight-variable model. But the nvmax option can be used in order to return as many variables as are desired. Here we fit up to a 19-variable model:
+
+```{r}
+lm_fit_00edit <- lm(medv~., data = Boston); summary(lm_fit_00edit)
+
+summary(lm_fit_00edit)[1:10]
+summary(lm_fit_00edit)$r.squared # 0.7406427
+summary(lm_fit_00edit)$adj.r.squared # 0.7337897
+summary(lm_fit_00edit)$fstatistic # 108.0767
+
+lm_fit_01edit <- lm(formula = medv ~ crim + zn + chas + nox + rm + dis + rad + tax + ptratio + black + lstat +indus, data = Boston); summary(lm_fit_01edit)
+# Multiple R-squared:  0.7406,	Adjusted R-squared:  0.7348 
+# F-statistic: 128.2 on 11 and 494 DF,  p-value: < 2.2e-16
+
+vif(lm_fit_01edit) %>% 
+  as_tibble() %>% 
+  bind_cols(names(vif(lm_fit_01edit))) %>% 
+  setNames(c("vif", "var_name")) %>% 
+  arrange(desc(vif))
+```
+http://www.science.smith.edu/~jcrouser/SDS293/labs/lab8-r.html
+
+```{r, echo = FALSE}
+generator_univar_importance_tbl <- function(dataframe, response) {
+  
+  if (sum(sapply(dataframe, function(x) {is.numeric(x) | is.factor(x)})) < ncol(dataframe)) {
+    stop("Make sure that all variables are of class numeric/factor!")
+  }
+  
+  # pre-allocate vectors
+  varname <- c()
+  vartype <- c()
+  R2 <- c()
+  R2_log <- c()
+  R2_quad <- c()
+  AIC <- c()
+  AIC_log <- c()
+  AIC_quad <- c()
+  y <- dataframe[, response]
+  # # # # # NUMERIC RESPONSE # # # # #
+  if (is.numeric(y)) {
+    
+    for (i in 1:ncol(dataframe)) {
+      
+      x <- dataframe[ ,i]
+      varname[i] <- names(dataframe)[i]
+      
+      if (class(x) %in% c("numeric", "integer")) {
+        vartype[i] <- "numeric"
+      } else {
+        vartype[i] <- "categorical"
+      }
+      
+      if (!identical(y, x)) {
+        
+        # linear: y ~ x
+        R2[i] <- summary(lm(y ~ x))$r.squared 
+        
+        # log-transform: y ~ log(x)
+        if (is.numeric(x)) { 
+          if (min(x) <= 0) { # if y ~ log(x) for min(x) <= 0, do y ~ log(x + abs(min(x)) + 1)
+             R2_log[i] <- summary(lm(y ~ log(x + abs(min(x)) + 1)))$r.squared
+          } else {
+            R2_log[i] <- summary(lm(y ~ log(x)))$r.squared
+          }
+        } else {
+          R2_log[i] <- NA
+        }
+        
+        # quadratic: y ~ x + x^2
+        if (is.numeric(x)) { 
+          R2_quad[i] <- summary(lm(y ~ x + I(x^2)))$r.squared
+        } else {
+          R2_quad[i] <- NA
+        }
+        
+      } else {
+        R2[i] <- NA
+        R2_log[i] <- NA
+        R2_quad[i] <- NA
+      }
+    }
+    
+    print(paste("Response variable:", response))
+    
+    data.frame(varname, 
+                vartype, 
+               R2 = round(R2, 3), 
+               R2_log = round(R2_log, 3), 
+               R2_quad = round(R2_quad, 3)) %>%
+      mutate(max_R2 = pmax(R2, R2_log, R2_quad, na.rm = T)) %>%
+      arrange(desc(max_R2))
+    
+    
+    # # # # # CATEGORICAL RESPONSE # # # # #
+  } else {
+    
+    for (i in 1:ncol(dataframe)) {
+      
+      x <- dataframe[ ,i]
+      varname[i] <- names(dataframe)[i]
+      
+      if (class(x) %in% c("numeric", "integer")) {
+        vartype[i] <- "numeric"
+      } else {
+        vartype[i] <- "categorical"
+      }
+      
+      if (!identical(y, x)) {
+         # linear: y ~ x
+        AIC[i] <- summary(glm(y ~ x, family = "binomial"))$aic 
+        
+        # log-transform: y ~ log(x)
+        if (is.numeric(x)) { 
+          if (min(x) <= 0) { # if y ~ log(x) for min(x) <= 0, do y ~ log(x + abs(min(x)) + 1)
+            AIC_log[i] <- summary(glm(y ~ log(x + abs(min(x)) + 1), family = "binomial"))$aic
+          } else {
+            AIC_log[i] <- summary(glm(y ~ log(x), family = "binomial"))$aic
+          }
+        } else {
+          AIC_log[i] <- NA
+        }
+        
+        # quadratic: y ~ x + x^2
+        if (is.numeric(x)) { 
+          AIC_quad[i] <- summary(glm(y ~ x + I(x^2), family = "binomial"))$aic
+        } else {
+          AIC_quad[i] <- NA
+        }
+        
+      } else {
+        AIC[i] <- NA
+        AIC_log[i] <- NA
+        AIC_quad[i] <- NA
+      }
+    }
+    
+    print(paste("Response variable:", response))
+    
+    data.frame(varname, 
+               vartype, 
+               AIC = round(AIC, 3), 
+               AIC_log = round(AIC_log, 3), 
+               AIC_quad = round(AIC_quad, 3)) %>%
+      mutate(min_AIC = pmin(AIC, AIC_log, AIC_quad, na.rm = T)) %>%
+      arrange(min_AIC)
+  } 
+}
+```
+
+
+```{r}
+generator_univar_importance_tbl(Boston, "medv")
+            
+```
+
+```{r}
+summary_relationship_tbl %>% 
+  filter(str_detect(label, pattern = "rad"))
+
+regsubfit <- regsubsets(medv~.-tax,
+                        data= Boston, 
+                        intercept = T,
+                        method = c("exhaustive", "backward", "forward", "seqrep"),
+                        nvmax = 19)
+reg_summary <- summary(regsubfit)
+summary(regsubfit)[1:10]
+
+par(mfrow = c(2,2))
+plot(reg_summary$rss, xlab = "Number of Variables", ylab = "RSS", type = "l")
+plot(reg_summary$adjr2, xlab = "Number of Variables", ylab = "Adjusted RSq", type = "l")
+```
+
+
+```{r}
+outlier_treatment <- function(x, na.rm = T) {
+  x[x > quantile(x,.95,na.rm = na.rm)]<- quantile(x, .95,na.rm = na.rm)
+  x[x < quantile(x,.05,na.rm = na.rm)]<- quantile(x, .05,na.rm = na.rm)
+}
+```
+
+```{r}
+
+lm_fit_dir <- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)
+plot(lm_fit_dir)
+boxplot(Boston$medv)
+boxplot(Boston$rm)
+boxplot(Boston$age)
+
+Boston %>% 
+  mutate(rm_outlierT = rm %>% outlier_treatment()) %>% 
+  ggplot(aes(medv, rm)) +
+  geom_point()
+
+Boston_medv_max <- Boston %>% filter(medv >= 50)
+bind_rows(sapply(Boston_medv_max, mean), sapply(Boston, mean))
+# lstat, chas
+```
 
 ```{r}
 
 ```
 
-Main pitfalls of linear regression: heteroscedasticity 
