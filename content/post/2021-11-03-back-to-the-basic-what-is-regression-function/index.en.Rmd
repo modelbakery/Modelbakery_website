@@ -21,6 +21,9 @@ image:
   preview_only: no
 projects: []
 draft: TRUE
+output:
+  blogdown::html_page:
+    toc: true
 ---
 
 Simple is great.
@@ -69,7 +72,7 @@ So is there an ideal f(X)?
 
 ## Regression verus correlation 
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(MASS)
 library(ISLR)
 
