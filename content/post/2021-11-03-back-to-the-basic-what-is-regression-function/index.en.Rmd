@@ -1,5 +1,5 @@
 ---
-title: 'Back to the Basic: Multiple Linear Regression'
+title: 'The Practical Approach of Multiple Linear Regression Model'
 author: Package Build
 date: '2021-11-03'
 slug: back-to-the-basic-what-is-regression-function
@@ -7,33 +7,25 @@ categories:
   - R
 tags:
   - Academic
-  - Regression 
+  - Regression
   - Model Interpretation
   - R
 subtitle: 'A general class of regression models and how to interpret these models'
 summary: ''
 authors: []
 lastmod: '2021-11-03T13:30:59+09:00'
-featured: no
+featured: no 
 image:
   caption: ''
   focal_point: ''
   preview_only: no
 projects: []
 draft: TRUE
-output:
-  blogdown::html_page:
-    toc: true
 ---
 
-Simple is great.
+The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what's called "route cause" is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and their effect.
 
-The concept I first learnt about linear regression was too strong of an assumption to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simple is great, linear regression is great, and not because of its simplicity but because of its strong assumption: assuming there is a linear relationship between the dependent variable Y and each of the independent variable, independently. 
-
-I always had this wonder. How do we know in what situation, the linear approximation is reasonable? - Yes, all the time. In any given problems, we first need to establish the "true" relationship between target Y variable and X's, in a way that we can interpret and track down the possible non-indenpendent relationship between the X's and their effects on Y. It is all about top-down approach. The more complicated the problem is, the more important its interpretation becomes. In other words, we should simplify the problem first (variable selection) and then relax the assumption with more flexible functions to increase the accuracy. That said, this process should be iterative. 
-
->“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
->—Albert Einstein
+In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity. 
 
 
 Contents:
@@ -41,6 +33,7 @@ Contents:
 Study 
 
 * What is multiple linear regression function 
+  + Why linear regression?
   + What are its assumptions and difference with linear regression?
   + Estimation of the parameters by least squares
   + Assessing the accuracy of the Coefficient Estimates
@@ -69,6 +62,16 @@ Before I begin explore the assumptions and algorithms of different regression mo
 So is there an ideal f(X)? 
 
 
+## Why linear regression?
+
+I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right? 
+
+>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
+>—Albert Einstein
+
+I believe that the more complicated the problem is, the more important its interpretation becomes. 
+In other words, we should always consider the possibility of simpler way to approach any form of problems. 
+
 
 ## Regression verus correlation 
 
@@ -89,7 +92,7 @@ library(hrbrthemes)
 library(GGally)
 library(viridis)
 ```
-
+ 
 ## Load Data 
 
 crim: per capita crime rate by town.
