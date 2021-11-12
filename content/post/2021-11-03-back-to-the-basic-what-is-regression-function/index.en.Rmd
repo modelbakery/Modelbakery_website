@@ -23,7 +23,7 @@ projects: []
 draft: TRUE
 ---
 
-The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what's called "route cause" is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and their effect.
+The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what's called "root cause" is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and not be betrayed by algorithms.
 
 In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity. 
 
@@ -73,7 +73,7 @@ I believe that the more complicated the problem is, the more important its inter
 In other words, we should always consider the possibility of simpler way to approach any form of problems. 
 
 
-## Regression verus correlation 
+## Load Libraries
 
 ```{r, message=FALSE, warning=FALSE}
 library(MASS)
@@ -87,113 +87,86 @@ library(janitor)
 library(tidyquant)
 library(lares)
 library(leaps)
+library(broom)
 
 library(hrbrthemes)
 library(GGally)
 library(viridis)
+library(kableExtra)
+library(gridExtra)
 ```
  
-## Load Data 
-
-crim: per capita crime rate by town.
-
-zn: proportion of residential land zoned for lots over 25,000 sq.ft.
-
-indus: proportion of non-retail business acres per town.
-
-chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
-
-nox: nitrogen oxides concentration (parts per 10 million).
-
-rm: average number of rooms per dwelling.
-
-age: proportion of owner-occupied units built prior to 1940.
-
-dis: weighted mean of distances to five Boston employment centres.
-
-rad: index of accessibility to radial highways.
-
-tax: full-value property-tax rate per \$10,000.
-
-ptratio: pupil-teacher ratio by town.
-
-black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
-
-lstat: lower status of the population (percent).
-
-medv: median value of owner-occupied homes in \$1000s.
 
 ```{r}
 data(Boston)
 
-describe(Boston)
+describe(Boston) %>% kbl() %>% kable_minimal()
 ```
 
-## Divide the data 
+## Understanding Data: Boston Housing Data 
 
-[1] Direct (size)
-rm: average number of rooms per dwelling.
-age: proportion of owner-occupied units built prior to 1940.
+#### Aim of the Analysis 
 
-[2] External Influence 
+The Boston Housing data set was analysed by Harrison and Rubinfeld, who wanted to find out whether "clean air" had an influence on house prices. 
+ 
+#### Segmenting Variables: Macro to Micro 
 
-* Size/distance/accessibility
-zn: proportion of residential land zoned for lots over 25,000 sq.ft.
-indus: proportion of non-retail business acres per town.
-dis: weighted mean of distances to five Boston employment centres.
-chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
-rad: index of accessibility to radial highways.
+[1] Macro{External Influence} 
 
-* Population 
-black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
-ptratio: pupil-teacher ratio by town.
-lstat: lower status of the population (percent).
+__chas__: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
 
-[3] Others 
-tax: full-value property-tax rate per \$10,000.
-crim: per capita crime rate by town.
-nox: nitrogen oxides concentration (parts per 10 million).
+__age__: proportion of owner-occupied units built prior to 1940.
 
 
-```{r}
-# The direct influence has: 
-# Multiple R-squared:  0.5303,	Adjusted R-squared:  0.5284; explains ~50% of the TSS
-lm_fit_dir <- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)
-```
+[2] Industry/land/district 
 
-```{r}
-# The external influence (Size/distance/accessibility) has: 
-# Multiple R-squared:  0.3506,	Adjusted R-squared:  0.3441 ; explains ~35% of the TSS
-lm_fit_exSDA <- lm(medv~zn + indus+ dis + chas + rad, data = Boston); summary(lm_fit_exSDA)
-lm_fit_exSDA <- lm(medv~indus, data = Boston); summary(lm_fit_exSDA)
-```
+__zn__: proportion of residential land zoned for lots over 25,000 sq.ft.
 
-```{r}
-# The external influence (population) has: 
-# Multiple R-squared:  0.6098,	Adjusted R-squared:  0.6075; explains ~60% of the TSS 
-lm_fit_exPOP <- lm(medv~lstat+ptratio+black, data = Boston); summary(lm_fit_exPOP)
-```
-[3] Others 
-tax: tax variable is the cause of expense to the property 
-crim: per capita crime rate by town.
-nox: nitrogen oxides concentration (parts per 10 million).
+__indus__: proportion of non-retail business acres per town.
 
-```{r}
-# The Others influence has: 
-# Multiple R-squared:  0.2611,	Adjusted R-squared:  0.2567; explains ~25% of the TSS 
-lm_fit_other <- lm(medv~nox+crim+tax, data = Boston); summary(lm_fit_other)
-step(lm_fit_other)
-```
+__dis__: weighted mean of distances to five Boston employment centres.
+
+__rad__: index of accessibility to radial highways.
+
+
+[3] Population 
+
+__lstat__: lower status of the population (percent).
+
+__black__: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
+
+__ptratio__: pupil-teacher ratio by town.
+
+
+[3] Cause/result
+
+__nox__: nitrogen oxides concentration (parts per 10 million)
+
+__tax__: full-value property-tax rate per \$10,000.
+
+__crim__: per capita crime rate by town.
+
+
+[4] Direct influence 
+
+__rm__: average number of rooms per dwelling.
+
+
+[5] Target variable
+
+__medv__: median value of owner-occupied homes in \$1000s.
+
+
 
 ## Distribution of Target Variable 
 
 ```{r}
+# Data preparation: logarithm target medv 
 lBoston <- Boston %>% 
-  mutate(log_medv = log(medv + 1))
+  mutate(log_medv = log(medv))
   
-
 # Distribution of target medv 
-ggplot(Boston, aes(x = medv)) +
+P_medv <- ggplot(Boston, aes(x = medv)) +
   geom_density(aes(x = medv, y = ..density..)) +
     geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
     stat_function(fun=dnorm, 
@@ -203,7 +176,7 @@ ggplot(Boston, aes(x = medv)) +
   theme_minimal()
 
 # Distribution of logarithm target medv 
-lBoston %>% 
+P_lmedv <- lBoston %>% 
   ggplot(aes(x = log_medv)) +
   geom_density(aes(x = log_medv, y = ..density..)) +
     geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
@@ -213,99 +186,19 @@ lBoston %>%
                 color="red", lwd = 1) +
   theme_minimal()
 
-shapiro.test(Boston$medv)
-shapiro.test(lBoston$log_medv)
+# Shapiro-Wilk normality test: Both rejects the Null Hypothesis stating that the target data does not fit the normal distribution with 95% confidence. Significant departure from normality was found. 
+shapiro.test(Boston$medv)$p.value
+shapiro.test(lBoston$log_medv)$p.value
+
+par(mfrow = c(1,2))
+qqnorm(Boston$medv); qqline(Boston$medv, col =2)
+qqnorm(lBoston$log_medv); qqline(lBoston$log_medv, col =2)
+
+grid.arrange(P_medv, P_lmedv)
 ```
+By looking at the p-values, the log transform departure less significant from normality hence I will carry logarithm medv. The R squared estimatation will be computed after inversion using exponent function. <Must Remember>
 
-```{r}
-lBoston_pre_fit <- lBoston %>% 
-  mutate(lcrim = log(crim)) %>% 
-  dplyr::select(-medv, -crim) 
 
-boxplot(Boston)
-boxplot(lBoston_pre_fit)
-boxplot(lBoston_pre_fit)
-
-```
-## GGally Visualisation 
-
-```{r}
-# Data preparation for GGally visualisation with observation split at meidan Y value. 
-Boston_medv_median <- Boston %>% 
-  mutate(median_medv_cutoff = ifelse(medv > median(medv), 1, 0),
-         median_medv_cutoff = as.factor(median_medv_cutoff)) 
-
-# GGally ggpairs plot for variables upto age 
-GGally::ggpairs(Boston_medv_median[ ,c(14,1:7, 15)],
-                aes(color=median_medv_cutoff, alpha = 0.75),
-                lower = list(continous = "smooth")) +
-  theme_bw() +
-  labs(title = "prostate cancer") +
-  theme(plot.title = element_text(face = 'bold',
-                                  colour = 'black',
-                                  hjust = 0.5, size = 12))
-# GGally ggpairs plot for variables from dis ~ lstat 
-GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
-                aes(color=median_medv_cutoff, alpha = 0.75),
-                lower = list(continous = "smooth")) +
-  theme_bw() +
-  labs(title = "prostate cancer") +
-  theme(plot.title = element_text(face = 'bold',
-                                  colour = 'black',
-                                  hjust = 0.5, size = 12))
-
-# Gally parallel coordinates plot 
-Boston_medv_median %>%
-  arrange(desc(median_medv_cutoff)) %>%
-  ggparcoord(
-    columns = 1:14, groupColumn = 15,
-    scale="uniminmax",
-    showPoints = FALSE,
-    alphaLines = 1
-    ) + 
-  scale_color_viridis(discrete=TRUE)+
-    labs(
-    title = "Parallel Coordinates Plot for Boston House Price: Minmax Standardised",
-    subtitle = "Strong negative connection observed between lstat & medv, rm & age",
-    caption = "medv > median(medv): Yellow
-               medv ≤ meidan(medv): Purple",
-    y = "Minmax scaled medv",
-    x = "") +
-  theme_ipsum()+
-  theme(
-    legend.position="default",
-    plot.title = element_text(size=15)
-  )
-
-```
-In order to highlight the relation of medv (target Y) to the remaining 13 variables, I have split the observations with medv > median(medv) as __yellow__ lines and rest as the __purple__ line. Some of the variables seem to be strongly related. The most obvious relation is the negative dependence between lstat and medv.For better graphical representations, the variables have been minmax scaled over the interval [0,1]. There are variables where the observations are highly concnetrated at the low region, close to zero. By means, it makes sense to consider transformation of the original data. 
-
-* crim -> lcrim (logarithm)
-  + Taking the logarithm makes the variable's distribution more symmetric. Its median and the mean have moved closer to each other then they were for the original crim. 
-
-* zn -> zn (logarithm)
-  + There is a large number of zero values. 
-  + There is a noticable non-linear negative relationship with crim. Almost all the observations for which zn = 0, have a high percapita crime rate, and vice versa. 
-  + On the concern of house price prediction, the correlation says that there seems to be no clear linear relationshipship with medv. However, the residential land over its common size would obviously lead to higher property price. 
-  
-* indus -> lindus (logarithm)
-  + Negative correlation with target medv observed. The relationship between the logarithums of both variables seems to be almost linear. The negative relation might result from the noise non-retail business sometimes generates and other pollution aspects. 
-  + Strong linear correlation with nox. Greater the proportion of non-retail business, more likely to cause a pollution hence the high nox concentration. 
-  
-* chas -> 
-  + There are some doubt that Charles River influences the house price. That said, the districts close to the Charles River would likely to influence other factors such as the pupil/teacher ratio or the proportion of non-retail business acres. Hence, their relation may be pure coincidence or some form of hierchical interaction. 
-  
-* rm -> 
-  + The number of rooms per dwelling is a direct measure of the size of the houses. Thus, I suspect rm to be strongly correlated with the target medv.  
-  + Outlier treatment needed. 
-  
-* age -> Removal candidate 
-  + There is no clear sign of rlationship with the house price. On top of that, usually the time, date, age factor has connection with multiple variables, which likely to inflate the VIF factor and rise multicollinearity issue. 
-  
-* dis -> 
-  + The scatterplot shows hardly any connection with the target, house price. I believe that this distance factor is upto workers preference and taste. 
-  
-* rad -> 
 ```{r, echo = FALSE}
 generator_hist_facet <- function(data, bins = 20, ncol = 5,
                                  fct_reorder = FALSE, 
@@ -337,76 +230,234 @@ generator_hist_facet <- function(data, bins = 20, ncol = 5,
 ```
 
 
+## Visualisation: Boxplot & Histogram 
+
+* Scaling or transformation should be considered 
+
+* Outlier treatment should be considered 
+
 ```{r}
+# Quick boxplot:
+boxplot(Boston)
+
 # Customised facet histogram: can be found on my GitHub :)  
 generator_hist_facet(lBoston)
-
-summary(Boston$crim)
-Boston %>% 
-  mutate(zn_bin   = ifelse(zn == 0, 0, 1)) %>% 
-  dplyr::select(crim, zn_bin, medv) %>% 
-  group_by(zn_bin) %>% 
-  summarise(count = n(),
-            avg_crim = mean(crim),
-            avg_medv = mean(medv))
-
-Boston %>% 
-  ggplot(aes(nox*indus,log(medv), colour = nox))+
-  geom_point()
-
-Boston %>% 
-  ggplot(aes(nox, log(indus), colour = nox))+
-  geom_point()
-
-plot(log(Boston$crim), log(Boston$medv))
-
-
-boxplot(Boston$rm)
-
-lm_fit_other <- lm(medv~I(nox*log(indus)), data = Boston); summary(lm_fit_other)
-lm_fit_other <- lm(medv~nox+log(indus), data = Boston); summary(lm_fit_other)
 ```
 
+
+## GGally Visualisation 
+```{r, message=FALSE, warning=FALSE}
+# Data preparation for GGally visualisation with observation split at meidan Y value. 
+Boston_medv_median <- Boston %>% 
+  mutate(median_medv_cutoff = ifelse(medv > median(medv), 1, 0),
+         median_medv_cutoff = as.factor(median_medv_cutoff)) 
+
+# GGally ggpairs plot for variables upto age 
+GGally::ggpairs(Boston_medv_median[ ,c(14,1:7, 15)],
+                aes(color=median_medv_cutoff, alpha = 0.75),
+                lower = list(continous = "smooth")) +
+  theme_bw() +
+  labs(title = "prostate cancer") +
+  theme(plot.title = element_text(face = 'bold',
+                                  colour = 'black',
+                                  hjust = 0.5, size = 12))
+
+# GGally ggpairs plot for variables from dis ~ lstat 
+GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
+                aes(color=median_medv_cutoff, alpha = 0.75),
+                lower = list(continous = "smooth")) +
+  theme_bw() +
+  labs(title = "prostate cancer") +
+  theme(plot.title = element_text(face = 'bold',
+                                  colour = 'black',
+                                  hjust = 0.5, size = 12))
+
+# Gally parallel coordinates plot {PCP}
+Boston_medv_median %>%
+  arrange(desc(median_medv_cutoff)) %>%
+  ggparcoord(
+    columns = 1:14, groupColumn = 15,
+    scale="uniminmax",
+    showPoints = FALSE,
+    alphaLines = 1
+    ) + 
+  scale_color_viridis(discrete=TRUE)+
+    labs(
+    title = "Parallel Coordinates Plot for Boston House Price: Minmax Standardised",
+    subtitle = "Strong negative connection observed between lstat & medv",
+    caption = "medv > median(medv): Yellow
+               medv ≤ meidan(medv): Purple",
+    y = "Minmax scaled medv",
+    x = "") +
+  theme_ipsum()+
+  theme(
+    legend.position="default",
+    plot.title = element_text(size=15)
+  )
+
+```
+
+In order to highlight the relation of medv (target Y) to the remaining 13 variables, I have split the observations with medv > median(medv) as __yellow__ lines and rest as the __purple__ line. Some of the variables seem to be strongly related. The most obvious relation is the negative dependence between lstat and medv.For better graphical representations, the variables have been minmax scaled over the interval [0,1]. There are variables where the observations are highly concnetrated at the low region, close to zero. By means, it makes sense to consider transformation of the original data. 
+
+* crim -> lcrim (logarithm)
+  + Taking the logarithm makes the variable's distribution more symmetric. Its median and the mean have moved closer to each other then they were for the original crim. 
+
+* zn -> zn (binning)
+  + There is a large number of zero values. 
+  + There is a noticable non-linear negative relationship with crim, noticed on PCP. Almost all the observations for which zn = 0, have a high percapita crime rate, and vice versa. 
+  + On the concern of house price prediction, the correlation says that there seems to be no clear linear relationship with medv. However, the residential land over its common size would obviously lead to higher property price. 
+  
+* indus -> lindus (logarithm)
+  + Negative correlation with target medv observed. The relationship between the logarithms of both variables seems to be almost linear. The negative relation might result from the noise non-retail business sometimes generates and other pollution aspects. 
+  + Strong linear correlation with nox. Greater the proportion of non-retail business, more likely to cause a pollution hence the high nox concentration. 
+  
+* chas 
+  + There are some doubt that Charles River influences the house price. That said, the districts close to the Charles River would likely to influence other factors such as the pupil/teacher ratio or the proportion of non-retail business acres. Hence, their relation may be pure coincidence or some form of hierchical interaction. 
+  
+* rm -> lrm (logarithm)
+  + The number of rooms per dwelling is a direct measure of the size of the houses. Thus, I suspect rm to be strongly correlated with the target medv.  
+  + Outlier treatment needed. 
+  
+* age -> age^2.5/10000
+  + There is no clear sign of rlationship with the house price. On top of that, usually the time, date, age factor has connection with multiple variables, which likely to inflate the VIF factor and rise multicollinearity issue. 
+  + Left skewed 
+  
+* dis -> ldis (logarithm)
+  + The scatter plot showed hardly any linear relationship with the target, house price. However, there is a noticable non-linear relation and its logarithm does seem to preserve distance influence on the house price.
+  
+* rad -> lrad (logarithm)
+  + The one obvious thing one can observe is the subgroups of districts containing rad value, which are lose to the respective group's mean. The boxplot from ggpair reveals that the mean value of these subgroups stays relatively the same for both low and high price of the house. 
+  + Its correlation with tax exceeds 0.9 
+
+* tax -> ltax (logarithm)
+  + Likewise to rad, there is a noticable subgroups on the distribution of tax value. The scatter plot shows downward curve with increase in the tax rate. There are presence of outliers in lower value subgroup but the mean difference within these groups seems to be significant to retain its information.   
+
+* ptratio -> exp(0.4*ptratio)/1000
+  + The ggpair boxplot indicates negative relation with medv. 
+  + The mean values of its subgroups depart significantly by high and low regime of medv.
+  + The kurtosis of of its red distribution {medv < median(medv)} is highly noticeable hence likely be potential predictor variable on medv.  
+  
+* black -> black/100
+  + https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8
+  
+* lstat -> lstat^0.5
+  + Of all the variables, lstat exhibits the strongest negative relation with medv (PCP & ggpairs). 
+  + Taking the square root removes all the outliers and gains better relation with log(mdv)
+  
+
+
+## Feature Transformation & Asymmetry reduction 
+
 ```{r}
-corr_info <- corr_var(lBoston, # name of dataset
-  medv # name of variable to focus on
-) 
-corr_tbl <- corr_info$data %>% dplyr::select(variables, corr)
+# feature transformation/scaling 
+Boston_transform <- Boston %>% 
+  summarise(lcrim    = log(crim),
+            zn       = zn/10,
+            lindus   = log(indus),
+            chas     = chas,
+            lnox     = log(nox),
+            lrm      = log(rm),
+            sqage    = (age^2.5)/10000,
+            ldis     = log(dis),
+            lrad     = log(rad),
+            ltax     = log(tax),
+            eptratio = exp(0.4*ptratio)/1000,
+            black    = black/100,
+            srlstat  = lstat^0.5,
+            lmedv    = log(medv))
 
-corr_cross_info <- corr_cross(lBoston %>% dplyr::select(-medv), # name of dataset
-  max_pvalue = 0.05, # display only significant correlations (at 5% level)
-  top = 15, # display top 10 couples of variables (by correlation coefficient)
+# Boxplots for all of the transformed variables + scaling 
+Boston_transform %>% 
+  summarise_all(funs(x = scale(., center = TRUE, scale = TRUE))) %>% 
+  setNames(c("crim", "zn", "indus", "chas", "nox", "rm", "age", "dis", "rad", "tax", "ptratio", "black", "lstat", "medv")) %>% 
+  gather(key = key, value = value, factor_key = TRUE) %>% 
+  ggplot(aes(key, value)) +
+  geom_boxplot(fill = viridisLite::viridis(n = 20)[1], colour = "yellow") +
+  labs(
+    title = "Transformed Boston Housing Data",
+    x = "",
+    y = "Scaled Index"
+  ) +
+  theme_dark() 
+
+```
+
+Since most of the variables exhibit an asymmetry with a higher density on the left-hand side (right skewed), the logarithm transformations are proposed on most of the variables. Taking the logarithm helps to reduce the asymmetry, pushing lower values to move further away from each other whereas the distance between greater values is reduced. 
+
+In comparison to original data, these transformed variables are more asymmetric and where logarithm was applied, the less outliers were shown. The question is: is the upper and/or extreme always an outlier? I believe there is no straight answer hence I will carry out this transformed data set and outlier treated data set as I go along the analysis.  
+
+#### Correlation: lares package 
+
+```{r}
+# Target variable correlation plot
+corr_info <- corr_var(Boston_transform, 
+  lmedv 
+); corr_info
+
+# X's cross correlation plot: display only significant correlations (at 5% level)
+corr_cross_info <- corr_cross(Boston_transform %>% dplyr::select(-lmedv), 
+  max_pvalue = 0.05,
   rm.na = FALSE
-)
+); corr_cross_info
 
+# Capturing data into table 
+corr_tbl <- corr_info$data %>% dplyr::select(variables, corr)
 corr_cross_tbl <-corr_cross_info$data %>% dplyr::select(key, label, corr)
 ```
 
-```{r}
-lm_fit_00edit <- lm(medv~., data = lBoston); summary(lm_fit_00edit)
-var_names <- colnames(lBoston %>% dplyr::select(medv, everything()))
+#### Linear Model: Original VS Transformed Data Set
 
-summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3)] %>% 
+```{r}
+# linear model on all variables 
+lm_fit_00edit <- lm(medv~., data = Boston); summary(lm_fit_00edit)
+
+# linear model on all transformed variables 
+lm_fit_01edit <- lm(lmedv~., data = Boston_transform); summary(lm_fit_01edit)
+summary_01edit <- summary(lm_fit_01edit)
+
+```
+We can clearly notice here the positive influence of asymmetry reduction has on the overall accuracy of the linear model. 
+
+* Higher R-squared (+0.0244) & adj.R-squared (+0.025) 
+
+* Less number of statistically significant variables depicted (t_value > 2) on the model. Optimal parameters   
+
+
+```{r}
+glance(lm_fit_00edit) %>% kbl %>% kable_material()
+
+glance(lm_fit_01edit) %>% kbl %>% kable_material()
+```
+
+  
+
+
+```{r}
+var_names <- colnames(Boston_transform %>% dplyr::select(lmedv, everything()))
+
+# Summary table for variable coefficient & correlation 
+summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %>% 
   as_tibble() %>% 
   cbind(var_names) %>% 
   dplyr::select(var_names, everything()) %>% 
   left_join(corr_tbl, by = c("var_names" = "variables")) %>% 
   left_join(corr_cross_tbl, by = c("var_names" = "key")) %>% 
-  setNames(c("var_names", "Estimate", "t_stats", "corr", "label", "cross_corr")) %>% 
-  arrange(desc(t_stats, cross_corr))
+  setNames(c("var_names", "Estimate", "t_stats", "p_value", "corr", "label", "cross_corr")) %>% 
+  arrange(cross_corr)
 ```
 
-Multicollinearity suspect: Promising variables (Severe)
+
 ```{r}
+# Multicollinearity suspect: Promising variables (Severe)
 summary_relationship_tbl %>% 
-  filter(str_detect(label, pattern = "lstat"))
+  filter(str_detect(label, pattern = "srlstat"))
 
 summary_relationship_tbl %>% 
-  filter(str_detect(label, pattern = "dis"))
+  filter(str_detect(label, pattern = "lrm"))
 
-# No sign of singificant collinearity :) 
+# No sign of significant collinearity :) 
 summary_relationship_tbl %>% 
-  filter(str_detect(label, pattern = "ptratio"))
+  filter(str_detect(label, pattern = "ltax"))
 ```
 
 Multicollinearity suspect: High entanglment in multiple dimension (variable removal candidate)

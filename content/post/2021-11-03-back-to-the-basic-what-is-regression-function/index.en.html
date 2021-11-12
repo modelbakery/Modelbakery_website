@@ -1,5 +1,5 @@
 ---
-title: 'Back to the Basic: Multiple Linear Regression'
+title: 'The Practical Approach of Multiple Linear Regression Model'
 author: Package Build
 date: '2021-11-03'
 slug: back-to-the-basic-what-is-regression-function
@@ -7,14 +7,14 @@ categories:
   - R
 tags:
   - Academic
-  - Regression 
+  - Regression
   - Model Interpretation
   - R
 subtitle: 'A general class of regression models and how to interpret these models'
 summary: ''
 authors: []
 lastmod: '2021-11-03T13:30:59+09:00'
-featured: no
+featured: no 
 image:
   caption: ''
   focal_point: ''
@@ -24,20 +24,18 @@ draft: TRUE
 ---
 
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
+<script src="{{< blogdown/postref >}}index.en_files/kePrint/kePrint.js"></script>
+<link href="{{< blogdown/postref >}}index.en_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>Simple is great.</p>
-<p>The concept I first learnt about linear regression was too strong of an assumption to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simple is great, linear regression is great, and not because of its simplicity but because of its strong assumption: assuming there is a linear relationship between the dependent variable Y and each of the independent variable, independently.</p>
-<p>I always had this wonder. How do we know in what situation, the linear approximation is reasonable? - Yes, all the time. In any given problems, we first need to establish the “true” relationship between target Y variable and X’s, in a way that we can interpret and track down the possible non-indenpendent relationship between the X’s and their effects on Y. It is all about top-down approach. The more complicated the problem is, the more important its interpretation becomes. In other words, we should simplify the problem first (variable selection) and then relax the assumption with more flexible functions to increase the accuracy. That said, this process should be iterative.</p>
-<blockquote>
-<p>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
-—Albert Einstein</p>
-</blockquote>
+<p>The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what’s called “root cause” is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and not be betrayed by algorithms.</p>
+<p>In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity.</p>
 <p>Contents:</p>
 <p>Study</p>
 <ul>
 <li>What is multiple linear regression function
 <ul>
+<li>Why linear regression?</li>
 <li>What are its assumptions and difference with linear regression?</li>
 <li>Estimation of the parameters by least squares</li>
 <li>Assessing the accuracy of the Coefficient Estimates</li>
@@ -63,250 +61,753 @@ draft: TRUE
 So is there an ideal f(X)?</li>
 </ul>
 </div>
-<div id="regression-verus-correlation" class="section level2">
-<h2>Regression verus correlation</h2>
+<div id="why-linear-regression" class="section level2">
+<h2>Why linear regression?</h2>
+<p>I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right?</p>
+<blockquote>
+<p>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
+—Albert Einstein</p>
+</blockquote>
+<p>I believe that the more complicated the problem is, the more important its interpretation becomes.
+In other words, we should always consider the possibility of simpler way to approach any form of problems.</p>
+</div>
+<div id="load-libraries" class="section level2">
+<h2>Load Libraries</h2>
 <pre class="r"><code>library(MASS)
 library(ISLR)
 
-library(tidyverse)</code></pre>
-<pre><code>## Warning: package &#39;forcats&#39; was built under R version 4.1.1</code></pre>
-<pre class="r"><code>library(psych)
+library(tidyverse)
+library(psych)
 library(skimr)
 library(car)
 library(janitor)
 library(tidyquant)
-library(lares)</code></pre>
-<pre><code>## Warning: package &#39;lares&#39; was built under R version 4.1.1</code></pre>
-<pre class="r"><code>library(leaps)
+library(lares)
+library(leaps)
+library(broom)
 
-library(hrbrthemes)</code></pre>
-<pre><code>## Warning: package &#39;hrbrthemes&#39; was built under R version 4.1.1</code></pre>
-<pre class="r"><code>library(GGally)
-library(viridis)</code></pre>
-</div>
-<div id="load-data" class="section level2">
-<h2>Load Data</h2>
-<p>crim: per capita crime rate by town.</p>
-<p>zn: proportion of residential land zoned for lots over 25,000 sq.ft.</p>
-<p>indus: proportion of non-retail business acres per town.</p>
-<p>chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).</p>
-<p>nox: nitrogen oxides concentration (parts per 10 million).</p>
-<p>rm: average number of rooms per dwelling.</p>
-<p>age: proportion of owner-occupied units built prior to 1940.</p>
-<p>dis: weighted mean of distances to five Boston employment centres.</p>
-<p>rad: index of accessibility to radial highways.</p>
-<p>tax: full-value property-tax rate per $10,000.</p>
-<p>ptratio: pupil-teacher ratio by town.</p>
-<p>black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.</p>
-<p>lstat: lower status of the population (percent).</p>
-<p>medv: median value of owner-occupied homes in $1000s.</p>
+library(hrbrthemes)
+library(GGally)
+library(viridis)
+library(kableExtra)
+library(gridExtra)</code></pre>
 <pre class="r"><code>data(Boston)
 
-describe(Boston)</code></pre>
-<pre><code>##         vars   n   mean     sd median trimmed    mad    min    max  range  skew
-## crim       1 506   3.61   8.60   0.26    1.68   0.33   0.01  88.98  88.97  5.19
-## zn         2 506  11.36  23.32   0.00    5.08   0.00   0.00 100.00 100.00  2.21
-## indus      3 506  11.14   6.86   9.69   10.93   9.37   0.46  27.74  27.28  0.29
-## chas       4 506   0.07   0.25   0.00    0.00   0.00   0.00   1.00   1.00  3.39
-## nox        5 506   0.55   0.12   0.54    0.55   0.13   0.38   0.87   0.49  0.72
-## rm         6 506   6.28   0.70   6.21    6.25   0.51   3.56   8.78   5.22  0.40
-## age        7 506  68.57  28.15  77.50   71.20  28.98   2.90 100.00  97.10 -0.60
-## dis        8 506   3.80   2.11   3.21    3.54   1.91   1.13  12.13  11.00  1.01
-## rad        9 506   9.55   8.71   5.00    8.73   2.97   1.00  24.00  23.00  1.00
-## tax       10 506 408.24 168.54 330.00  400.04 108.23 187.00 711.00 524.00  0.67
-## ptratio   11 506  18.46   2.16  19.05   18.66   1.70  12.60  22.00   9.40 -0.80
-## black     12 506 356.67  91.29 391.44  383.17   8.09   0.32 396.90 396.58 -2.87
-## lstat     13 506  12.65   7.14  11.36   11.90   7.11   1.73  37.97  36.24  0.90
-## medv      14 506  22.53   9.20  21.20   21.56   5.93   5.00  50.00  45.00  1.10
-##         kurtosis   se
-## crim       36.60 0.38
-## zn          3.95 1.04
-## indus      -1.24 0.30
-## chas        9.48 0.01
-## nox        -0.09 0.01
-## rm          1.84 0.03
-## age        -0.98 1.25
-## dis         0.46 0.09
-## rad        -0.88 0.39
-## tax        -1.15 7.49
-## ptratio    -0.30 0.10
-## black       7.10 4.06
-## lstat       0.46 0.32
-## medv        1.45 0.41</code></pre>
+describe(Boston) %&gt;% kbl() %&gt;% kable_minimal()</code></pre>
+<table class=" lightable-minimal" style="font-family: &quot;Trebuchet MS&quot;, verdana, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+vars
+</th>
+<th style="text-align:right;">
+n
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+median
+</th>
+<th style="text-align:right;">
+trimmed
+</th>
+<th style="text-align:right;">
+mad
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+range
+</th>
+<th style="text-align:right;">
+skew
+</th>
+<th style="text-align:right;">
+kurtosis
+</th>
+<th style="text-align:right;">
+se
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+crim
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+3.6135236
+</td>
+<td style="text-align:right;">
+8.6015451
+</td>
+<td style="text-align:right;">
+0.25651
+</td>
+<td style="text-align:right;">
+1.6816300
+</td>
+<td style="text-align:right;">
+0.3283218
+</td>
+<td style="text-align:right;">
+0.00632
+</td>
+<td style="text-align:right;">
+88.9762
+</td>
+<td style="text-align:right;">
+88.96988
+</td>
+<td style="text-align:right;">
+5.1922223
+</td>
+<td style="text-align:right;">
+36.5958159
+</td>
+<td style="text-align:right;">
+0.3823853
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+zn
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+11.3636364
+</td>
+<td style="text-align:right;">
+23.3224530
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+5.0800493
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+100.0000
+</td>
+<td style="text-align:right;">
+100.00000
+</td>
+<td style="text-align:right;">
+2.2124881
+</td>
+<td style="text-align:right;">
+3.9523873
+</td>
+<td style="text-align:right;">
+1.0368095
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+indus
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+11.1367787
+</td>
+<td style="text-align:right;">
+6.8603529
+</td>
+<td style="text-align:right;">
+9.69000
+</td>
+<td style="text-align:right;">
+10.9318719
+</td>
+<td style="text-align:right;">
+9.3700320
+</td>
+<td style="text-align:right;">
+0.46000
+</td>
+<td style="text-align:right;">
+27.7400
+</td>
+<td style="text-align:right;">
+27.28000
+</td>
+<td style="text-align:right;">
+0.2932747
+</td>
+<td style="text-align:right;">
+-1.2401949
+</td>
+<td style="text-align:right;">
+0.3049799
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chas
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+0.0691700
+</td>
+<td style="text-align:right;">
+0.2539940
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+0.00000
+</td>
+<td style="text-align:right;">
+1.0000
+</td>
+<td style="text-align:right;">
+1.00000
+</td>
+<td style="text-align:right;">
+3.3857377
+</td>
+<td style="text-align:right;">
+9.4819703
+</td>
+<td style="text-align:right;">
+0.0112914
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nox
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+0.5546951
+</td>
+<td style="text-align:right;">
+0.1158777
+</td>
+<td style="text-align:right;">
+0.53800
+</td>
+<td style="text-align:right;">
+0.5450601
+</td>
+<td style="text-align:right;">
+0.1297275
+</td>
+<td style="text-align:right;">
+0.38500
+</td>
+<td style="text-align:right;">
+0.8710
+</td>
+<td style="text-align:right;">
+0.48600
+</td>
+<td style="text-align:right;">
+0.7249897
+</td>
+<td style="text-align:right;">
+-0.0874106
+</td>
+<td style="text-align:right;">
+0.0051514
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+rm
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+6.2846344
+</td>
+<td style="text-align:right;">
+0.7026171
+</td>
+<td style="text-align:right;">
+6.20850
+</td>
+<td style="text-align:right;">
+6.2528744
+</td>
+<td style="text-align:right;">
+0.5122383
+</td>
+<td style="text-align:right;">
+3.56100
+</td>
+<td style="text-align:right;">
+8.7800
+</td>
+<td style="text-align:right;">
+5.21900
+</td>
+<td style="text-align:right;">
+0.4012223
+</td>
+<td style="text-align:right;">
+1.8418324
+</td>
+<td style="text-align:right;">
+0.0312351
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+68.5749012
+</td>
+<td style="text-align:right;">
+28.1488614
+</td>
+<td style="text-align:right;">
+77.50000
+</td>
+<td style="text-align:right;">
+71.1960591
+</td>
+<td style="text-align:right;">
+28.9848300
+</td>
+<td style="text-align:right;">
+2.90000
+</td>
+<td style="text-align:right;">
+100.0000
+</td>
+<td style="text-align:right;">
+97.10000
+</td>
+<td style="text-align:right;">
+-0.5954162
+</td>
+<td style="text-align:right;">
+-0.9780297
+</td>
+<td style="text-align:right;">
+1.2513695
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+dis
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+3.7950427
+</td>
+<td style="text-align:right;">
+2.1057101
+</td>
+<td style="text-align:right;">
+3.20745
+</td>
+<td style="text-align:right;">
+3.5393786
+</td>
+<td style="text-align:right;">
+1.9142590
+</td>
+<td style="text-align:right;">
+1.12960
+</td>
+<td style="text-align:right;">
+12.1265
+</td>
+<td style="text-align:right;">
+10.99690
+</td>
+<td style="text-align:right;">
+1.0057898
+</td>
+<td style="text-align:right;">
+0.4575916
+</td>
+<td style="text-align:right;">
+0.0936102
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+rad
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+9.5494071
+</td>
+<td style="text-align:right;">
+8.7072594
+</td>
+<td style="text-align:right;">
+5.00000
+</td>
+<td style="text-align:right;">
+8.7339901
+</td>
+<td style="text-align:right;">
+2.9652000
+</td>
+<td style="text-align:right;">
+1.00000
+</td>
+<td style="text-align:right;">
+24.0000
+</td>
+<td style="text-align:right;">
+23.00000
+</td>
+<td style="text-align:right;">
+0.9988651
+</td>
+<td style="text-align:right;">
+-0.8789291
+</td>
+<td style="text-align:right;">
+0.3870849
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+tax
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+408.2371542
+</td>
+<td style="text-align:right;">
+168.5371161
+</td>
+<td style="text-align:right;">
+330.00000
+</td>
+<td style="text-align:right;">
+400.0443350
+</td>
+<td style="text-align:right;">
+108.2298000
+</td>
+<td style="text-align:right;">
+187.00000
+</td>
+<td style="text-align:right;">
+711.0000
+</td>
+<td style="text-align:right;">
+524.00000
+</td>
+<td style="text-align:right;">
+0.6659891
+</td>
+<td style="text-align:right;">
+-1.1503176
+</td>
+<td style="text-align:right;">
+7.4923887
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ptratio
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+18.4555336
+</td>
+<td style="text-align:right;">
+2.1649455
+</td>
+<td style="text-align:right;">
+19.05000
+</td>
+<td style="text-align:right;">
+18.6625616
+</td>
+<td style="text-align:right;">
+1.7049900
+</td>
+<td style="text-align:right;">
+12.60000
+</td>
+<td style="text-align:right;">
+22.0000
+</td>
+<td style="text-align:right;">
+9.40000
+</td>
+<td style="text-align:right;">
+-0.7975743
+</td>
+<td style="text-align:right;">
+-0.3048010
+</td>
+<td style="text-align:right;">
+0.0962436
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+356.6740316
+</td>
+<td style="text-align:right;">
+91.2948644
+</td>
+<td style="text-align:right;">
+391.44000
+</td>
+<td style="text-align:right;">
+383.1695074
+</td>
+<td style="text-align:right;">
+8.0949960
+</td>
+<td style="text-align:right;">
+0.32000
+</td>
+<td style="text-align:right;">
+396.9000
+</td>
+<td style="text-align:right;">
+396.58000
+</td>
+<td style="text-align:right;">
+-2.8732597
+</td>
+<td style="text-align:right;">
+7.1037150
+</td>
+<td style="text-align:right;">
+4.0585518
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lstat
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+12.6530632
+</td>
+<td style="text-align:right;">
+7.1410615
+</td>
+<td style="text-align:right;">
+11.36000
+</td>
+<td style="text-align:right;">
+11.8990394
+</td>
+<td style="text-align:right;">
+7.1090670
+</td>
+<td style="text-align:right;">
+1.73000
+</td>
+<td style="text-align:right;">
+37.9700
+</td>
+<td style="text-align:right;">
+36.24000
+</td>
+<td style="text-align:right;">
+0.9010929
+</td>
+<td style="text-align:right;">
+0.4628171
+</td>
+<td style="text-align:right;">
+0.3174589
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+medv
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:right;">
+506
+</td>
+<td style="text-align:right;">
+22.5328063
+</td>
+<td style="text-align:right;">
+9.1971041
+</td>
+<td style="text-align:right;">
+21.20000
+</td>
+<td style="text-align:right;">
+21.5623153
+</td>
+<td style="text-align:right;">
+5.9304000
+</td>
+<td style="text-align:right;">
+5.00000
+</td>
+<td style="text-align:right;">
+50.0000
+</td>
+<td style="text-align:right;">
+45.00000
+</td>
+<td style="text-align:right;">
+1.1015373
+</td>
+<td style="text-align:right;">
+1.4509837
+</td>
+<td style="text-align:right;">
+0.4088611
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="divide-the-data" class="section level2">
-<h2>Divide the data</h2>
-<p>[1] Direct (size)
-rm: average number of rooms per dwelling.
-age: proportion of owner-occupied units built prior to 1940.</p>
-<p>[2] External Influence</p>
-<ul>
-<li><p>Size/distance/accessibility
-zn: proportion of residential land zoned for lots over 25,000 sq.ft.
-indus: proportion of non-retail business acres per town.
-dis: weighted mean of distances to five Boston employment centres.
-chas: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).
-rad: index of accessibility to radial highways.</p></li>
-<li><p>Population
-black: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.
-ptratio: pupil-teacher ratio by town.
-lstat: lower status of the population (percent).</p></li>
-</ul>
-<p>[3] Others
-tax: full-value property-tax rate per $10,000.
-crim: per capita crime rate by town.
-nox: nitrogen oxides concentration (parts per 10 million).</p>
-<pre class="r"><code># The direct influence has: 
-# Multiple R-squared:  0.5303,  Adjusted R-squared:  0.5284; explains ~50% of the TSS
-lm_fit_dir &lt;- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ rm + age, data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -20.555  -2.882  -0.274   2.293  40.799 
-## 
-## Coefficients:
-##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -25.27740    2.85676  -8.848  &lt; 2e-16 ***
-## rm            8.40158    0.41208  20.388  &lt; 2e-16 ***
-## age          -0.07278    0.01029  -7.075 5.02e-12 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 6.316 on 503 degrees of freedom
-## Multiple R-squared:  0.5303, Adjusted R-squared:  0.5284 
-## F-statistic: 283.9 on 2 and 503 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code># The external influence (Size/distance/accessibility) has: 
-# Multiple R-squared:  0.3506,  Adjusted R-squared:  0.3441 ; explains ~35% of the TSS
-lm_fit_exSDA &lt;- lm(medv~zn + indus+ dis + chas + rad, data = Boston); summary(lm_fit_exSDA)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ zn + indus + dis + chas + rad, data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -13.130  -4.928  -1.382   3.312  32.620 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) 35.79239    1.56133  22.924  &lt; 2e-16 ***
-## zn           0.11443    0.01923   5.951 5.02e-09 ***
-## indus       -0.65592    0.07540  -8.699  &lt; 2e-16 ***
-## dis         -1.56448    0.25809  -6.062 2.66e-09 ***
-## chas         6.57661    1.31522   5.000 7.93e-07 ***
-## rad         -0.18563    0.04804  -3.864 0.000126 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 7.448 on 500 degrees of freedom
-## Multiple R-squared:  0.3506, Adjusted R-squared:  0.3441 
-## F-statistic:    54 on 5 and 500 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>lm_fit_exSDA &lt;- lm(medv~indus, data = Boston); summary(lm_fit_exSDA)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ indus, data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -13.017  -4.917  -1.457   3.180  32.943 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) 29.75490    0.68345   43.54   &lt;2e-16 ***
-## indus       -0.64849    0.05226  -12.41   &lt;2e-16 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 8.057 on 504 degrees of freedom
-## Multiple R-squared:  0.234,  Adjusted R-squared:  0.2325 
-## F-statistic:   154 on 1 and 504 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code># The external influence (population) has: 
-# Multiple R-squared:  0.6098,  Adjusted R-squared:  0.6075; explains ~60% of the TSS 
-lm_fit_exPOP &lt;- lm(medv~lstat+ptratio+black, data = Boston); summary(lm_fit_exPOP)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ lstat + ptratio + black, data = Boston)
-## 
-## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -12.3063  -3.6707  -0.8439   1.9123  26.9096 
-## 
-## Coefficients:
-##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) 51.294202   2.615734  19.610   &lt;2e-16 ***
-## lstat       -0.792905   0.040989 -19.344   &lt;2e-16 ***
-## ptratio     -1.133111   0.127843  -8.863   &lt;2e-16 ***
-## black        0.006122   0.003021   2.026   0.0433 *  
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 5.762 on 502 degrees of freedom
-## Multiple R-squared:  0.6098, Adjusted R-squared:  0.6075 
-## F-statistic: 261.6 on 3 and 502 DF,  p-value: &lt; 2.2e-16</code></pre>
-<p>[3] Others
-tax: tax variable is the cause of expense to the property
-crim: per capita crime rate by town.
-nox: nitrogen oxides concentration (parts per 10 million).</p>
-<pre class="r"><code># The Others influence has: 
-# Multiple R-squared:  0.2611,  Adjusted R-squared:  0.2567; explains ~25% of the TSS 
-lm_fit_other &lt;- lm(medv~nox+crim+tax, data = Boston); summary(lm_fit_other)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ nox + crim + tax, data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -12.753  -4.726  -2.218   2.511  33.446 
-## 
-## Coefficients:
-##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  37.207205   1.836445  20.260  &lt; 2e-16 ***
-## nox         -15.637382   4.097701  -3.816 0.000152 ***
-## crim         -0.176513   0.050550  -3.492 0.000522 ***
-## tax          -0.013136   0.003145  -4.177 3.48e-05 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 7.929 on 502 degrees of freedom
-## Multiple R-squared:  0.2611, Adjusted R-squared:  0.2567 
-## F-statistic: 59.12 on 3 and 502 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>step(lm_fit_other)</code></pre>
-<pre><code>## Start:  AIC=2099.42
-## medv ~ nox + crim + tax
-## 
-##        Df Sum of Sq   RSS    AIC
-## &lt;none&gt;              31564 2099.4
-## - crim  1    766.66 32331 2109.6
-## - nox   1    915.66 32480 2111.9
-## - tax   1   1097.07 32661 2114.7</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ nox + crim + tax, data = Boston)
-## 
-## Coefficients:
-## (Intercept)          nox         crim          tax  
-##    37.20721    -15.63738     -0.17651     -0.01314</code></pre>
+<div id="understanding-data-boston-housing-data" class="section level2">
+<h2>Understanding Data: Boston Housing Data</h2>
+<div id="aim-of-the-analysis" class="section level4">
+<h4>Aim of the Analysis</h4>
+<p>The Boston Housing data set was analysed by Harrison and Rubinfeld, who wanted to find out whether “clean air” had an influence on house prices.</p>
+</div>
+<div id="segmenting-variables-macro-to-micro" class="section level4">
+<h4>Segmenting Variables: Macro to Micro</h4>
+<p>[1] Macro{External Influence}</p>
+<p><strong>chas</strong>: Charles River dummy variable (= 1 if tract bounds river; 0 otherwise).</p>
+<p><strong>age</strong>: proportion of owner-occupied units built prior to 1940.</p>
+<p>[2] Industry/land/district</p>
+<p><strong>zn</strong>: proportion of residential land zoned for lots over 25,000 sq.ft.</p>
+<p><strong>indus</strong>: proportion of non-retail business acres per town.</p>
+<p><strong>dis</strong>: weighted mean of distances to five Boston employment centres.</p>
+<p><strong>rad</strong>: index of accessibility to radial highways.</p>
+<p>[3] Population</p>
+<p><strong>lstat</strong>: lower status of the population (percent).</p>
+<p><strong>black</strong>: 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town.</p>
+<p><strong>ptratio</strong>: pupil-teacher ratio by town.</p>
+<p>[3] Cause/result</p>
+<p><strong>nox</strong>: nitrogen oxides concentration (parts per 10 million)</p>
+<p><strong>tax</strong>: full-value property-tax rate per $10,000.</p>
+<p><strong>crim</strong>: per capita crime rate by town.</p>
+<p>[4] Direct influence</p>
+<p><strong>rm</strong>: average number of rooms per dwelling.</p>
+<p>[5] Target variable</p>
+<p><strong>medv</strong>: median value of owner-occupied homes in $1000s.</p>
+</div>
 </div>
 <div id="distribution-of-target-variable" class="section level2">
 <h2>Distribution of Target Variable</h2>
-<pre class="r"><code>lBoston &lt;- Boston %&gt;% 
-  mutate(log_medv = log(medv + 1))
+<pre class="r"><code># Data preparation: logarithm target medv 
+lBoston &lt;- Boston %&gt;% 
+  mutate(log_medv = log(medv))
   
-
 # Distribution of target medv 
-ggplot(Boston, aes(x = medv)) +
+P_medv &lt;- ggplot(Boston, aes(x = medv)) +
   geom_density(aes(x = medv, y = ..density..)) +
     geom_density(color=&quot;black&quot;, lwd =1.5, fill = palette_light()[1])  +
     stat_function(fun=dnorm, 
                 args = list(mean=mean(Boston$medv),
                             sd=sd(Boston$medv)),
                 color=&quot;red&quot;, lwd = 1) +
-  theme_minimal()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<pre class="r"><code># Distribution of logarithm target medv 
-lBoston %&gt;% 
+  theme_minimal()
+
+# Distribution of logarithm target medv 
+P_lmedv &lt;- lBoston %&gt;% 
   ggplot(aes(x = log_medv)) +
   geom_density(aes(x = log_medv, y = ..density..)) +
     geom_density(color=&quot;black&quot;, lwd =1.5, fill = palette_light()[1])  +
@@ -314,30 +815,36 @@ lBoston %&gt;%
                 args = list(mean=mean(lBoston$log_medv),
                             sd=sd(lBoston$log_medv)),
                 color=&quot;red&quot;, lwd = 1) +
-  theme_minimal()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
-<pre class="r"><code>shapiro.test(Boston$medv)</code></pre>
-<pre><code>## 
-##  Shapiro-Wilk normality test
-## 
-## data:  Boston$medv
-## W = 0.91718, p-value = 4.941e-16</code></pre>
-<pre class="r"><code>shapiro.test(lBoston$log_medv)</code></pre>
-<pre><code>## 
-##  Shapiro-Wilk normality test
-## 
-## data:  lBoston$log_medv
-## W = 0.97831, p-value = 7.72e-07</code></pre>
-<pre class="r"><code>lBoston_pre_fit &lt;- lBoston %&gt;% 
-  mutate(lcrim = log(crim)) %&gt;% 
-  dplyr::select(-medv, -crim) 
+  theme_minimal()
 
+# Shapiro-Wilk normality test: Both rejects the Null Hypothesis stating that the target data does not fit the normal distribution with 95% confidence. Significant departure from normality was found. 
+shapiro.test(Boston$medv)$p.value</code></pre>
+<pre><code>## [1] 4.941386e-16</code></pre>
+<pre class="r"><code>shapiro.test(lBoston$log_medv)$p.value</code></pre>
+<pre><code>## [1] 1.935427e-07</code></pre>
+<pre class="r"><code>par(mfrow = c(1,2))
+qqnorm(Boston$medv); qqline(Boston$medv, col =2)
+qqnorm(lBoston$log_medv); qqline(lBoston$log_medv, col =2)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>grid.arrange(P_medv, P_lmedv)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-3-2.png" width="672" />
+By looking at the p-values, the log transform departure less significant from normality hence I will carry logarithm medv. The R squared estimatation will be computed after inversion using exponent function. <Must Remember></p>
+</div>
+<div id="visualisation-boxplot-histogram" class="section level2">
+<h2>Visualisation: Boxplot &amp; Histogram</h2>
+<ul>
+<li><p>Scaling or transformation should be considered</p></li>
+<li><p>Outlier treatment should be considered</p></li>
+</ul>
+<pre class="r"><code># Quick boxplot:
 boxplot(Boston)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
-<pre class="r"><code>boxplot(lBoston_pre_fit)
-boxplot(lBoston_pre_fit)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-2.png" width="672" />
-## GGally Visualisation</p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code># Customised facet histogram: can be found on my GitHub :)  
+generator_hist_facet(lBoston)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
+</div>
+<div id="ggally-visualisation" class="section level2">
+<h2>GGally Visualisation</h2>
 <pre class="r"><code># Data preparation for GGally visualisation with observation split at meidan Y value. 
 Boston_medv_median &lt;- Boston %&gt;% 
   mutate(median_medv_cutoff = ifelse(medv &gt; median(medv), 1, 0),
@@ -352,15 +859,7 @@ GGally::ggpairs(Boston_medv_median[ ,c(14,1:7, 15)],
   theme(plot.title = element_text(face = &#39;bold&#39;,
                                   colour = &#39;black&#39;,
                                   hjust = 0.5, size = 12))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre class="r"><code># GGally ggpairs plot for variables from dis ~ lstat 
 GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
                 aes(color=median_medv_cutoff, alpha = 0.75),
@@ -370,16 +869,8 @@ GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
   theme(plot.title = element_text(face = &#39;bold&#39;,
                                   colour = &#39;black&#39;,
                                   hjust = 0.5, size = 12))</code></pre>
-<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-9-2.png" width="672" /></p>
-<pre class="r"><code># Gally parallel coordinates plot 
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<pre class="r"><code># Gally parallel coordinates plot {PCP}
 Boston_medv_median %&gt;%
   arrange(desc(median_medv_cutoff)) %&gt;%
   ggparcoord(
@@ -391,7 +882,7 @@ Boston_medv_median %&gt;%
   scale_color_viridis(discrete=TRUE)+
     labs(
     title = &quot;Parallel Coordinates Plot for Boston House Price: Minmax Standardised&quot;,
-    subtitle = &quot;Strong negative connection observed between lstat &amp; medv, rm &amp; age&quot;,
+    subtitle = &quot;Strong negative connection observed between lstat &amp; medv&quot;,
     caption = &quot;medv &gt; median(medv): Yellow
                medv ≤ meidan(medv): Purple&quot;,
     y = &quot;Minmax scaled medv&quot;,
@@ -401,208 +892,472 @@ Boston_medv_median %&gt;%
     legend.position=&quot;default&quot;,
     plot.title = element_text(size=15)
   )</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-9-3.png" width="672" />
-In order to highlight the relation of medv (target Y) to the remaining 13 variables, I have split the observations with medv &gt; median(medv) as <strong>yellow</strong> lines and rest as the <strong>purple</strong> line. Some of the variables seem to be strongly related. The most obvious relation is the negative dependence between lstat and medv.For better graphical representations, the variables have been minmax scaled over the interval [0,1]. There are variables where the observations are highly concnetrated at the low region, close to zero. By means, it makes sense to consider transformation of the original data.</p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-6-3.png" width="672" /></p>
+<p>In order to highlight the relation of medv (target Y) to the remaining 13 variables, I have split the observations with medv &gt; median(medv) as <strong>yellow</strong> lines and rest as the <strong>purple</strong> line. Some of the variables seem to be strongly related. The most obvious relation is the negative dependence between lstat and medv.For better graphical representations, the variables have been minmax scaled over the interval [0,1]. There are variables where the observations are highly concnetrated at the low region, close to zero. By means, it makes sense to consider transformation of the original data.</p>
 <ul>
 <li>crim -&gt; lcrim (logarithm)
 <ul>
 <li>Taking the logarithm makes the variable’s distribution more symmetric. Its median and the mean have moved closer to each other then they were for the original crim.</li>
 </ul></li>
-<li>zn -&gt; zn (logarithm)
+<li>zn -&gt; zn (binning)
 <ul>
 <li>There is a large number of zero values.</li>
-<li>There is a noticable non-linear negative relationship with crim. Almost all the observations for which zn = 0, have a high percapita crime rate, and vice versa.</li>
-<li>On the concern of house price prediction, the correlation says that there seems to be no clear linear relationshipship with medv. However, the residential land over its common size would obviously lead to higher property price.</li>
+<li>There is a noticable non-linear negative relationship with crim, noticed on PCP. Almost all the observations for which zn = 0, have a high percapita crime rate, and vice versa.</li>
+<li>On the concern of house price prediction, the correlation says that there seems to be no clear linear relationship with medv. However, the residential land over its common size would obviously lead to higher property price.</li>
 </ul></li>
 <li>indus -&gt; lindus (logarithm)
 <ul>
-<li>Negative correlation with target medv observed. The relationship between the logarithums of both variables seems to be almost linear. The negative relation might result from the noise non-retail business sometimes generates and other pollution aspects.</li>
+<li>Negative correlation with target medv observed. The relationship between the logarithms of both variables seems to be almost linear. The negative relation might result from the noise non-retail business sometimes generates and other pollution aspects.</li>
 <li>Strong linear correlation with nox. Greater the proportion of non-retail business, more likely to cause a pollution hence the high nox concentration.</li>
 </ul></li>
-<li>chas -&gt;
+<li>chas
 <ul>
 <li>There are some doubt that Charles River influences the house price. That said, the districts close to the Charles River would likely to influence other factors such as the pupil/teacher ratio or the proportion of non-retail business acres. Hence, their relation may be pure coincidence or some form of hierchical interaction.</li>
 </ul></li>
-<li>rm -&gt;
+<li>rm -&gt; lrm (logarithm)
 <ul>
 <li>The number of rooms per dwelling is a direct measure of the size of the houses. Thus, I suspect rm to be strongly correlated with the target medv.<br />
 </li>
 <li>Outlier treatment needed.</li>
 </ul></li>
-<li>age -&gt; Removal candidate
+<li>age -&gt; age^2.5/10000
 <ul>
 <li>There is no clear sign of rlationship with the house price. On top of that, usually the time, date, age factor has connection with multiple variables, which likely to inflate the VIF factor and rise multicollinearity issue.</li>
+<li>Left skewed</li>
 </ul></li>
-<li>dis -&gt;
+<li>dis -&gt; ldis (logarithm)
 <ul>
-<li>The scatterplot shows hardly any connection with the target, house price. I believe that this distance factor is upto workers preference and taste.</li>
+<li>The scatter plot showed hardly any linear relationship with the target, house price. However, there is a noticable non-linear relation and its logarithm does seem to preserve distance influence on the house price.</li>
 </ul></li>
-<li>rad -&gt;</li>
+<li>rad -&gt; lrad (logarithm)
+<ul>
+<li>The one obvious thing one can observe is the subgroups of districts containing rad value, which are lose to the respective group’s mean. The boxplot from ggpair reveals that the mean value of these subgroups stays relatively the same for both low and high price of the house.</li>
+<li>Its correlation with tax exceeds 0.9</li>
+</ul></li>
+<li>tax -&gt; ltax (logarithm)
+<ul>
+<li>Likewise to rad, there is a noticable subgroups on the distribution of tax value. The scatter plot shows downward curve with increase in the tax rate. There are presence of outliers in lower value subgroup but the mean difference within these groups seems to be significant to retain its information.</li>
+</ul></li>
+<li>ptratio -&gt; exp(0.4*ptratio)/1000
+<ul>
+<li>The ggpair boxplot indicates negative relation with medv.</li>
+<li>The mean values of its subgroups depart significantly by high and low regime of medv.</li>
+<li>The kurtosis of of its red distribution {medv &lt; median(medv)} is highly noticeable hence likely be potential predictor variable on medv.</li>
+</ul></li>
+<li>black -&gt; black/100
+<ul>
+<li><a href="https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8" class="uri">https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8</a></li>
+</ul></li>
+<li>lstat -&gt; lstat^0.5
+<ul>
+<li>Of all the variables, lstat exhibits the strongest negative relation with medv (PCP &amp; ggpairs).</li>
+<li>Taking the square root removes all the outliers and gains better relation with log(mdv)</li>
+</ul></li>
 </ul>
-<pre class="r"><code># Customised facet histogram: can be found on my GitHub :)  
-generator_hist_facet(lBoston)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<pre class="r"><code>summary(Boston$crim)</code></pre>
-<pre><code>##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-##  0.00632  0.08204  0.25651  3.61352  3.67708 88.97620</code></pre>
-<pre class="r"><code>Boston %&gt;% 
-  mutate(zn_bin   = ifelse(zn == 0, 0, 1)) %&gt;% 
-  dplyr::select(crim, zn_bin, medv) %&gt;% 
-  group_by(zn_bin) %&gt;% 
-  summarise(count = n(),
-            avg_crim = mean(crim),
-            avg_medv = mean(medv))</code></pre>
-<pre><code>## # A tibble: 2 × 4
-##   zn_bin count avg_crim avg_medv
-##    &lt;dbl&gt; &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;
-## 1      0   372    4.87      20.5
-## 2      1   134    0.130     28.2</code></pre>
-<pre class="r"><code>Boston %&gt;% 
-  ggplot(aes(nox*indus,log(medv), colour = nox))+
-  geom_point()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
-<pre class="r"><code>Boston %&gt;% 
-  ggplot(aes(nox, log(indus), colour = nox))+
-  geom_point()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-3.png" width="672" /></p>
-<pre class="r"><code>plot(log(Boston$crim), log(Boston$medv))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-4.png" width="672" /></p>
-<pre class="r"><code>boxplot(Boston$rm)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-11-5.png" width="672" /></p>
-<pre class="r"><code>lm_fit_other &lt;- lm(medv~I(nox*log(indus)), data = Boston); summary(lm_fit_other)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ I(nox * log(indus)), data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -13.068  -4.789  -1.561   2.838  32.524 
-## 
-## Coefficients:
-##                     Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)          32.0525     0.7762   41.29   &lt;2e-16 ***
-## I(nox * log(indus))  -7.5351     0.5487  -13.73   &lt;2e-16 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 7.854 on 504 degrees of freedom
-## Multiple R-squared:  0.2723, Adjusted R-squared:  0.2708 
-## F-statistic: 188.6 on 1 and 504 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>lm_fit_other &lt;- lm(medv~nox+log(indus), data = Boston); summary(lm_fit_other)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ nox + log(indus), data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -14.308  -4.623  -1.139   2.806  32.277 
-## 
-## Coefficients:
-##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  38.5441     1.7428  22.116  &lt; 2e-16 ***
-## nox          -8.5120     4.3742  -1.946   0.0522 .  
-## log(indus)   -5.2263     0.6524  -8.011 7.96e-15 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 7.846 on 503 degrees of freedom
-## Multiple R-squared:  0.2751, Adjusted R-squared:  0.2722 
-## F-statistic: 95.44 on 2 and 503 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>corr_info &lt;- corr_var(lBoston, # name of dataset
-  medv # name of variable to focus on
-) 
-corr_tbl &lt;- corr_info$data %&gt;% dplyr::select(variables, corr)
+</div>
+<div id="feature-transformation-asymmetry-reduction" class="section level2">
+<h2>Feature Transformation &amp; Asymmetry reduction</h2>
+<pre class="r"><code># feature transformation/scaling 
+Boston_transform &lt;- Boston %&gt;% 
+  summarise(lcrim    = log(crim),
+            zn       = zn/10,
+            lindus   = log(indus),
+            chas     = chas,
+            lnox     = log(nox),
+            lrm      = log(rm),
+            sqage    = (age^2.5)/10000,
+            ldis     = log(dis),
+            lrad     = log(rad),
+            ltax     = log(tax),
+            eptratio = exp(0.4*ptratio)/1000,
+            black    = black/100,
+            srlstat  = lstat^0.5,
+            lmedv    = log(medv))
 
-corr_cross_info &lt;- corr_cross(lBoston %&gt;% dplyr::select(-medv), # name of dataset
-  max_pvalue = 0.05, # display only significant correlations (at 5% level)
-  top = 15, # display top 10 couples of variables (by correlation coefficient)
+# Boxplots for all of the transformed variables + scaling 
+Boston_transform %&gt;% 
+  summarise_all(funs(x = scale(., center = TRUE, scale = TRUE))) %&gt;% 
+  setNames(c(&quot;crim&quot;, &quot;zn&quot;, &quot;indus&quot;, &quot;chas&quot;, &quot;nox&quot;, &quot;rm&quot;, &quot;age&quot;, &quot;dis&quot;, &quot;rad&quot;, &quot;tax&quot;, &quot;ptratio&quot;, &quot;black&quot;, &quot;lstat&quot;, &quot;medv&quot;)) %&gt;% 
+  gather(key = key, value = value, factor_key = TRUE) %&gt;% 
+  ggplot(aes(key, value)) +
+  geom_boxplot(fill = viridisLite::viridis(n = 20)[1], colour = &quot;yellow&quot;) +
+  labs(
+    title = &quot;Transformed Boston Housing Data&quot;,
+    x = &quot;&quot;,
+    y = &quot;Scaled Index&quot;
+  ) +
+  theme_dark() </code></pre>
+<pre><code>## Warning: `funs()` was deprecated in dplyr 0.8.0.
+## Please use a list of either functions or lambdas: 
+## 
+##   # Simple named list: 
+##   list(mean = mean, median = median)
+## 
+##   # Auto named with `tibble::lst()`: 
+##   tibble::lst(mean, median)
+## 
+##   # Using lambdas
+##   list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))</code></pre>
+<pre><code>## Warning: attributes are not identical across measure variables;
+## they will be dropped</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Since most of the variables exhibit an asymmetry with a higher density on the left-hand side (right skewed), the logarithm transformations are proposed on most of the variables. Taking the logarithm helps to reduce the asymmetry, pushing lower values to move further away from each other whereas the distance between greater values is reduced.</p>
+<p>In comparison to original data, these transformed variables are more asymmetric and where logarithm was applied, the less outliers were shown. The question is: is the upper and/or extreme always an outlier? I believe there is no straight answer hence I will carry out this transformed data set and outlier treated data set as I go along the analysis.</p>
+<div id="correlation-lares-package" class="section level4">
+<h4>Correlation: lares package</h4>
+<pre class="r"><code># Target variable correlation plot
+corr_info &lt;- corr_var(Boston_transform, 
+  lmedv 
+); corr_info</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code># X&#39;s cross correlation plot: display only significant correlations (at 5% level)
+corr_cross_info &lt;- corr_cross(Boston_transform %&gt;% dplyr::select(-lmedv), 
+  max_pvalue = 0.05,
   rm.na = FALSE
-)</code></pre>
-<pre><code>## Returning only the top 15. You may override with the &#39;top&#39; argument</code></pre>
-<pre class="r"><code>corr_cross_tbl &lt;-corr_cross_info$data %&gt;% dplyr::select(key, label, corr)</code></pre>
-<pre class="r"><code>lm_fit_00edit &lt;- lm(medv~., data = lBoston); summary(lm_fit_00edit)</code></pre>
+); corr_cross_info</code></pre>
+<pre><code>## Returning only the top 25. You may override with the &#39;top&#39; argument</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+<pre class="r"><code># Capturing data into table 
+corr_tbl &lt;- corr_info$data %&gt;% dplyr::select(variables, corr)
+corr_cross_tbl &lt;-corr_cross_info$data %&gt;% dplyr::select(key, label, corr)</code></pre>
+</div>
+<div id="linear-model-original-vs-transformed-data-set" class="section level4">
+<h4>Linear Model: Original VS Transformed Data Set</h4>
+<pre class="r"><code># linear model on all variables 
+lm_fit_00edit &lt;- lm(medv~., data = Boston); summary(lm_fit_00edit)</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = medv ~ ., data = lBoston)
+## lm(formula = medv ~ ., data = Boston)
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -8.4192 -1.1474 -0.4136  0.6388 10.1915 
+## -15.595  -2.730  -0.518   1.777  26.199 
 ## 
 ## Coefficients:
 ##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -6.057e+01  3.076e+00 -19.694  &lt; 2e-16 ***
-## crim         1.142e-01  1.514e-02   7.541 2.28e-13 ***
-## zn           1.894e-02  6.021e-03   3.146 0.001756 ** 
-## indus       -3.240e-02  2.686e-02  -1.206 0.228259    
-## chas         3.893e-01  3.793e-01   1.026 0.305232    
-## nox         -1.176e-01  1.711e+00  -0.069 0.945238    
-## rm           1.666e+00  1.883e-01   8.846  &lt; 2e-16 ***
-## age         -3.271e-03  5.765e-03  -0.567 0.570771    
-## dis         -3.444e-01  9.048e-02  -3.806 0.000159 ***
-## rad         -1.470e-02  2.979e-02  -0.493 0.621975    
-## tax          1.702e-03  1.669e-03   1.019 0.308613    
-## ptratio     -8.154e-02  6.018e-02  -1.355 0.176076    
-## black       -1.373e-04  1.190e-03  -0.115 0.908203    
-## lstat        1.234e-01  2.628e-02   4.695 3.47e-06 ***
-## log_medv     2.378e+01  5.199e-01  45.744  &lt; 2e-16 ***
+## (Intercept)  3.646e+01  5.103e+00   7.144 3.28e-12 ***
+## crim        -1.080e-01  3.286e-02  -3.287 0.001087 ** 
+## zn           4.642e-02  1.373e-02   3.382 0.000778 ***
+## indus        2.056e-02  6.150e-02   0.334 0.738288    
+## chas         2.687e+00  8.616e-01   3.118 0.001925 ** 
+## nox         -1.777e+01  3.820e+00  -4.651 4.25e-06 ***
+## rm           3.810e+00  4.179e-01   9.116  &lt; 2e-16 ***
+## age          6.922e-04  1.321e-02   0.052 0.958229    
+## dis         -1.476e+00  1.995e-01  -7.398 6.01e-13 ***
+## rad          3.060e-01  6.635e-02   4.613 5.07e-06 ***
+## tax         -1.233e-02  3.760e-03  -3.280 0.001112 ** 
+## ptratio     -9.527e-01  1.308e-01  -7.283 1.31e-12 ***
+## black        9.312e-03  2.686e-03   3.467 0.000573 ***
+## lstat       -5.248e-01  5.072e-02 -10.347  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 2.071 on 491 degrees of freedom
-## Multiple R-squared:  0.9507, Adjusted R-squared:  0.9493 
-## F-statistic: 676.5 on 14 and 491 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>var_names &lt;- colnames(lBoston %&gt;% dplyr::select(medv, everything()))
+## Residual standard error: 4.745 on 492 degrees of freedom
+## Multiple R-squared:  0.7406, Adjusted R-squared:  0.7338 
+## F-statistic: 108.1 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code># linear model on all transformed variables 
+lm_fit_01edit &lt;- lm(lmedv~., data = Boston_transform); summary(lm_fit_01edit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = lmedv ~ ., data = Boston_transform)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -0.9918 -0.1002 -0.0034  0.1117  0.7640 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  4.176874   0.379017  11.020  &lt; 2e-16 ***
+## lcrim       -0.014606   0.011650  -1.254 0.210527    
+## zn           0.001392   0.005639   0.247 0.805121    
+## lindus      -0.012709   0.022312  -0.570 0.569195    
+## chas         0.109980   0.036634   3.002 0.002817 ** 
+## lnox        -0.283112   0.105340  -2.688 0.007441 ** 
+## lrm          0.421108   0.110175   3.822 0.000149 ***
+## sqage        0.006403   0.004863   1.317 0.188536    
+## ldis        -0.183154   0.036804  -4.977 8.97e-07 ***
+## lrad         0.068362   0.022473   3.042 0.002476 ** 
+## ltax        -0.201832   0.048432  -4.167 3.64e-05 ***
+## eptratio    -0.040017   0.008091  -4.946 1.04e-06 ***
+## black        0.044472   0.011456   3.882 0.000118 ***
+## srlstat     -0.262615   0.016091 -16.320  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.2008 on 492 degrees of freedom
+## Multiple R-squared:  0.765,  Adjusted R-squared:  0.7588 
+## F-statistic: 123.2 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>summary_01edit &lt;- summary(lm_fit_01edit)</code></pre>
+<p>We can clearly notice here the positive influence of asymmetry reduction has on the overall accuracy of the linear model.</p>
+<ul>
+<li><p>Higher R-squared (+0.0244) &amp; adj.R-squared (+0.025)</p></li>
+<li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
+</ul>
+<pre class="r"><code>glance(lm_fit_00edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+<th style="text-align:right;">
+nobs
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.7406427
+</td>
+<td style="text-align:right;">
+0.7337897
+</td>
+<td style="text-align:right;">
+4.745298
+</td>
+<td style="text-align:right;">
+108.0767
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+-1498.804
+</td>
+<td style="text-align:right;">
+3027.609
+</td>
+<td style="text-align:right;">
+3091.007
+</td>
+<td style="text-align:right;">
+11078.78
+</td>
+<td style="text-align:right;">
+492
+</td>
+<td style="text-align:right;">
+506
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>glance(lm_fit_01edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+<th style="text-align:right;">
+nobs
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.7650004
+</td>
+<td style="text-align:right;">
+0.7587911
+</td>
+<td style="text-align:right;">
+0.2007528
+</td>
+<td style="text-align:right;">
+123.2016
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+101.5902
+</td>
+<td style="text-align:right;">
+-173.1805
+</td>
+<td style="text-align:right;">
+-109.7824
+</td>
+<td style="text-align:right;">
+19.82844
+</td>
+<td style="text-align:right;">
+492
+</td>
+<td style="text-align:right;">
+506
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>var_names &lt;- colnames(Boston_transform %&gt;% dplyr::select(lmedv, everything()))
 
-summary_relationship_tbl &lt;- summary(lm_fit_00edit)$coefficients[,c(1,3)] %&gt;% 
+# Summary table for variable coefficient &amp; correlation 
+summary_relationship_tbl &lt;- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %&gt;% 
   as_tibble() %&gt;% 
   cbind(var_names) %&gt;% 
   dplyr::select(var_names, everything()) %&gt;% 
   left_join(corr_tbl, by = c(&quot;var_names&quot; = &quot;variables&quot;)) %&gt;% 
   left_join(corr_cross_tbl, by = c(&quot;var_names&quot; = &quot;key&quot;)) %&gt;% 
-  setNames(c(&quot;var_names&quot;, &quot;Estimate&quot;, &quot;t_stats&quot;, &quot;corr&quot;, &quot;label&quot;, &quot;cross_corr&quot;)) %&gt;% 
-  arrange(desc(t_stats, cross_corr))</code></pre>
-<p>Multicollinearity suspect: Promising variables (Severe)</p>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;lstat&quot;))</code></pre>
-<pre><code>##   var_names  Estimate  t_stats      corr            label cross_corr
-## 1        rm 1.6657196 8.845840  0.695360       rm + lstat  -0.613808
-## 2     lstat 0.1233754 4.694916 -0.737663 lstat + log_medv  -0.804294</code></pre>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;dis&quot;))</code></pre>
-<pre><code>##   var_names    Estimate     t_stats      corr       label cross_corr
-## 1        zn  0.01894028  3.14592534  0.360445    zn + dis   0.664408
-## 2       nox -0.11758379 -0.06872359 -0.427321   nox + dis  -0.769230
-## 3       age -0.00327063 -0.56729869 -0.376955   age + dis  -0.747881
-## 4     indus -0.03240416 -1.20636124 -0.483725 indus + dis  -0.708027</code></pre>
-<pre class="r"><code># No sign of singificant collinearity :) 
+  setNames(c(&quot;var_names&quot;, &quot;Estimate&quot;, &quot;t_stats&quot;, &quot;p_value&quot;, &quot;corr&quot;, &quot;label&quot;, &quot;cross_corr&quot;)) %&gt;% 
+  arrange(cross_corr)</code></pre>
+<pre class="r"><code># Multicollinearity suspect: Promising variables (Severe)
 summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;ptratio&quot;))</code></pre>
-<pre><code>## [1] var_names  Estimate   t_stats    corr       label      cross_corr
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+  filter(str_detect(label, pattern = &quot;srlstat&quot;))</code></pre>
+<pre><code>##   var_names      Estimate     t_stats      p_value      corr            label
+## 1       lrm  3.809865e+00  9.11614020 1.979441e-18  0.610437    lrm + srlstat
+## 2      lnox -1.776661e+01 -4.65125741 4.245644e-06 -0.515251   lnox + srlstat
+## 3    lindus  2.055863e-02  0.33431004 7.382881e-01 -0.553887 lindus + srlstat
+## 4     lcrim -1.080114e-01 -3.28651687 1.086810e-03 -0.567242  lcrim + srlstat
+## 5     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096  sqage + srlstat
+##   cross_corr
+## 1  -0.639439
+## 2   0.609437
+## 3   0.621379
+## 4   0.622276
+## 5   0.637140</code></pre>
+<pre class="r"><code>summary_relationship_tbl %&gt;% 
+  filter(str_detect(label, pattern = &quot;lrm&quot;))</code></pre>
+<pre><code>##   var_names Estimate t_stats      p_value     corr         label cross_corr
+## 1       lrm 3.809865 9.11614 1.979441e-18 0.610437 lrm + srlstat  -0.639439</code></pre>
+<pre class="r"><code># No sign of significant collinearity :) 
+summary_relationship_tbl %&gt;% 
+  filter(str_detect(label, pattern = &quot;ltax&quot;))</code></pre>
+<pre><code>##   var_names     Estimate   t_stats      p_value      corr         label
+## 1      ldis  -1.47556685 -7.398004 6.013491e-13  0.405721   ldis + ltax
+## 2    lindus   0.02055863  0.334310 7.382881e-01 -0.553887 lindus + ltax
+## 3      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + ltax
+## 4     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242  lcrim + ltax
+## 5      lrad   0.30604948  4.612900 5.070529e-06 -0.434513   lrad + ltax
+##   cross_corr
+## 1  -0.599621
+## 2   0.659285
+## 3   0.668307
+## 4   0.809977
+## 5   0.820487</code></pre>
 <p>Multicollinearity suspect: High entanglment in multiple dimension (variable removal candidate)</p>
 <p>indus variable is the most problematic</p>
 <pre class="r"><code>summary_relationship_tbl %&gt;% 
   filter(str_detect(label, pattern = &quot;indus&quot;))</code></pre>
-<pre><code>##   var_names    Estimate   t_stats      corr       label cross_corr
-## 1     indus -0.03240416 -1.206361 -0.483725 indus + nox   0.763651
-## 2     indus -0.03240416 -1.206361 -0.483725 indus + tax   0.720760
-## 3     indus -0.03240416 -1.206361 -0.483725 indus + dis  -0.708027
-## 4     indus -0.03240416 -1.206361 -0.483725 indus + age   0.644779</code></pre>
+<pre><code>##   var_names    Estimate   t_stats      p_value      corr            label
+## 1    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + ldis
+## 2        zn  0.04642046  3.381576 0.0007781097  0.363344      zn + lindus
+## 3    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + lrad
+## 4    lindus  0.02055863  0.334310 0.7382880714 -0.553887 lindus + srlstat
+## 5    lindus  0.02055863  0.334310 0.7382880714 -0.553887   lindus + sqage
+## 6    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + ltax
+## 7     lcrim -0.10801136 -3.286517 0.0010868101 -0.567242   lcrim + lindus
+## 8    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + lnox
+##   cross_corr
+## 1  -0.730297
+## 2  -0.655898
+## 3   0.580533
+## 4   0.621379
+## 5   0.658137
+## 6   0.659285
+## 7   0.739553
+## 8   0.750463</code></pre>
 <pre class="r"><code>summary_relationship_tbl %&gt;% 
   filter(str_detect(label, pattern = &quot;age&quot;))</code></pre>
-<pre><code>##   var_names    Estimate     t_stats      corr       label cross_corr
-## 1       nox -0.11758379 -0.06872359 -0.427321   nox + age   0.731470
-## 2       age -0.00327063 -0.56729869 -0.376955   age + dis  -0.747881
-## 3     indus -0.03240416 -1.20636124 -0.483725 indus + age   0.644779</code></pre>
+<pre><code>##   var_names      Estimate     t_stats      p_value      corr           label
+## 1     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096    sqage + ldis
+## 2     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096 sqage + srlstat
+## 3    lindus  2.055863e-02  0.33431004 7.382881e-01 -0.553887  lindus + sqage
+## 4     lcrim -1.080114e-01 -3.28651687 1.086810e-03 -0.567242   lcrim + sqage
+## 5      lnox -1.776661e+01 -4.65125741 4.245644e-06 -0.515251    lnox + sqage
+##   cross_corr
+## 1  -0.795991
+## 2   0.637140
+## 3   0.658137
+## 4   0.696771
+## 5   0.783129</code></pre>
 <pre class="r"><code>summary_relationship_tbl %&gt;% 
   filter(str_detect(label, pattern = &quot;nox&quot;))</code></pre>
-<pre><code>##   var_names    Estimate     t_stats      corr       label cross_corr
-## 1       nox -0.11758379 -0.06872359 -0.427321   nox + dis  -0.769230
-## 2       nox -0.11758379 -0.06872359 -0.427321   nox + age   0.731470
-## 3       nox -0.11758379 -0.06872359 -0.427321   nox + tax   0.668023
-## 4       nox -0.11758379 -0.06872359 -0.427321   nox + rad   0.611441
-## 5     indus -0.03240416 -1.20636124 -0.483725 indus + nox   0.763651</code></pre>
+<pre><code>##   var_names     Estimate   t_stats      p_value      corr          label
+## 1      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + ldis
+## 2      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251 lnox + srlstat
+## 3      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + lrad
+## 4      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + ltax
+## 5    lindus   0.02055863  0.334310 7.382881e-01 -0.553887  lindus + lnox
+## 6      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + sqage
+## 7     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242   lcrim + lnox
+##   cross_corr
+## 1  -0.860018
+## 2   0.609437
+## 3   0.612948
+## 4   0.668307
+## 5   0.750463
+## 6   0.783129
+## 7   0.806988</code></pre>
 <p>The regsubsets() function (part of the leaps library) performs best subset selection by identifying the best model that contains a given number of predictors, where best is quantified using RSS. The syntax is the same as for lm(). The summary() command outputs the best set of variables for each model size.</p>
 <p>An asterisk ("*") indicates that a given variable is included in the corresponding model. For instance, this output indicates that the best two-variable model contains only Hits and CRBI. By default, regsubsets() only reports results up to the best eight-variable model. But the nvmax option can be used in order to return as many variables as are desired. Here we fit up to a 19-variable model:</p>
 <pre class="r"><code>lm_fit_00edit &lt;- lm(medv~., data = Boston); summary(lm_fit_00edit)</code></pre>
@@ -1011,10 +1766,16 @@ vif(lm_fit_01edit) %&gt;%
 ## 14    medv numeric    NA     NA      NA     NA</code></pre>
 <pre class="r"><code>summary_relationship_tbl %&gt;% 
   filter(str_detect(label, pattern = &quot;rad&quot;))</code></pre>
-<pre><code>##   var_names   Estimate     t_stats      corr      label cross_corr
-## 1      crim  0.1141846  7.54083164 -0.388305 crim + rad   0.625505
-## 2       nox -0.1175838 -0.06872359 -0.427321  nox + rad   0.611441
-## 3       rad -0.0146973 -0.49336560 -0.381626  rad + tax   0.910228</code></pre>
+<pre><code>##   var_names     Estimate   t_stats      p_value      corr         label
+## 1    lindus   0.02055863  0.334310 7.382881e-01 -0.553887 lindus + lrad
+## 2      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + lrad
+## 3      lrad   0.30604948  4.612900 5.070529e-06 -0.434513   lrad + ltax
+## 4     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242  lcrim + lrad
+##   cross_corr
+## 1   0.580533
+## 2   0.612948
+## 3   0.820487
+## 4   0.838943</code></pre>
 <pre class="r"><code>regsubfit &lt;- regsubsets(medv~.-tax,
                         data= Boston, 
                         intercept = T,
@@ -1115,7 +1876,7 @@ summary(regsubfit)[1:10]</code></pre>
 <pre class="r"><code>par(mfrow = c(2,2))
 plot(reg_summary$rss, xlab = &quot;Number of Variables&quot;, ylab = &quot;RSS&quot;, type = &quot;l&quot;)
 plot(reg_summary$adjr2, xlab = &quot;Number of Variables&quot;, ylab = &quot;Adjusted RSq&quot;, type = &quot;l&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <pre class="r"><code>outlier_treatment &lt;- function(x, na.rm = T) {
   x[x &gt; quantile(x,.95,na.rm = na.rm)]&lt;- quantile(x, .95,na.rm = na.rm)
   x[x &lt; quantile(x,.05,na.rm = na.rm)]&lt;- quantile(x, .05,na.rm = na.rm)
@@ -1141,18 +1902,18 @@ plot(reg_summary$adjr2, xlab = &quot;Number of Variables&quot;, ylab = &quot;Adj
 ## Multiple R-squared:  0.5303, Adjusted R-squared:  0.5284 
 ## F-statistic: 283.9 on 2 and 503 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>plot(lm_fit_dir)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-4.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-4.png" width="672" /></p>
 <pre class="r"><code>boxplot(Boston$medv)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-5.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-5.png" width="672" /></p>
 <pre class="r"><code>boxplot(Boston$rm)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-6.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-6.png" width="672" /></p>
 <pre class="r"><code>boxplot(Boston$age)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-7.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-7.png" width="672" /></p>
 <pre class="r"><code>Boston %&gt;% 
   mutate(rm_outlierT = rm %&gt;% outlier_treatment()) %&gt;% 
   ggplot(aes(medv, rm)) +
   geom_point()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-8.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-8.png" width="672" /></p>
 <pre class="r"><code>Boston_medv_max &lt;- Boston %&gt;% filter(medv &gt;= 50)
 bind_rows(sapply(Boston_medv_max, mean), sapply(Boston, mean))</code></pre>
 <pre><code>## # A tibble: 2 × 14
@@ -1162,4 +1923,5 @@ bind_rows(sapply(Boston_medv_max, mean), sapply(Boston, mean))</code></pre>
 ## 2  3.61  11.4  11.1 0.0692 0.555  6.28  68.6  3.80  9.55  408.    18.5  357.
 ## # … with 2 more variables: lstat &lt;dbl&gt;, medv &lt;dbl&gt;</code></pre>
 <pre class="r"><code># lstat, chas</code></pre>
+</div>
 </div>
