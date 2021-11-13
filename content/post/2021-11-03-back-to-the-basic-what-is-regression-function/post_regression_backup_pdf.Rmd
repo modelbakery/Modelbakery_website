@@ -1,28 +1,15 @@
 ---
-title: 'The Practical Approach of Multiple Linear Regression Model'
-author: Package Build
-date: '2021-11-03'
-slug: back-to-the-basic-what-is-regression-function
-categories:
-  - R
-tags:
-  - Academic
-  - Regression
-  - Model Interpretation
-  - R
-subtitle: 'A general class of regression models and how to interpret these models'
-summary: ''
-authors: []
-lastmod: '2021-11-03T13:30:59+09:00'
-featured: no 
-image:
-  caption: ''
-  focal_point: ''
-  preview_only: no
-projects: []
-draft: TRUE
+title: "post_regression_backup"
+author: "Seung Hyun Sung"
+date: "11/13/2021"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what's called "root cause" is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and not be betrayed by algorithms.
 
 In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity. 
@@ -427,26 +414,11 @@ From the summary statistics computed with glance function, it is clear that asym
 * Less number of statistically significant variables depicted (t_value > 2) on the model. Optimal parameters   
 
 
-## Summary table for variable coefficient & correlation 
-```{r}
-var_names <- colnames(Boston_transform %>% dplyr::select(lmedv, everything()))
-
-summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %>% 
-  as_tibble() %>% 
-  cbind(var_names) %>% 
-  dplyr::select(var_names, everything()) %>% 
-  left_join(corr_tbl, by = c("var_names" = "variables")) %>% 
-  left_join(corr_cross_tbl, by = c("var_names" = "key")) %>% 
-  setNames(c("var_names", "Estimate", "t_stats", "p_value", "corr", "label", "cross_corr")) %>% 
-  arrange(cross_corr)
-
-summary_relationship_tbl %>% kbl() %>% kable_material()
-```
-
 ## Outlier Detection: On Fluential Observation by Cooks Distance 
 
 ```{r}
 # plot cook's distance
+
 cooksd_outlier_detect <- function(lm_fit){
   cooksd <- cooks.distance(lm_fit)
   influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])
@@ -463,8 +435,9 @@ cooksd_outlier_plot <- function(lm_fit){
 
 ```
 
-```{r}
-# Vectorise outliers NA converter 
+
+```{r, echo=FALSE}
+
 detect_outliers_to_na <- function(x) {
   if (missing(x)) stop("The argument x needs a vector.")
   if (!is.numeric(x)) stop("The argument x must be numeric")
@@ -484,9 +457,8 @@ detect_outliers_to_na <- function(x) {
            )
   return(output_tbl$outlier)
 }
-```
 
-```{r, echo=FALSE}
+  
 detect_outliers_logic <- function(x) {
   if (missing(x)) stop("The argument x needs a vector.")
   if (!is.numeric(x)) stop("The argument x must be numeric")
@@ -528,8 +500,8 @@ Boston_outlier_1tbl <- Boston_row_tbl %>%
   mutate(row_id = row_number(),
          cooksd_flag = case_when(row_id %in% cooksd_outlier_detect(lm_fit_01edit) ~ 1,
                                 TRUE ~ 0)) %>% 
-  filter(cooksd_flag == 1) %>%  
-  mutate_at(vars(lcrim:srlstat), ~ detect_outliers_to_na(.)) %>% 
+  filter(cooksd_flag == 1) %>% 
+  mutate_at(vars(lcrim:srlstat), ~detect_outliers_to_na(.)) %>% 
   mutate_at(vars(lcrim:srlstat), function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))) %>% 
   bind_rows(Boston_row_tbl[-cooksd_outlier_detect(lm_fit_01edit),]) %>% 
   arrange(row_id) %>% 
@@ -550,23 +522,154 @@ lm_fit_03edit <- lm(lmedv~.-row_id, data = Boston_outlier_2tbl); summary(lm_fit_
 cooksd_outlier_plot(lm_fit_03edit)
 plot(lm_fit_03edit)
 
-Boston_prepared <- Boston_outlier_2tbl %>% select(-row_id)
 ```
+
+
+
+
+```{r}
+
+
+log(Boston$indus +1)
+
+
+Boston_outlier_tbl <- Boston_transform %>% 
+  mutate_all(funs(x = detect_outliers(.))) %>% 
+  mutate_if(is.logical, as.numeric) %>% 
+  mutate(outlier_flag = rowSums(.[grep("_x", names(.))], na.rm = TRUE)) %>% 
+  mutate(row_id = row_number(),
+         cooksd_flag = case_when(row_id %in% influential ~ 1,
+                                 TRUE ~0)) %>% 
+    mutate_all(funs(x = impute_rf(. ~ .))) 
+
+
+Boston_outlier_tbl %>% 
+  filter(cooksd_flag == 1) %>% 
+  mutate_at(vars(lcrim_x:srlstat_x), ~replace(., . == 1, NA)) %>% 
+  mutate_all(funs(x = impute_rf(. ~ .))) 
+  
+  
+  
+
+Boston_outlier_tbl %>% 
+  filter(cooksd_flag == 1) %>% 
+  select(matches(c("id", "_x"))) %>% 
+  summarise_all(sum)
+
+
+Boston_outlier_tbl %>% 
+  select(outlier_flag:outlier_treat_w_IQR) %>% 
+  group_by(outlier_flag) %>% 
+  
+  summarise_all(funs(x = sum(.))) 
+Boston_outlier_tbl %>% 
+  filter(outlier_flag == 2) %>% 
+  pull(row_id) 
+
+
+  mutate_at(vars(lcrim:srlstat), ~outlier_treatment(.)) 
+```
+
+
+```{r}
+
+lm_fit_dir <- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)
+plot(lm_fit_dir)
+boxplot(Boston$medv)
+boxplot(Boston$rm)
+boxplot(Boston$age)
+
+Boston %>% 
+  mutate(rm_outlierT = rm %>% outlier_treatment()) %>% 
+  ggplot(aes(medv, rm)) +
+  geom_point()
+outlier_tbl <- Boston_transform[influential, ]
+colnames(outlier_tbl)
+  ggplot(aes())
+
+```
+
+
+## Outlier Missing Value Treatment 
+
+```{r}
+
+out <- c()
+for(i in 1:length(var_names)){
+  univar <- Boston_transform[,i]
+  outlier_values<- boxplot.stats(univar)$out
+  outier <- which(univar %in% outlier_values)
+  outier <- c(outier, out_rm) 
+  out <- outier[-which(duplicated(outier))]
+}
+out
+
+outlier_values <- boxplot.stats(Boston_transform$lcrim)$out 
+which(Boston_transform$lcrim %in% outlier_values)
+which(Boston_transform$lcrim %in% outlier_values)
+
+```
+
+
+
+```{r}
+boxplot.stats(Boston_transform$lcrim)[4]
+outlier_values <- boxplot.stats(Boston_transform$lcrim)$out  # outlier values.
+boxplot(Boston_transform$lcrim, main="lcrim", boxwex=0.1) +
+mtext(paste("Outliers: ", paste(outlier_values, collapse=", ")), cex=0.6)
+
+boxplot(lmedv ~ lcrim, data=Boston_transform, main="Boxplot for Pressure height (continuos var) vs Ozone")
+
+which(Boston_transform$lcrim %in% outlier_values)
+
+```
+
+
+
 
 ## Data Partitioning: train:test (7:3)
 
 ```{r}
 set.seed(42)
-tidy_split <- initial_split(Boston_prepared, prop = .7,
+tidy_split <- initial_split(Boston_transform, prop = .7,
                             strata = lmedv)
 Boston_tr <- training(tidy_split)
 Boston_te <- testing(tidy_split)
+
 ```
 
 
-## Variable Selection: Best Subsets Selection & Optimal Dimension
+## Summary table for variable coefficient & correlation 
+```{r}
+var_names <- colnames(Boston_transform %>% dplyr::select(lmedv, everything()))
+
+summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %>% 
+  as_tibble() %>% 
+  cbind(var_names) %>% 
+  dplyr::select(var_names, everything()) %>% 
+  left_join(corr_tbl, by = c("var_names" = "variables")) %>% 
+  left_join(corr_cross_tbl, by = c("var_names" = "key")) %>% 
+  setNames(c("var_names", "Estimate", "t_stats", "p_value", "corr", "label", "cross_corr")) %>% 
+  arrange(cross_corr)
+
+summary_relationship_tbl %>% kbl() %>% kable_material()
+```
+
+
+## Variable Selection: Best Subsets Selection 
 
 ```{r}
+lm_model <- linear_reg() %>% 
+            set_engine('lm') %>% 
+            set_mode('regression')
+
+lmfit_00tr <- lm_model %>% 
+  fit(lmedv ~., data = Boston_tr)
+
+plot(lmfit_00tr$fit, 
+     pch = 16,    # optional parameters to make points blue
+     col = '#006EA1')
+
 regsubfit_full <- regsubsets(lmedv~.,
                         data= Boston_tr, 
                         intercept = T,
@@ -583,25 +686,18 @@ opt_bic <- which.min(regfit_summary$bic)
 plot(regfit_summary$adjr2, xlab="No. of Predictor Variables", ylab="adj.RSquare", type="l") +points(opt_adjr2, regfit_summary$adjr2[opt_adjr2], col = "red", cex=2, pch=20)
 
 plot(regfit_summary$bic, xlab="No. of Predictor Variables", ylab="BIC", type="l") +
-  points(opt_bic, regfit_summary$bic[opt_bic], col = "red", cex=2, pch=20)
+  points(min_bic, regfit_summary$bic[min_bic], col = "red", cex=2, pch=20)
 
 plot(regfit_summary$rss, xlab="No. of Predictor Variables", ylab="RSS", type="l") 
 ```
 
 
+
 ```{r}
-lm_model <- linear_reg() %>% 
-            set_engine('lm') %>% 
-            set_mode('regression')
-
-lmfit_00tr <- lm_model %>% 
-  fit(lmedv ~., data = Boston_tr)
-
-plot(lmfit_00tr$fit, 
-     pch = 16,
-     col = '#006EA1')
-
+plot(regsubfit_full, scale = "r2")
+plot(regsubfit_full, scale = "bic")
 ```
+
 
 ```{r}
 # Multicollinearity suspect: Promising variables (Severe)
@@ -743,4 +839,3 @@ generator_univar_importance_tbl <- function(dataframe, response) {
 ```{r}
 generator_univar_importance_tbl(Boston_tr, "lmedv")
 ```
-

@@ -86,6 +86,9 @@ library(lares)
 library(leaps)
 library(broom)
 
+library(caret)
+library(tidymodels)
+
 library(hrbrthemes)
 library(GGally)
 library(viridis)
@@ -959,7 +962,7 @@ Boston_medv_median %&gt;%
 <h2>Feature Transformation &amp; Asymmetry reduction</h2>
 <pre class="r"><code># feature transformation/scaling 
 Boston_transform &lt;- Boston %&gt;% 
-  summarise(lcrim    = log(crim),
+  summarise(lcrim    = log(crim + 1),
             zn       = zn/10,
             lindus   = log(indus),
             chas     = chas,
@@ -1062,37 +1065,31 @@ lm_fit_01edit &lt;- lm(lmedv~., data = Boston_transform); summary(lm_fit_01edit)
 ## lm(formula = lmedv ~ ., data = Boston_transform)
 ## 
 ## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -0.9918 -0.1002 -0.0034  0.1117  0.7640 
+##      Min       1Q   Median       3Q      Max 
+## -0.76220 -0.11102 -0.00600  0.09499  0.77740 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  4.176874   0.379017  11.020  &lt; 2e-16 ***
-## lcrim       -0.014606   0.011650  -1.254 0.210527    
-## zn           0.001392   0.005639   0.247 0.805121    
-## lindus      -0.012709   0.022312  -0.570 0.569195    
-## chas         0.109980   0.036634   3.002 0.002817 ** 
-## lnox        -0.283112   0.105340  -2.688 0.007441 ** 
-## lrm          0.421108   0.110175   3.822 0.000149 ***
-## sqage        0.006403   0.004863   1.317 0.188536    
-## ldis        -0.183154   0.036804  -4.977 8.97e-07 ***
-## lrad         0.068362   0.022473   3.042 0.002476 ** 
-## ltax        -0.201832   0.048432  -4.167 3.64e-05 ***
-## eptratio    -0.040017   0.008091  -4.946 1.04e-06 ***
-## black        0.044472   0.011456   3.882 0.000118 ***
-## srlstat     -0.262615   0.016091 -16.320  &lt; 2e-16 ***
+## (Intercept)  3.964669   0.362512  10.937  &lt; 2e-16 ***
+## lcrim       -0.135032   0.020403  -6.618 9.53e-11 ***
+## zn           0.007416   0.005453   1.360 0.174453    
+## lindus      -0.027081   0.021415  -1.265 0.206614    
+## chas         0.102059   0.035181   2.901 0.003886 ** 
+## lnox        -0.263992   0.098659  -2.676 0.007704 ** 
+## lrm          0.398020   0.105803   3.762 0.000189 ***
+## sqage        0.006585   0.004605   1.430 0.153363    
+## ldis        -0.234407   0.036182  -6.479 2.25e-10 ***
+## lrad         0.124417   0.020891   5.956 4.94e-09 ***
+## ltax        -0.139092   0.047304  -2.940 0.003433 ** 
+## eptratio    -0.037756   0.007767  -4.861 1.57e-06 ***
+## black        0.029055   0.011127   2.611 0.009296 ** 
+## srlstat     -0.249327   0.015567 -16.016  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.2008 on 492 degrees of freedom
-## Multiple R-squared:  0.765,  Adjusted R-squared:  0.7588 
-## F-statistic: 123.2 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>summary_01edit &lt;- summary(lm_fit_01edit)</code></pre>
-<p>We can clearly notice here the positive influence of asymmetry reduction has on the overall accuracy of the linear model.</p>
-<ul>
-<li><p>Higher R-squared (+0.0244) &amp; adj.R-squared (+0.025)</p></li>
-<li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
-</ul>
+## Residual standard error: 0.1927 on 492 degrees of freedom
+## Multiple R-squared:  0.7835, Adjusted R-squared:  0.7778 
+## F-statistic:   137 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>glance(lm_fit_00edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
@@ -1221,16 +1218,16 @@ nobs
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.7650004
+0.7835214
 </td>
 <td style="text-align:right;">
-0.7587911
+0.7778015
 </td>
 <td style="text-align:right;">
-0.2007528
+0.1926796
 </td>
 <td style="text-align:right;">
-123.2016
+136.9802
 </td>
 <td style="text-align:right;">
 0
@@ -1239,16 +1236,16 @@ nobs
 13
 </td>
 <td style="text-align:right;">
-101.5902
+122.3595
 </td>
 <td style="text-align:right;">
--173.1805
+-214.7191
 </td>
 <td style="text-align:right;">
--109.7824
+-151.321
 </td>
 <td style="text-align:right;">
-19.82844
+18.2657
 </td>
 <td style="text-align:right;">
 492
@@ -1259,9 +1256,25 @@ nobs
 </tr>
 </tbody>
 </table>
+<p>From the summary statistics computed with glance function, it is clear that asymmetric reduced data having positive influence on the overall accuracy of the linear model and OLS approach.</p>
+<ul>
+<li><p>Higher R-squared &amp; adj.R-squared, and lower AIC &amp; BIC</p></li>
+<li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
+</ul>
+</div>
+</div>
+<div id="data-partitioning-traintest-73" class="section level2">
+<h2>Data Partitioning: train:test (7:3)</h2>
+<pre class="r"><code>set.seed(42)
+tidy_split &lt;- initial_split(Boston_transform, prop = .7,
+                            strata = lmedv)
+Boston_tr &lt;- training(tidy_split)
+Boston_te &lt;- testing(tidy_split)</code></pre>
+</div>
+<div id="summary-table-for-variable-coefficient-correlation" class="section level2">
+<h2>Summary table for variable coefficient &amp; correlation</h2>
 <pre class="r"><code>var_names &lt;- colnames(Boston_transform %&gt;% dplyr::select(lmedv, everything()))
 
-# Summary table for variable coefficient &amp; correlation 
 summary_relationship_tbl &lt;- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %&gt;% 
   as_tibble() %&gt;% 
   cbind(var_names) %&gt;% 
@@ -1269,659 +1282,810 @@ summary_relationship_tbl &lt;- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %&
   left_join(corr_tbl, by = c(&quot;var_names&quot; = &quot;variables&quot;)) %&gt;% 
   left_join(corr_cross_tbl, by = c(&quot;var_names&quot; = &quot;key&quot;)) %&gt;% 
   setNames(c(&quot;var_names&quot;, &quot;Estimate&quot;, &quot;t_stats&quot;, &quot;p_value&quot;, &quot;corr&quot;, &quot;label&quot;, &quot;cross_corr&quot;)) %&gt;% 
-  arrange(cross_corr)</code></pre>
-<pre class="r"><code># Multicollinearity suspect: Promising variables (Severe)
-summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;srlstat&quot;))</code></pre>
-<pre><code>##   var_names      Estimate     t_stats      p_value      corr            label
-## 1       lrm  3.809865e+00  9.11614020 1.979441e-18  0.610437    lrm + srlstat
-## 2      lnox -1.776661e+01 -4.65125741 4.245644e-06 -0.515251   lnox + srlstat
-## 3    lindus  2.055863e-02  0.33431004 7.382881e-01 -0.553887 lindus + srlstat
-## 4     lcrim -1.080114e-01 -3.28651687 1.086810e-03 -0.567242  lcrim + srlstat
-## 5     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096  sqage + srlstat
-##   cross_corr
-## 1  -0.639439
-## 2   0.609437
-## 3   0.621379
-## 4   0.622276
-## 5   0.637140</code></pre>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;lrm&quot;))</code></pre>
-<pre><code>##   var_names Estimate t_stats      p_value     corr         label cross_corr
-## 1       lrm 3.809865 9.11614 1.979441e-18 0.610437 lrm + srlstat  -0.639439</code></pre>
-<pre class="r"><code># No sign of significant collinearity :) 
-summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;ltax&quot;))</code></pre>
-<pre><code>##   var_names     Estimate   t_stats      p_value      corr         label
-## 1      ldis  -1.47556685 -7.398004 6.013491e-13  0.405721   ldis + ltax
-## 2    lindus   0.02055863  0.334310 7.382881e-01 -0.553887 lindus + ltax
-## 3      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + ltax
-## 4     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242  lcrim + ltax
-## 5      lrad   0.30604948  4.612900 5.070529e-06 -0.434513   lrad + ltax
-##   cross_corr
-## 1  -0.599621
-## 2   0.659285
-## 3   0.668307
-## 4   0.809977
-## 5   0.820487</code></pre>
-<p>Multicollinearity suspect: High entanglment in multiple dimension (variable removal candidate)</p>
-<p>indus variable is the most problematic</p>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;indus&quot;))</code></pre>
-<pre><code>##   var_names    Estimate   t_stats      p_value      corr            label
-## 1    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + ldis
-## 2        zn  0.04642046  3.381576 0.0007781097  0.363344      zn + lindus
-## 3    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + lrad
-## 4    lindus  0.02055863  0.334310 0.7382880714 -0.553887 lindus + srlstat
-## 5    lindus  0.02055863  0.334310 0.7382880714 -0.553887   lindus + sqage
-## 6    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + ltax
-## 7     lcrim -0.10801136 -3.286517 0.0010868101 -0.567242   lcrim + lindus
-## 8    lindus  0.02055863  0.334310 0.7382880714 -0.553887    lindus + lnox
-##   cross_corr
-## 1  -0.730297
-## 2  -0.655898
-## 3   0.580533
-## 4   0.621379
-## 5   0.658137
-## 6   0.659285
-## 7   0.739553
-## 8   0.750463</code></pre>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;age&quot;))</code></pre>
-<pre><code>##   var_names      Estimate     t_stats      p_value      corr           label
-## 1     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096    sqage + ldis
-## 2     sqage  6.922246e-04  0.05240243 9.582293e-01 -0.482096 sqage + srlstat
-## 3    lindus  2.055863e-02  0.33431004 7.382881e-01 -0.553887  lindus + sqage
-## 4     lcrim -1.080114e-01 -3.28651687 1.086810e-03 -0.567242   lcrim + sqage
-## 5      lnox -1.776661e+01 -4.65125741 4.245644e-06 -0.515251    lnox + sqage
-##   cross_corr
-## 1  -0.795991
-## 2   0.637140
-## 3   0.658137
-## 4   0.696771
-## 5   0.783129</code></pre>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;nox&quot;))</code></pre>
-<pre><code>##   var_names     Estimate   t_stats      p_value      corr          label
-## 1      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + ldis
-## 2      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251 lnox + srlstat
-## 3      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + lrad
-## 4      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251    lnox + ltax
-## 5    lindus   0.02055863  0.334310 7.382881e-01 -0.553887  lindus + lnox
-## 6      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + sqage
-## 7     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242   lcrim + lnox
-##   cross_corr
-## 1  -0.860018
-## 2   0.609437
-## 3   0.612948
-## 4   0.668307
-## 5   0.750463
-## 6   0.783129
-## 7   0.806988</code></pre>
-<p>The regsubsets() function (part of the leaps library) performs best subset selection by identifying the best model that contains a given number of predictors, where best is quantified using RSS. The syntax is the same as for lm(). The summary() command outputs the best set of variables for each model size.</p>
-<p>An asterisk ("*") indicates that a given variable is included in the corresponding model. For instance, this output indicates that the best two-variable model contains only Hits and CRBI. By default, regsubsets() only reports results up to the best eight-variable model. But the nvmax option can be used in order to return as many variables as are desired. Here we fit up to a 19-variable model:</p>
-<pre class="r"><code>lm_fit_00edit &lt;- lm(medv~., data = Boston); summary(lm_fit_00edit)</code></pre>
+  arrange(cross_corr)
+
+summary_relationship_tbl %&gt;% kbl() %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+var_names
+</th>
+<th style="text-align:right;">
+Estimate
+</th>
+<th style="text-align:right;">
+t_stats
+</th>
+<th style="text-align:right;">
+p_value
+</th>
+<th style="text-align:right;">
+corr
+</th>
+<th style="text-align:left;">
+label
+</th>
+<th style="text-align:right;">
+cross_corr
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.515251
+</td>
+<td style="text-align:left;">
+lnox + ldis
+</td>
+<td style="text-align:right;">
+-0.860018
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sqage
+</td>
+<td style="text-align:right;">
+0.0006922
+</td>
+<td style="text-align:right;">
+0.0524024
+</td>
+<td style="text-align:right;">
+0.9582293
+</td>
+<td style="text-align:right;">
+-0.482096
+</td>
+<td style="text-align:left;">
+sqage + ldis
+</td>
+<td style="text-align:right;">
+-0.795991
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + ldis
+</td>
+<td style="text-align:right;">
+-0.730297
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + ldis
+</td>
+<td style="text-align:right;">
+-0.676479
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+zn
+</td>
+<td style="text-align:right;">
+0.0464205
+</td>
+<td style="text-align:right;">
+3.3815763
+</td>
+<td style="text-align:right;">
+0.0007781
+</td>
+<td style="text-align:right;">
+0.363344
+</td>
+<td style="text-align:left;">
+zn + lindus
+</td>
+<td style="text-align:right;">
+-0.655898
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lrm
+</td>
+<td style="text-align:right;">
+3.8098652
+</td>
+<td style="text-align:right;">
+9.1161402
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+0.610437
+</td>
+<td style="text-align:left;">
+lrm + srlstat
+</td>
+<td style="text-align:right;">
+-0.639439
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ldis
+</td>
+<td style="text-align:right;">
+-1.4755668
+</td>
+<td style="text-align:right;">
+-7.3980036
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+0.405721
+</td>
+<td style="text-align:left;">
+ldis + ltax
+</td>
+<td style="text-align:right;">
+-0.599621
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + lrad
+</td>
+<td style="text-align:right;">
+0.580533
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+zn
+</td>
+<td style="text-align:right;">
+0.0464205
+</td>
+<td style="text-align:right;">
+3.3815763
+</td>
+<td style="text-align:right;">
+0.0007781
+</td>
+<td style="text-align:right;">
+0.363344
+</td>
+<td style="text-align:left;">
+zn + ldis
+</td>
+<td style="text-align:right;">
+0.590655
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + srlstat
+</td>
+<td style="text-align:right;">
+0.591480
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + sqage
+</td>
+<td style="text-align:right;">
+0.604537
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.515251
+</td>
+<td style="text-align:left;">
+lnox + srlstat
+</td>
+<td style="text-align:right;">
+0.609437
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.515251
+</td>
+<td style="text-align:left;">
+lnox + lrad
+</td>
+<td style="text-align:right;">
+0.612948
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + srlstat
+</td>
+<td style="text-align:right;">
+0.621379
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + lindus
+</td>
+<td style="text-align:right;">
+0.626457
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sqage
+</td>
+<td style="text-align:right;">
+0.0006922
+</td>
+<td style="text-align:right;">
+0.0524024
+</td>
+<td style="text-align:right;">
+0.9582293
+</td>
+<td style="text-align:right;">
+-0.482096
+</td>
+<td style="text-align:left;">
+sqage + srlstat
+</td>
+<td style="text-align:right;">
+0.637140
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + sqage
+</td>
+<td style="text-align:right;">
+0.658137
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + ltax
+</td>
+<td style="text-align:right;">
+0.659285
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.515251
+</td>
+<td style="text-align:left;">
+lnox + ltax
+</td>
+<td style="text-align:right;">
+0.668307
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + lnox
+</td>
+<td style="text-align:right;">
+0.716788
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+0.0205586
+</td>
+<td style="text-align:right;">
+0.3343100
+</td>
+<td style="text-align:right;">
+0.7382881
+</td>
+<td style="text-align:right;">
+-0.553887
+</td>
+<td style="text-align:left;">
+lindus + lnox
+</td>
+<td style="text-align:right;">
+0.750463
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.515251
+</td>
+<td style="text-align:left;">
+lnox + sqage
+</td>
+<td style="text-align:right;">
+0.783129
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lrad
+</td>
+<td style="text-align:right;">
+0.3060495
+</td>
+<td style="text-align:right;">
+4.6128998
+</td>
+<td style="text-align:right;">
+0.0000051
+</td>
+<td style="text-align:right;">
+-0.434513
+</td>
+<td style="text-align:left;">
+lrad + ltax
+</td>
+<td style="text-align:right;">
+0.820487
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + ltax
+</td>
+<td style="text-align:right;">
+0.824690
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.1080114
+</td>
+<td style="text-align:right;">
+-3.2865169
+</td>
+<td style="text-align:right;">
+0.0010868
+</td>
+<td style="text-align:right;">
+-0.599781
+</td>
+<td style="text-align:left;">
+lcrim + lrad
+</td>
+<td style="text-align:right;">
+0.838352
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lmedv
+</td>
+<td style="text-align:right;">
+36.4594884
+</td>
+<td style="text-align:right;">
+7.1440742
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chas
+</td>
+<td style="text-align:right;">
+2.6867338
+</td>
+<td style="text-align:right;">
+3.1183809
+</td>
+<td style="text-align:right;">
+0.0019250
+</td>
+<td style="text-align:right;">
+0.158412
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ltax
+</td>
+<td style="text-align:right;">
+-0.0123346
+</td>
+<td style="text-align:right;">
+-3.2800091
+</td>
+<td style="text-align:right;">
+0.0011116
+</td>
+<td style="text-align:right;">
+-0.557184
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+eptratio
+</td>
+<td style="text-align:right;">
+-0.9527472
+</td>
+<td style="text-align:right;">
+-7.2825106
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+-0.508224
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0.0093117
+</td>
+<td style="text-align:right;">
+3.4667926
+</td>
+<td style="text-align:right;">
+0.0005729
+</td>
+<td style="text-align:right;">
+0.402382
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+srlstat
+</td>
+<td style="text-align:right;">
+-0.5247584
+</td>
+<td style="text-align:right;">
+-10.3471458
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+<td style="text-align:right;">
+-0.825024
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="variable-selection-best-subsets-selection" class="section level2">
+<h2>Variable Selection: Best Subsets Selection</h2>
+<pre class="r"><code>lmfit_00tr &lt;- lm(lmedv~., Boston_tr); summary(lmfit_00tr)</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = medv ~ ., data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -15.595  -2.730  -0.518   1.777  26.199 
-## 
-## Coefficients:
-##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  3.646e+01  5.103e+00   7.144 3.28e-12 ***
-## crim        -1.080e-01  3.286e-02  -3.287 0.001087 ** 
-## zn           4.642e-02  1.373e-02   3.382 0.000778 ***
-## indus        2.056e-02  6.150e-02   0.334 0.738288    
-## chas         2.687e+00  8.616e-01   3.118 0.001925 ** 
-## nox         -1.777e+01  3.820e+00  -4.651 4.25e-06 ***
-## rm           3.810e+00  4.179e-01   9.116  &lt; 2e-16 ***
-## age          6.922e-04  1.321e-02   0.052 0.958229    
-## dis         -1.476e+00  1.995e-01  -7.398 6.01e-13 ***
-## rad          3.060e-01  6.635e-02   4.613 5.07e-06 ***
-## tax         -1.233e-02  3.760e-03  -3.280 0.001112 ** 
-## ptratio     -9.527e-01  1.308e-01  -7.283 1.31e-12 ***
-## black        9.312e-03  2.686e-03   3.467 0.000573 ***
-## lstat       -5.248e-01  5.072e-02 -10.347  &lt; 2e-16 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 4.745 on 492 degrees of freedom
-## Multiple R-squared:  0.7406, Adjusted R-squared:  0.7338 
-## F-statistic: 108.1 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>summary(lm_fit_00edit)[1:10]</code></pre>
-<pre><code>## $call
-## lm(formula = medv ~ ., data = Boston)
-## 
-## $terms
-## medv ~ crim + zn + indus + chas + nox + rm + age + dis + rad + 
-##     tax + ptratio + black + lstat
-## attr(,&quot;variables&quot;)
-## list(medv, crim, zn, indus, chas, nox, rm, age, dis, rad, tax, 
-##     ptratio, black, lstat)
-## attr(,&quot;factors&quot;)
-##         crim zn indus chas nox rm age dis rad tax ptratio black lstat
-## medv       0  0     0    0   0  0   0   0   0   0       0     0     0
-## crim       1  0     0    0   0  0   0   0   0   0       0     0     0
-## zn         0  1     0    0   0  0   0   0   0   0       0     0     0
-## indus      0  0     1    0   0  0   0   0   0   0       0     0     0
-## chas       0  0     0    1   0  0   0   0   0   0       0     0     0
-## nox        0  0     0    0   1  0   0   0   0   0       0     0     0
-## rm         0  0     0    0   0  1   0   0   0   0       0     0     0
-## age        0  0     0    0   0  0   1   0   0   0       0     0     0
-## dis        0  0     0    0   0  0   0   1   0   0       0     0     0
-## rad        0  0     0    0   0  0   0   0   1   0       0     0     0
-## tax        0  0     0    0   0  0   0   0   0   1       0     0     0
-## ptratio    0  0     0    0   0  0   0   0   0   0       1     0     0
-## black      0  0     0    0   0  0   0   0   0   0       0     1     0
-## lstat      0  0     0    0   0  0   0   0   0   0       0     0     1
-## attr(,&quot;term.labels&quot;)
-##  [1] &quot;crim&quot;    &quot;zn&quot;      &quot;indus&quot;   &quot;chas&quot;    &quot;nox&quot;     &quot;rm&quot;      &quot;age&quot;    
-##  [8] &quot;dis&quot;     &quot;rad&quot;     &quot;tax&quot;     &quot;ptratio&quot; &quot;black&quot;   &quot;lstat&quot;  
-## attr(,&quot;order&quot;)
-##  [1] 1 1 1 1 1 1 1 1 1 1 1 1 1
-## attr(,&quot;intercept&quot;)
-## [1] 1
-## attr(,&quot;response&quot;)
-## [1] 1
-## attr(,&quot;.Environment&quot;)
-## &lt;environment: R_GlobalEnv&gt;
-## attr(,&quot;predvars&quot;)
-## list(medv, crim, zn, indus, chas, nox, rm, age, dis, rad, tax, 
-##     ptratio, black, lstat)
-## attr(,&quot;dataClasses&quot;)
-##      medv      crim        zn     indus      chas       nox        rm       age 
-## &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; 
-##       dis       rad       tax   ptratio     black     lstat 
-## &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; &quot;numeric&quot; 
-## 
-## $residuals
-##             1             2             3             4             5 
-##  -6.003843377  -3.425562379   4.132403281   4.792963511   8.256475767 
-##             6             7             8             9            10 
-##   3.443715538  -0.101808268   7.564011571   4.976363147  -0.020262107 
-##            11            12            13            14            15 
-##  -3.999496511  -2.686795681   0.793478472   0.847097189  -1.083482050 
-##            16            17            18            19            20 
-##   0.602516792   2.572490209   0.588598653   4.021988943  -0.206136033 
-##            21            22            23            24            25 
-##   1.076142473   1.928963305  -0.632881292   0.693714654  -0.078338315 
-##            26            27            28            29            30 
-##   0.513314391   1.136023454   0.091525719  -1.147372851   0.123571798 
-##            31            32            33            34            35 
-##   1.244882410  -3.559232946   4.388942638  -1.182758141  -0.206758913 
-##            36            37            38            39            40 
-##  -4.914635265  -2.341937076  -2.108911425   1.784973884  -0.557625688 
-##            41            42            43            44            45 
-##   0.684897746  -1.420564139   0.096133720   0.090207275  -1.741491757 
-##            46            47            48            49            50 
-##  -2.796698175  -0.423200323  -1.436550884   5.293446228   2.193922486 
-##            51            52            53            54            55 
-##  -1.581525353  -3.472222849  -2.655850802  -0.649018091   3.538152299 
-##            56            57            58            59            60 
-##   4.247350534  -0.156869782  -1.509198062   1.524620129  -1.484935551 
-##            61            62            63            64            65 
-##   0.827419603  -2.511102080  -1.787428565   2.445911311   9.626913558 
-##            66            67            68            69            70 
-##  -6.861483581  -6.130565115   0.886614358  -0.021537857   0.115163673 
-##            71            72            73            74            75 
-##  -1.001488594  -0.042657705  -1.757449572  -0.642957120  -1.404997164 
-##            76            77            78            79            80 
-##  -2.566930200  -2.945454031  -2.556998184  -0.061982662  -2.128173732 
-##            81            82            83            84            85 
-##  -0.405769682  -3.094860862  -1.235762968  -2.158734819  -0.884566738 
-##            86            87            88            89            90 
-##  -1.190491951   0.331465769  -3.692764153  -7.074618272  -2.131106227 
-##            91            92            93            94            95 
-##  -4.519019396  -5.412667341  -6.041227624  -4.081055463  -6.439773649 
-##            96            97            98            99           100 
-##  -0.224599485  -3.327449776   2.918404819   8.685454127   0.948971987 
-##           101           102           103           104           105 
-##   2.919779811   0.905865254  -1.190136835  -1.011671288  -1.334825911 
-##           106           107           108           109           110 
-##   0.960059918   2.312440082  -0.350490259  -2.848291146  -0.372036695 
-##           111           112           113           114           115 
-##   1.050341357  -3.725867438  -1.973236377  -2.015483150  -6.672088813 
-##           116           117           118           119           120 
-##  -2.130255909  -2.177246257  -4.490432606   0.064216357  -1.491808732 
-##           121           122           123           124           125 
-##   0.083679289  -2.171077767  -0.057385558   0.933380226  -1.760998192 
-##           126           127           128           129           130 
-##  -1.081784462   1.082933672   1.021233160  -0.938685924   0.244267149 
-##           131           132           133           134           135 
-##  -0.835273989   0.189865979   2.938084338   2.641923269   2.343547618 
-##           136           137           138           139           140 
-##   0.837222650   1.521581166  -2.261639540  -0.514838967   1.351185252 
-##           141           142           143           144           145 
-##   0.428580681  10.411144917  -1.194954780   3.451185197   3.071776377 
-##           146           147           148           149           150 
-##   1.764146573  -0.220820580   6.085009797   8.081558607   0.595486263 
-##           151           152           153           154           155 
-##   0.661418471   1.298988306  -4.822825579   2.113981064  -5.366002281 
-##           156           157           158           159           160 
-##  -4.503759227  -0.521258907   8.040173031  -4.730172680  -2.267527694 
-##           161           162           163           164           165 
-##  -5.708276658  13.225329854   9.442341555   8.152718323  -2.088673791 
-##           166           167           168           169           170 
-##  -0.378892378  12.796525454   0.712512527  -2.602739553  -4.353821137 
-##           171           172           173           174           175 
-##  -5.155146605  -5.190828118   0.123427810  -5.471943077  -3.921943396 
-##           176           177           178           179           180 
-##  -1.322090555  -2.416693069  -4.537409794  -1.535719677   4.277684320 
-##           181           182           183           184           185 
-##   5.075595356   8.434478893   4.012126787   1.507619640   3.681799919 
-##           186           187           188           189           190 
-##   4.833521901  14.115027738  -1.424767220  -2.611991466   0.384900507 
-##           191           192           193           194           195 
-##   6.238905148   0.210658593   3.480812857  -1.012607714  -2.458710043 
-##           196           197           198           199           200 
-##   9.154442786  -2.827700792  -2.369208100  -0.104691164   4.806548382 
-##           201           202           203           204           205 
-##   2.256060935  -5.187195014   5.228516080   6.468068762   6.810501563 
-##           206           207           208           209           210 
-##  -0.090347964   0.717152885   4.645527863   0.905710080   2.994122821 
-##           211           212           213           214           215 
-##  -0.692510964   2.239572462  -0.338929215   2.880574461  12.580832628 
-##           216           217           218           219           220 
-##   0.489508521  -3.303347748   0.344812873  -3.415254636  -6.686527678 
-##           221           222           223           224           225 
-##  -6.484197456  -2.074566560  -4.640519579   0.354180104   6.428975473 
-##           226           227           228           229           230 
-##  10.185381330   0.013942450  -0.799532503  11.243347580   0.265884883 
-##           231           232           233           234           235 
-##  -0.184492269  -1.588372916   3.651895196  11.136713685  -2.713835225 
-##           236           237           238           239           240 
-##  -1.267055713  -5.000107449  -1.219871558  -4.727170566  -5.129406781 
-##           241           242           243           244           245 
-##  -5.293759384  -3.642624783  -1.920078909  -3.702084138   1.271424399 
-##           246           247           248           249           250 
-##   5.101087387   4.283612248   0.638155722   3.211686902   2.120108504 
-##           251           252           253           254           255 
-##   0.193664530  -0.242158213   4.680359930  12.854366255  -2.072283165 
-##           256           257           258           259           260 
-##  -0.795808866   6.488907610   6.697609573  -0.483614206  -4.889885936 
-##           261           262           263           264           265 
-##  -1.012115081   5.933686692   7.810714991  -3.446340893   0.666024531 
-##           266           267           268           269           270 
-##  -5.445742999  -0.526735926   9.160442504   4.182076069  -5.008179052 
-##           271           272           273           274           275 
-##  -1.202955330  -2.003409719  -4.111694720  -0.276765982  -3.706391643 
-##           276           277           278           279           280 
-##  -1.796682735  -2.410858579  -1.739933819  -1.251926558  -0.209807009 
-##           281           282           283           284           285 
-##   6.602430340   1.068768140   5.660369252   5.326916613   0.603109145 
-##           286           287           288           289           290 
-##  -5.356592298  -0.001741541  -3.842066736  -4.913645804  -2.113958394 
-##           291           292           293           294           295 
-##  -4.935633106   2.896503670  -3.933398201  -1.917832369  -2.729823483 
-##           296           297           298           299           300 
-##   0.142356632  -0.262669985   0.760712419  -6.613098441  -2.910546108 
-##           301           302           303           304           305 
-##  -5.971594485  -6.942758713  -2.481910224   0.301127681   2.890945441 
-##           306           307           308           309           310 
-##  -2.368317923  -2.162268570  -4.509051237  -5.842442366  -3.289658271 
-##           311           312           313           314           315 
-##  -2.442668968  -4.778898429  -3.881339788  -3.945802461  -1.681200571 
-##           316           317           318           319           320 
-##  -4.339099011   0.184274272   1.424183136  -1.190702769  -0.325290392 
-##           321           322           323           324           325 
-##  -1.086822441  -1.769372815  -2.469524474  -0.951237906  -0.117834011 
-##           326           327           328           329           330 
-##  -0.067869132  -0.680761771   2.859103837  -1.874181054  -1.652490735 
-##           331           332           333           334           335 
-##  -1.792608939  -2.884466054  -3.938879998   0.059393075  -0.855099290 
-##           336           337           338           339           340 
-##   0.481270932  -0.660971763  -0.784903873  -1.566723204  -2.249657744 
-##           341           342           343           344           345 
-##  -2.729393054   2.372112040  -5.547349751  -3.806479125   2.652058832 
-##           346           347           348           349           350 
-##   0.954988786   2.416403590  -2.173800817  -3.042051174   4.451624376 
-##           351           352           353           354           355 
-##   2.440559053   3.553945773   1.719361734   4.697464942   3.875133681 
-##           356           357           358           359           360 
-##   4.005115383  -1.837046913  -1.018066075   0.497811132   3.394519426 
-##           361           362           363           364           365 
-##   2.333838949   0.968073818   2.571531957  -3.431508114 -15.594473900 
-##           366           367           368           369           370 
-##  13.218092659   6.357137517  12.268376759  26.199270978  17.355926399 
-##           371           372           373           374           375 
-##  15.393159576  25.056686675  24.000190899   7.673675004  13.022201940 
-##           376           377           378           379           380 
-## -10.307130642  -3.840610645  -6.932744140  -2.733313008  -6.635125872 
-##           381           382           383           384           385 
-##  -3.969948255  -7.576828331  -2.127682805  -0.761775118   5.520818839 
-##           386           387           388           389           390 
-##  -0.860221708   4.371578036   1.781351900   3.748014302  -2.707647352 
-##           391           392           393           394           395 
-##  -2.112251831   5.901127348  -0.191166432  -6.421241935  -5.241811753 
-##           396           397           398           399           400 
-##  -7.204457827  -6.795590755  -7.836327793  -1.551623191  -4.590167781 
-##           401           402           403           404           405 
-##  -6.281458707 -10.611745068  -6.161265872  -4.679487807   1.121836393 
-##           406           407           408           409           410 
-##  -3.211158614   3.833738070   7.917052140   3.492436308   7.647315455 
-##           411           412           413           414           415 
-##  -0.223082977   0.239280190  16.181481932   4.494216128  11.281310709 
-##           416           417           418           419           420 
-##  -2.383767369  -5.866608110   3.504376374   2.652201480  -6.206617942 
-##           421           422           423           424           425 
-##  -2.900026702  -3.924274759   2.278228678   0.224713895  -2.926176242 
-##           426           427           428           429           430 
-##  -1.623749760  -6.145906467  -3.175194255  -3.257562426  -3.542347875 
-##           431           432           433           434           435 
-##  -3.659556934  -4.595543541  -5.427283002  -2.731418609  -4.260904353 
-##           436           437           438           439           440 
-##   0.038583893  -4.920793839  -0.119760054   3.532488977  -0.265913130 
-##           441           442           443           444           445 
-##  -2.206096993  -0.195580592  -0.340485002  -2.659010295  -0.714746834 
-##           446           447           448           449           450 
-##  -0.174003587  -2.783446185  -5.526952390  -3.418346504  -4.227425073 
-##           451           452           453           454           455 
-##  -3.122716313  -4.212910951  -2.482152362  -4.689447908  -0.380001330 
-##           456           457           458           459           460 
-##  -1.720893352   0.012744187   0.623662098  -2.286685309   1.487523907 
-##           461           462           463           464           465 
-##  -2.648605332  -2.472089273  -0.274073197  -2.229407679   1.080881457 
-##           466           467           468           469           470 
-##   2.013837468   4.625214772   2.152231493   2.115942378   1.511616032 
-##           471           472           473           474           475 
-##  -0.267194411  -3.377180317   0.744192736   4.221753735  -2.591476316 
-##           476           477           478           479           480 
-##  -2.811462804  -3.834815996   0.457272618  -4.604963045  -0.462763906 
-##           481           482           483           484           485 
-##  -0.468788663  -3.398873155  -3.569943017   0.716012169   1.144838044 
-##           486           487           488           489           490 
-##  -1.022259141  -0.555919608  -0.725361044   3.344162834  -1.223866868 
-##           491           492           493           494           495 
-##   4.436003280  -0.159085382   4.168814549   1.173379456   3.887505860 
-##           496           497           498           499           500 
-##   6.214580361   5.686792129  -0.808541439  -0.098051744  -0.954988409 
-##           501           502           503           504           505 
-##  -3.668708470  -1.133340547  -1.775718920  -3.727426095  -4.127966807 
-##           506 
-## -10.444212293 
-## 
-## $coefficients
-##                  Estimate  Std. Error      t value     Pr(&gt;|t|)
-## (Intercept)  3.645949e+01 5.103458811   7.14407419 3.283438e-12
-## crim        -1.080114e-01 0.032864994  -3.28651687 1.086810e-03
-## zn           4.642046e-02 0.013727462   3.38157628 7.781097e-04
-## indus        2.055863e-02 0.061495689   0.33431004 7.382881e-01
-## chas         2.686734e+00 0.861579756   3.11838086 1.925030e-03
-## nox         -1.776661e+01 3.819743707  -4.65125741 4.245644e-06
-## rm           3.809865e+00 0.417925254   9.11614020 1.979441e-18
-## age          6.922246e-04 0.013209782   0.05240243 9.582293e-01
-## dis         -1.475567e+00 0.199454735  -7.39800360 6.013491e-13
-## rad          3.060495e-01 0.066346440   4.61289977 5.070529e-06
-## tax         -1.233459e-02 0.003760536  -3.28000914 1.111637e-03
-## ptratio     -9.527472e-01 0.130826756  -7.28251056 1.308835e-12
-## black        9.311683e-03 0.002685965   3.46679256 5.728592e-04
-## lstat       -5.247584e-01 0.050715278 -10.34714580 7.776912e-23
-## 
-## $aliased
-## (Intercept)        crim          zn       indus        chas         nox 
-##       FALSE       FALSE       FALSE       FALSE       FALSE       FALSE 
-##          rm         age         dis         rad         tax     ptratio 
-##       FALSE       FALSE       FALSE       FALSE       FALSE       FALSE 
-##       black       lstat 
-##       FALSE       FALSE 
-## 
-## $sigma
-## [1] 4.745298
-## 
-## $df
-## [1]  14 492  14
-## 
-## $r.squared
-## [1] 0.7406427
-## 
-## $adj.r.squared
-## [1] 0.7337897
-## 
-## $fstatistic
-##    value    numdf    dendf 
-## 108.0767  13.0000 492.0000</code></pre>
-<pre class="r"><code>summary(lm_fit_00edit)$r.squared # 0.7406427</code></pre>
-<pre><code>## [1] 0.7406427</code></pre>
-<pre class="r"><code>summary(lm_fit_00edit)$adj.r.squared # 0.7337897</code></pre>
-<pre><code>## [1] 0.7337897</code></pre>
-<pre class="r"><code>summary(lm_fit_00edit)$fstatistic # 108.0767</code></pre>
-<pre><code>##    value    numdf    dendf 
-## 108.0767  13.0000 492.0000</code></pre>
-<pre class="r"><code>lm_fit_01edit &lt;- lm(formula = medv ~ crim + zn + chas + nox + rm + dis + rad + tax + ptratio + black + lstat +indus, data = Boston); summary(lm_fit_01edit)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ crim + zn + chas + nox + rm + dis + rad + 
-##     tax + ptratio + black + lstat + indus, data = Boston)
+## lm(formula = lmedv ~ ., data = Boston_tr)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -15.6054  -2.7313  -0.5188   1.7601  26.2243 
-## 
-## Coefficients:
-##               Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  36.436927   5.080119   7.172 2.72e-12 ***
-## crim         -0.108006   0.032832  -3.290 0.001075 ** 
-## zn            0.046334   0.013613   3.404 0.000719 ***
-## chas          2.689026   0.859598   3.128 0.001863 ** 
-## nox         -17.713540   3.679308  -4.814 1.97e-06 ***
-## rm            3.814394   0.408480   9.338  &lt; 2e-16 ***
-## dis          -1.478612   0.190611  -7.757 5.03e-14 ***
-## rad           0.305786   0.066089   4.627 4.75e-06 ***
-## tax          -0.012329   0.003755  -3.283 0.001099 ** 
-## ptratio      -0.952211   0.130294  -7.308 1.10e-12 ***
-## black         0.009321   0.002678   3.481 0.000544 ***
-## lstat        -0.523852   0.047625 -10.999  &lt; 2e-16 ***
-## indus         0.020562   0.061433   0.335 0.737989    
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 4.74 on 493 degrees of freedom
-## Multiple R-squared:  0.7406, Adjusted R-squared:  0.7343 
-## F-statistic: 117.3 on 12 and 493 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code># Multiple R-squared:  0.7406,  Adjusted R-squared:  0.7348 
-# F-statistic: 128.2 on 11 and 494 DF,  p-value: &lt; 2.2e-16
-
-vif(lm_fit_01edit) %&gt;% 
-  as_tibble() %&gt;% 
-  bind_cols(names(vif(lm_fit_01edit))) %&gt;% 
-  setNames(c(&quot;vif&quot;, &quot;var_name&quot;)) %&gt;% 
-  arrange(desc(vif))</code></pre>
-<pre><code>## New names:
-## * NA -&gt; ...2</code></pre>
-<pre><code>## # A tibble: 12 × 2
-##      vif var_name
-##    &lt;dbl&gt; &lt;chr&gt;   
-##  1  9.00 tax     
-##  2  7.44 rad     
-##  3  4.08 nox     
-##  4  3.99 indus   
-##  5  3.62 dis     
-##  6  2.60 lstat   
-##  7  2.27 zn      
-##  8  1.85 rm      
-##  9  1.79 crim    
-## 10  1.79 ptratio 
-## 11  1.34 black   
-## 12  1.07 chas</code></pre>
-<p><a href="http://www.science.smith.edu/~jcrouser/SDS293/labs/lab8-r.html" class="uri">http://www.science.smith.edu/~jcrouser/SDS293/labs/lab8-r.html</a></p>
-<pre class="r"><code>generator_univar_importance_tbl(Boston, &quot;medv&quot;)</code></pre>
-<pre><code>## [1] &quot;Response variable: medv&quot;</code></pre>
-<pre><code>##    varname vartype    R2 R2_log R2_quad max_R2
-## 1    lstat numeric 0.544  0.665   0.641  0.665
-## 2       rm numeric 0.484  0.436   0.548  0.548
-## 3    indus numeric 0.234  0.270   0.269  0.270
-## 4  ptratio numeric 0.258  0.253   0.262  0.262
-## 5      tax numeric 0.220  0.225   0.225  0.225
-## 6     crim numeric 0.151  0.206   0.210  0.210
-## 7      nox numeric 0.183  0.186   0.187  0.187
-## 8      rad numeric 0.146  0.117   0.156  0.156
-## 9      age numeric 0.142  0.107   0.155  0.155
-## 10      zn numeric 0.130  0.147   0.139  0.147
-## 11   black numeric 0.111  0.080   0.113  0.113
-## 12     dis numeric 0.062  0.085   0.096  0.096
-## 13    chas numeric 0.031  0.031   0.031  0.031
-## 14    medv numeric    NA     NA      NA     NA</code></pre>
-<pre class="r"><code>summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;rad&quot;))</code></pre>
-<pre><code>##   var_names     Estimate   t_stats      p_value      corr         label
-## 1    lindus   0.02055863  0.334310 7.382881e-01 -0.553887 lindus + lrad
-## 2      lnox -17.76661123 -4.651257 4.245644e-06 -0.515251   lnox + lrad
-## 3      lrad   0.30604948  4.612900 5.070529e-06 -0.434513   lrad + ltax
-## 4     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.567242  lcrim + lrad
-##   cross_corr
-## 1   0.580533
-## 2   0.612948
-## 3   0.820487
-## 4   0.838943</code></pre>
-<pre class="r"><code>regsubfit &lt;- regsubsets(medv~.-tax,
-                        data= Boston, 
-                        intercept = T,
-                        method = c(&quot;exhaustive&quot;, &quot;backward&quot;, &quot;forward&quot;, &quot;seqrep&quot;),
-                        nvmax = 19)
-reg_summary &lt;- summary(regsubfit)
-summary(regsubfit)[1:10]</code></pre>
-<pre><code>## $which
-##    (Intercept)  crim    zn indus  chas   nox    rm   age   dis   rad ptratio
-## 1         TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE   FALSE
-## 2         TRUE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE   FALSE
-## 3         TRUE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE FALSE FALSE    TRUE
-## 4         TRUE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE  TRUE FALSE    TRUE
-## 5         TRUE FALSE FALSE FALSE FALSE  TRUE  TRUE FALSE  TRUE FALSE    TRUE
-## 6         TRUE FALSE FALSE FALSE  TRUE  TRUE  TRUE FALSE  TRUE FALSE    TRUE
-## 7         TRUE FALSE FALSE FALSE  TRUE  TRUE  TRUE FALSE  TRUE FALSE    TRUE
-## 8         TRUE FALSE  TRUE FALSE  TRUE  TRUE  TRUE FALSE  TRUE FALSE    TRUE
-## 9         TRUE  TRUE FALSE FALSE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE    TRUE
-## 10        TRUE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE    TRUE
-## 11        TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE    TRUE
-## 12        TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE  TRUE    TRUE
-##    black lstat
-## 1  FALSE  TRUE
-## 2  FALSE  TRUE
-## 3  FALSE  TRUE
-## 4  FALSE  TRUE
-## 5  FALSE  TRUE
-## 6  FALSE  TRUE
-## 7   TRUE  TRUE
-## 8   TRUE  TRUE
-## 9   TRUE  TRUE
-## 10  TRUE  TRUE
-## 11  TRUE  TRUE
-## 12  TRUE  TRUE
-## 
-## $rsq
-##  [1] 0.5441463 0.6385616 0.6786242 0.6903077 0.7080893 0.7157742 0.7221614
-##  [8] 0.7266079 0.7301704 0.7341768 0.7349702 0.7349714
-## 
-## $rss
-##  [1] 19472.38 15439.31 13727.99 13228.91 12469.34 12141.07 11868.24 11678.30
-##  [9] 11526.12 11354.98 11321.09 11321.04
-## 
-## $adjr2
-##  [1] 0.5432418 0.6371245 0.6767036 0.6878351 0.7051702 0.7123567 0.7182560
-##  [8] 0.7222072 0.7252743 0.7288066 0.7290688 0.7285204
-## 
-## $cp
-##  [1] 345.96824 172.33912  99.81571  80.08226  49.00538  36.71006  26.82876
-##  [8]  20.55757  15.93068  10.47805  11.00206  13.00000
-## 
-## $bic
-##  [1] -385.0521 -496.2582 -549.4767 -561.9884 -585.6823 -592.9553 -598.2295
-##  [8] -600.1663 -600.5767 -601.9195 -597.2056 -590.9812
-## 
-## $outmat
-##           crim zn  indus chas nox rm  age dis rad ptratio black lstat
-## 1  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;   &quot;*&quot;  
-## 2  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot; &quot;*&quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;   &quot;*&quot;  
-## 3  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot; &quot;*&quot; &quot; &quot; &quot; &quot; &quot; &quot; &quot;*&quot;     &quot; &quot;   &quot;*&quot;  
-## 4  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot;     &quot; &quot;   &quot;*&quot;  
-## 5  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot;     &quot; &quot;   &quot;*&quot;  
-## 6  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot;     &quot; &quot;   &quot;*&quot;  
-## 7  ( 1 )  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 8  ( 1 )  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot; &quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 9  ( 1 )  &quot;*&quot;  &quot; &quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot;*&quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 10  ( 1 ) &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot;*&quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 11  ( 1 ) &quot;*&quot;  &quot;*&quot; &quot;*&quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot; &quot; &quot;*&quot; &quot;*&quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 12  ( 1 ) &quot;*&quot;  &quot;*&quot; &quot;*&quot;   &quot;*&quot;  &quot;*&quot; &quot;*&quot; &quot;*&quot; &quot;*&quot; &quot;*&quot; &quot;*&quot;     &quot;*&quot;   &quot;*&quot;  
-## 
-## $obj
-## Subset selection object
-## Call: regsubsets.formula(medv ~ . - tax, data = Boston, intercept = T, 
-##     method = c(&quot;exhaustive&quot;, &quot;backward&quot;, &quot;forward&quot;, &quot;seqrep&quot;), 
-##     nvmax = 19)
-## 12 Variables  (and intercept)
-##         Forced in Forced out
-## crim        FALSE      FALSE
-## zn          FALSE      FALSE
-## indus       FALSE      FALSE
-## chas        FALSE      FALSE
-## nox         FALSE      FALSE
-## rm          FALSE      FALSE
-## age         FALSE      FALSE
-## dis         FALSE      FALSE
-## rad         FALSE      FALSE
-## ptratio     FALSE      FALSE
-## black       FALSE      FALSE
-## lstat       FALSE      FALSE
-## 1 subsets of each size up to 12
-## Selection Algorithm: exhaustive
-## 
-## $&lt;NA&gt;
-## NULL
-## 
-## $&lt;NA&gt;
-## NULL</code></pre>
-<pre class="r"><code>par(mfrow = c(2,2))
-plot(reg_summary$rss, xlab = &quot;Number of Variables&quot;, ylab = &quot;RSS&quot;, type = &quot;l&quot;)
-plot(reg_summary$adjr2, xlab = &quot;Number of Variables&quot;, ylab = &quot;Adjusted RSq&quot;, type = &quot;l&quot;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-<pre class="r"><code>outlier_treatment &lt;- function(x, na.rm = T) {
-  x[x &gt; quantile(x,.95,na.rm = na.rm)]&lt;- quantile(x, .95,na.rm = na.rm)
-  x[x &lt; quantile(x,.05,na.rm = na.rm)]&lt;- quantile(x, .05,na.rm = na.rm)
-}</code></pre>
-<pre class="r"><code>lm_fit_dir &lt;- lm(medv~rm + age, data = Boston); summary(lm_fit_dir)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = medv ~ rm + age, data = Boston)
-## 
-## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -20.555  -2.882  -0.274   2.293  40.799 
+## -0.76352 -0.10686 -0.00819  0.08682  0.79123 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept) -25.27740    2.85676  -8.848  &lt; 2e-16 ***
-## rm            8.40158    0.41208  20.388  &lt; 2e-16 ***
-## age          -0.07278    0.01029  -7.075 5.02e-12 ***
+## (Intercept)  3.687774   0.465807   7.917 3.53e-14 ***
+## lcrim       -0.145978   0.024003  -6.082 3.22e-09 ***
+## zn           0.006761   0.006579   1.028  0.30487    
+## lindus      -0.027556   0.025225  -1.092  0.27543    
+## chas         0.104987   0.038958   2.695  0.00739 ** 
+## lnox        -0.274483   0.117073  -2.345  0.01963 *  
+## lrm          0.527551   0.141663   3.724  0.00023 ***
+## sqage        0.005481   0.005473   1.001  0.31736    
+## ldis        -0.242247   0.043863  -5.523 6.66e-08 ***
+## lrad         0.138331   0.025670   5.389 1.33e-07 ***
+## ltax        -0.151940   0.058873  -2.581  0.01028 *  
+## eptratio    -0.038161   0.009271  -4.116 4.85e-05 ***
+## black        0.037392   0.013020   2.872  0.00434 ** 
+## srlstat     -0.224428   0.019777 -11.348  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 6.316 on 503 degrees of freedom
-## Multiple R-squared:  0.5303, Adjusted R-squared:  0.5284 
-## F-statistic: 283.9 on 2 and 503 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>plot(lm_fit_dir)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-4.png" width="672" /></p>
-<pre class="r"><code>boxplot(Boston$medv)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-5.png" width="672" /></p>
-<pre class="r"><code>boxplot(Boston$rm)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-6.png" width="672" /></p>
-<pre class="r"><code>boxplot(Boston$age)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-7.png" width="672" /></p>
-<pre class="r"><code>Boston %&gt;% 
-  mutate(rm_outlierT = rm %&gt;% outlier_treatment()) %&gt;% 
-  ggplot(aes(medv, rm)) +
-  geom_point()</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-8.png" width="672" /></p>
-<pre class="r"><code>Boston_medv_max &lt;- Boston %&gt;% filter(medv &gt;= 50)
-bind_rows(sapply(Boston_medv_max, mean), sapply(Boston, mean))</code></pre>
-<pre><code>## # A tibble: 2 × 14
-##    crim    zn indus   chas   nox    rm   age   dis   rad   tax ptratio black
-##   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-## 1  2.70  19.1  11.9 0.375  0.567  7.48  77.6  2.59 10.6   415.    16.5  382.
-## 2  3.61  11.4  11.1 0.0692 0.555  6.28  68.6  3.80  9.55  408.    18.5  357.
-## # … with 2 more variables: lstat &lt;dbl&gt;, medv &lt;dbl&gt;</code></pre>
-<pre class="r"><code># lstat, chas</code></pre>
-</div>
+## Residual standard error: 0.1921 on 338 degrees of freedom
+## Multiple R-squared:  0.7882, Adjusted R-squared:  0.7801 
+## F-statistic: 96.78 on 13 and 338 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>regsubfit_full &lt;- regsubsets(lmedv~.,
+                        data= Boston_tr, 
+                        intercept = T,
+                        method = c(&quot;backward&quot;, &quot;forward&quot;, &quot;seqrep&quot;),
+                        nvmax = 13)
+
+regfit_summary &lt;- summary(regsubfit_full)</code></pre>
+<blockquote>
+<pre><code>      Df Sum of Sq    RSS     AIC</code></pre>
+<p><none> 12.544 -1149.7
+- lindus 1 0.0943 12.638 -1149.1
+- lnox 1 0.1804 12.724 -1146.7
+- ltax 1 0.2100 12.754 -1145.9
+- chas 1 0.2974 12.841 -1143.5
+- black 1 0.3248 12.869 -1142.7
+- lrm 1 0.6202 13.164 -1134.7
+- eptratio 1 0.6680 13.212 -1133.4
+- lrad 1 1.0026 13.547 -1124.6
+- lcrim 1 1.3176 13.861 -1116.5
+- ldis 1 1.4130 13.957 -1114.1
+- srlstat 1 5.1337 17.678 -1031.0</p>
+</blockquote>
+<pre class="r"><code># Multicollinearity suspect: Promising variables (Severe)
+summary_relationship_tbl %&gt;% 
+  filter(str_detect(label, pattern = &quot;chas&quot;))</code></pre>
+<pre><code>## [1] var_names  Estimate   t_stats    p_value    corr       label      cross_corr
+## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
 </div>
