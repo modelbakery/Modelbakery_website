@@ -966,7 +966,7 @@ Boston_transform &lt;- Boston %&gt;%
             zn       = zn/10,
             lindus   = log(indus),
             chas     = chas,
-            lnox     = log(nox),
+            lnox     = log(nox + 1),
             lrm      = log(rm),
             sqage    = (age^2.5)/10000,
             ldis     = log(dis),
@@ -1066,30 +1066,30 @@ lm_fit_01edit &lt;- lm(lmedv~., data = Boston_transform); summary(lm_fit_01edit)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.76220 -0.11102 -0.00600  0.09499  0.77740 
+## -0.76335 -0.11160 -0.00628  0.09486  0.77234 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  3.964669   0.362512  10.937  &lt; 2e-16 ***
-## lcrim       -0.135032   0.020403  -6.618 9.53e-11 ***
-## zn           0.007416   0.005453   1.360 0.174453    
-## lindus      -0.027081   0.021415  -1.265 0.206614    
-## chas         0.102059   0.035181   2.901 0.003886 ** 
-## lnox        -0.263992   0.098659  -2.676 0.007704 ** 
-## lrm          0.398020   0.105803   3.762 0.000189 ***
-## sqage        0.006585   0.004605   1.430 0.153363    
-## ldis        -0.234407   0.036182  -6.479 2.25e-10 ***
-## lrad         0.124417   0.020891   5.956 4.94e-09 ***
-## ltax        -0.139092   0.047304  -2.940 0.003433 ** 
-## eptratio    -0.037756   0.007767  -4.861 1.57e-06 ***
-## black        0.029055   0.011127   2.611 0.009296 ** 
-## srlstat     -0.249327   0.015567 -16.016  &lt; 2e-16 ***
+## (Intercept)  4.441051   0.362100  12.265  &lt; 2e-16 ***
+## lcrim       -0.134082   0.020402  -6.572 1.27e-10 ***
+## zn           0.008149   0.005430   1.501 0.134044    
+## lindus      -0.026409   0.021399  -1.234 0.217746    
+## chas         0.103224   0.035160   2.936 0.003482 ** 
+## lnox        -0.732228   0.256108  -2.859 0.004429 ** 
+## lrm          0.394455   0.105705   3.732 0.000212 ***
+## sqage        0.006549   0.004582   1.429 0.153581    
+## ldis        -0.233468   0.035580  -6.562 1.35e-10 ***
+## lrad         0.123402   0.020857   5.916 6.17e-09 ***
+## ltax        -0.137077   0.047299  -2.898 0.003922 ** 
+## eptratio    -0.038705   0.007797  -4.964 9.52e-07 ***
+## black        0.028878   0.011117   2.598 0.009665 ** 
+## srlstat     -0.249070   0.015554 -16.014  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.1927 on 492 degrees of freedom
-## Multiple R-squared:  0.7835, Adjusted R-squared:  0.7778 
-## F-statistic:   137 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 0.1925 on 492 degrees of freedom
+## Multiple R-squared:  0.784,  Adjusted R-squared:  0.7783 
+## F-statistic: 137.3 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>glance(lm_fit_00edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
@@ -1218,16 +1218,16 @@ nobs
 <tbody>
 <tr>
 <td style="text-align:right;">
-0.7835214
+0.7839604
 </td>
 <td style="text-align:right;">
-0.7778015
+0.7782521
 </td>
 <td style="text-align:right;">
-0.1926796
+0.1924841
 </td>
 <td style="text-align:right;">
-136.9802
+137.3354
 </td>
 <td style="text-align:right;">
 0
@@ -1236,16 +1236,16 @@ nobs
 13
 </td>
 <td style="text-align:right;">
-122.3595
+122.8731
 </td>
 <td style="text-align:right;">
--214.7191
+-215.7462
 </td>
 <td style="text-align:right;">
--151.321
+-152.3482
 </td>
 <td style="text-align:right;">
-18.2657
+18.22866
 </td>
 <td style="text-align:right;">
 492
@@ -1262,14 +1262,6 @@ nobs
 <li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
 </ul>
 </div>
-</div>
-<div id="data-partitioning-traintest-73" class="section level2">
-<h2>Data Partitioning: train:test (7:3)</h2>
-<pre class="r"><code>set.seed(42)
-tidy_split &lt;- initial_split(Boston_transform, prop = .7,
-                            strata = lmedv)
-Boston_tr &lt;- training(tidy_split)
-Boston_te &lt;- testing(tidy_split)</code></pre>
 </div>
 <div id="summary-table-for-variable-coefficient-correlation" class="section level2">
 <h2>Summary table for variable coefficient &amp; correlation</h2>
@@ -1326,13 +1318,13 @@ lnox
 0.0000042
 </td>
 <td style="text-align:right;">
--0.515251
+-0.513735
 </td>
 <td style="text-align:left;">
 lnox + ldis
 </td>
 <td style="text-align:right;">
--0.860018
+-0.843877
 </td>
 </tr>
 <tr>
@@ -1544,6 +1536,29 @@ lcrim + srlstat
 </tr>
 <tr>
 <td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-17.7666112
+</td>
+<td style="text-align:right;">
+-4.6512574
+</td>
+<td style="text-align:right;">
+0.0000042
+</td>
+<td style="text-align:right;">
+-0.513735
+</td>
+<td style="text-align:left;">
+lnox + srlstat
+</td>
+<td style="text-align:right;">
+0.602493
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 lcrim
 </td>
 <td style="text-align:right;">
@@ -1579,36 +1594,13 @@ lnox
 0.0000042
 </td>
 <td style="text-align:right;">
--0.515251
-</td>
-<td style="text-align:left;">
-lnox + srlstat
-</td>
-<td style="text-align:right;">
-0.609437
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lnox
-</td>
-<td style="text-align:right;">
--17.7666112
-</td>
-<td style="text-align:right;">
--4.6512574
-</td>
-<td style="text-align:right;">
-0.0000042
-</td>
-<td style="text-align:right;">
--0.515251
+-0.513735
 </td>
 <td style="text-align:left;">
 lnox + lrad
 </td>
 <td style="text-align:right;">
-0.612948
+0.604894
 </td>
 </tr>
 <tr>
@@ -1740,13 +1732,13 @@ lnox
 0.0000042
 </td>
 <td style="text-align:right;">
--0.515251
+-0.513735
 </td>
 <td style="text-align:left;">
 lnox + ltax
 </td>
 <td style="text-align:right;">
-0.668307
+0.665838
 </td>
 </tr>
 <tr>
@@ -1769,7 +1761,7 @@ lcrim
 lcrim + lnox
 </td>
 <td style="text-align:right;">
-0.716788
+0.713491
 </td>
 </tr>
 <tr>
@@ -1792,7 +1784,7 @@ lindus
 lindus + lnox
 </td>
 <td style="text-align:right;">
-0.750463
+0.735757
 </td>
 </tr>
 <tr>
@@ -1809,13 +1801,13 @@ lnox
 0.0000042
 </td>
 <td style="text-align:right;">
--0.515251
+-0.513735
 </td>
 <td style="text-align:left;">
 lnox + sqage
 </td>
 <td style="text-align:right;">
-0.783129
+0.767939
 </td>
 </tr>
 <tr>
@@ -2028,39 +2020,156 @@ NA
 </tbody>
 </table>
 </div>
-<div id="variable-selection-best-subsets-selection" class="section level2">
-<h2>Variable Selection: Best Subsets Selection</h2>
-<pre class="r"><code>lmfit_00tr &lt;- lm(lmedv~., Boston_tr); summary(lmfit_00tr)</code></pre>
+<div id="outlier-detection-on-fluential-observation-by-cooks-distance" class="section level2">
+<h2>Outlier Detection: On Fluential Observation by Cooks Distance</h2>
+<pre class="r"><code># plot cook&#39;s distance
+cooksd_outlier_detect &lt;- function(lm_fit){
+  cooksd &lt;- cooks.distance(lm_fit)
+  influential &lt;- as.numeric(names(cooksd)[(cooksd &gt; 4*mean(cooksd, na.rm=T))])
+  return(influential)
+}
+cooksd_outlier_detect(lm_fit_01edit)</code></pre>
+<pre><code>##  [1]   8 149 153 215 365 366 368 369 370 372 373 375 399 400 401 402 406 410 413
+## [20] 417 420 490 491 506</code></pre>
+<pre class="r"><code>cooksd_outlier_plot &lt;- function(lm_fit){
+  cooksd &lt;- cooks.distance(lm_fit)
+  plot(cooksd, pch=&quot;*&quot;, cex=2, main=&quot;Influential Obs by Cooks distance&quot;) +
+    abline(h = 4*mean(cooksd, na.rm=T), col=&quot;red&quot;) +
+    text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd&gt;4*mean(cooksd, na.rm=T),names(cooksd),&quot;&quot;), col=&quot;red&quot;)
+}</code></pre>
+<pre class="r"><code># Vectorise outliers NA converter 
+detect_outliers_to_na &lt;- function(x) {
+  if (missing(x)) stop(&quot;The argument x needs a vector.&quot;)
+  if (!is.numeric(x)) stop(&quot;The argument x must be numeric&quot;)
+  data_tbl &lt;- tibble(data = x)
+  limits_tbl &lt;- data_tbl %&gt;% 
+    summarise(
+      quantile_lo = quantile(data, probs = 0.25, na.rm = TRUE),
+      quantile_hi = quantile(data, probs = 0.75, na.rm = TRUE),
+      iqr = IQR(data, na.rm = TRUE),
+      limit_lo = quantile_lo - 1.5 * iqr,
+      limit_hi = quantile_hi + 1.5 * iqr
+    )
+    output_tbl &lt;- data_tbl %&gt;% 
+    mutate(outlier = ifelse(data &lt; limits_tbl$limit_lo, NA,
+                            ifelse(data &gt; limits_tbl$limit_hi, NA,
+                                   data))
+           )
+  return(output_tbl$outlier)
+}</code></pre>
+<div id="outlier-treatment-1-predictor-varaibles-iqr-outliers-mean-treatment-at-influential-observation-detected" class="section level3">
+<h3>Outlier Treatment #1: Predictor Varaibles IQR-outliers mean treatment at influential Observation detected</h3>
+<pre class="r"><code># Add Row Id 
+Boston_row_tbl &lt;- Boston_transform %&gt;% 
+  mutate(row_id = row_number()) %&gt;% 
+  select(row_id, everything())
+
+# 
+Boston_outlier_1tbl &lt;- Boston_row_tbl %&gt;% 
+  mutate(row_id = row_number(),
+         cooksd_flag = case_when(row_id %in% cooksd_outlier_detect(lm_fit_01edit) ~ 1,
+                                TRUE ~ 0)) %&gt;% 
+  filter(cooksd_flag == 1) %&gt;%  
+  mutate_at(vars(lcrim:srlstat), ~ detect_outliers_to_na(.)) %&gt;% 
+  mutate_at(vars(lcrim:srlstat), function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))) %&gt;% 
+  bind_rows(Boston_row_tbl[-cooksd_outlier_detect(lm_fit_01edit),]) %&gt;% 
+  arrange(row_id) %&gt;% 
+  select(-c(cooksd_flag)) 
+
+# 
+lm_fit_02edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_1tbl); summary(lm_fit_02edit)</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = lmedv ~ ., data = Boston_tr)
+## lm(formula = lmedv ~ . - row_id, data = Boston_outlier_1tbl)
 ## 
 ## Residuals:
 ##      Min       1Q   Median       3Q      Max 
-## -0.76352 -0.10686 -0.00819  0.08682  0.79123 
+## -0.75916 -0.10917 -0.00429  0.09838  0.75845 
 ## 
 ## Coefficients:
 ##              Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)  3.687774   0.465807   7.917 3.53e-14 ***
-## lcrim       -0.145978   0.024003  -6.082 3.22e-09 ***
-## zn           0.006761   0.006579   1.028  0.30487    
-## lindus      -0.027556   0.025225  -1.092  0.27543    
-## chas         0.104987   0.038958   2.695  0.00739 ** 
-## lnox        -0.274483   0.117073  -2.345  0.01963 *  
-## lrm          0.527551   0.141663   3.724  0.00023 ***
-## sqage        0.005481   0.005473   1.001  0.31736    
-## ldis        -0.242247   0.043863  -5.523 6.66e-08 ***
-## lrad         0.138331   0.025670   5.389 1.33e-07 ***
-## ltax        -0.151940   0.058873  -2.581  0.01028 *  
-## eptratio    -0.038161   0.009271  -4.116 4.85e-05 ***
-## black        0.037392   0.013020   2.872  0.00434 ** 
-## srlstat     -0.224428   0.019777 -11.348  &lt; 2e-16 ***
+## (Intercept)  4.113844   0.369653  11.129  &lt; 2e-16 ***
+## lcrim       -0.139921   0.019907  -7.029 6.99e-12 ***
+## zn           0.009357   0.005400   1.733  0.08375 .  
+## lindus      -0.021086   0.021301  -0.990  0.32271    
+## chas         0.094843   0.036854   2.574  0.01036 *  
+## lnox        -0.705555   0.259197  -2.722  0.00672 ** 
+## lrm          0.492301   0.112185   4.388 1.40e-05 ***
+## sqage        0.006451   0.004651   1.387  0.16608    
+## ldis        -0.242995   0.035153  -6.912 1.48e-11 ***
+## lrad         0.118565   0.020420   5.806 1.15e-08 ***
+## ltax        -0.118905   0.044916  -2.647  0.00837 ** 
+## eptratio    -0.034134   0.007883  -4.330 1.81e-05 ***
+## black        0.036768   0.011402   3.225  0.00135 ** 
+## srlstat     -0.248084   0.015800 -15.702  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 0.1921 on 338 degrees of freedom
-## Multiple R-squared:  0.7882, Adjusted R-squared:  0.7801 
-## F-statistic: 96.78 on 13 and 338 DF,  p-value: &lt; 2.2e-16</code></pre>
+## Residual standard error: 0.1913 on 492 degrees of freedom
+## Multiple R-squared:  0.7865, Adjusted R-squared:  0.7809 
+## F-statistic: 139.4 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>cooksd_outlier_detect(lm_fit_02edit)</code></pre>
+<pre><code>##  [1]   8   9 149 215 368 369 370 372 373 375 381 399 400 401 402 406 410 413 417
+## [20] 420 490 491 506</code></pre>
+<pre class="r"><code>cooksd_outlier_plot(lm_fit_02edit)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>plot(lm_fit_02edit)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-4.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-5.png" width="672" /></p>
+<pre class="r"><code># Remove the Target Variable Extreme Outliers 
+Boston_outlier_2tbl &lt;- Boston_outlier_1tbl %&gt;% 
+  filter(!row_id %in% cooksd_outlier_detect(lm_fit_02edit)) 
+
+
+lm_fit_03edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_2tbl); summary(lm_fit_03edit)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = lmedv ~ . - row_id, data = Boston_outlier_2tbl)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.55865 -0.09297 -0.00368  0.08359  0.49244 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  2.739611   0.304941   8.984  &lt; 2e-16 ***
+## lcrim       -0.095181   0.016776  -5.674 2.45e-08 ***
+## zn           0.005664   0.004055   1.397 0.163185    
+## lindus      -0.012002   0.016034  -0.749 0.454504    
+## chas         0.094667   0.027627   3.427 0.000665 ***
+## lnox        -0.290096   0.201664  -1.439 0.150955    
+## lrm          1.009030   0.096111  10.499  &lt; 2e-16 ***
+## sqage       -0.005823   0.003678  -1.583 0.114068    
+## ldis        -0.196255   0.027769  -7.067 5.75e-12 ***
+## lrad         0.069634   0.015998   4.353 1.65e-05 ***
+## ltax        -0.117336   0.036032  -3.256 0.001210 ** 
+## eptratio    -0.032212   0.005956  -5.409 1.01e-07 ***
+## black        0.055959   0.008909   6.281 7.68e-10 ***
+## srlstat     -0.186806   0.013588 -13.748  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.1433 on 469 degrees of freedom
+## Multiple R-squared:  0.8577, Adjusted R-squared:  0.8538 
+## F-statistic: 217.5 on 13 and 469 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>cooksd_outlier_plot(lm_fit_03edit)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-6.png" width="672" /></p>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>plot(lm_fit_03edit)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-7.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-8.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-9.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-10.png" width="672" /></p>
+<pre class="r"><code>Boston_prepared &lt;- Boston_outlier_2tbl %&gt;% select(-row_id)</code></pre>
+</div>
+</div>
+<div id="data-partitioning-traintest-73" class="section level2">
+<h2>Data Partitioning: train:test (7:3)</h2>
+<pre class="r"><code>set.seed(42)
+tidy_split &lt;- initial_split(Boston_prepared, prop = .7,
+                            strata = lmedv)
+Boston_tr &lt;- training(tidy_split)
+Boston_te &lt;- testing(tidy_split)</code></pre>
+</div>
+<div id="variable-selection-best-subsets-selection-optimal-dimension" class="section level2">
+<h2>Variable Selection: Best Subsets Selection &amp; Optimal Dimension</h2>
 <pre class="r"><code>regsubfit_full &lt;- regsubsets(lmedv~.,
                         data= Boston_tr, 
                         intercept = T,
@@ -2068,24 +2177,49 @@ NA
                         nvmax = 13)
 
 regfit_summary &lt;- summary(regsubfit_full)</code></pre>
-<blockquote>
-<pre><code>      Df Sum of Sq    RSS     AIC</code></pre>
-<p><none> 12.544 -1149.7
-- lindus 1 0.0943 12.638 -1149.1
-- lnox 1 0.1804 12.724 -1146.7
-- ltax 1 0.2100 12.754 -1145.9
-- chas 1 0.2974 12.841 -1143.5
-- black 1 0.3248 12.869 -1142.7
-- lrm 1 0.6202 13.164 -1134.7
-- eptratio 1 0.6680 13.212 -1133.4
-- lrad 1 1.0026 13.547 -1124.6
-- lcrim 1 1.3176 13.861 -1116.5
-- ldis 1 1.4130 13.957 -1114.1
-- srlstat 1 5.1337 17.678 -1031.0</p>
-</blockquote>
+<pre class="r"><code>opt_adjr2 &lt;- which.max(regfit_summary$adjr2)
+opt_bic &lt;- which.min(regfit_summary$bic)
+
+plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;adj.RSquare&quot;, type=&quot;l&quot;) +points(opt_adjr2, regfit_summary$adjr2[opt_adjr2], col = &quot;red&quot;, cex=2, pch=20)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>plot(regfit_summary$bic, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;BIC&quot;, type=&quot;l&quot;) +
+  points(opt_bic, regfit_summary$bic[opt_bic], col = &quot;red&quot;, cex=2, pch=20)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>plot(regfit_summary$rss, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;RSS&quot;, type=&quot;l&quot;) </code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-3.png" width="672" /></p>
+<pre class="r"><code>lm_model &lt;- linear_reg() %&gt;% 
+            set_engine(&#39;lm&#39;) %&gt;% 
+            set_mode(&#39;regression&#39;)
+
+lmfit_00tr &lt;- lm_model %&gt;% 
+  fit(lmedv ~., data = Boston_tr)
+
+plot(lmfit_00tr$fit, 
+     pch = 16,
+     col = &#39;#006EA1&#39;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-1.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-4.png" width="672" /></p>
 <pre class="r"><code># Multicollinearity suspect: Promising variables (Severe)
 summary_relationship_tbl %&gt;% 
   filter(str_detect(label, pattern = &quot;chas&quot;))</code></pre>
 <pre><code>## [1] var_names  Estimate   t_stats    p_value    corr       label      cross_corr
 ## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+<pre class="r"><code>generator_univar_importance_tbl(Boston_tr, &quot;lmedv&quot;)</code></pre>
+<pre><code>## [1] &quot;Response variable: lmedv&quot;</code></pre>
+<pre><code>##     varname vartype    R2 R2_log R2_quad max_R2
+## 1   srlstat numeric 0.722  0.721   0.725  0.725
+## 2       lrm numeric 0.490  0.479   0.510  0.510
+## 3     lcrim numeric 0.382  0.317   0.389  0.389
+## 4      ltax numeric 0.325  0.323   0.326  0.326
+## 5    lindus numeric 0.313  0.293   0.316  0.316
+## 6  eptratio numeric 0.293  0.280   0.315  0.315
+## 7      lnox numeric 0.270  0.272   0.274  0.274
+## 8     sqage numeric 0.247  0.161   0.252  0.252
+## 9      lrad numeric 0.192  0.141   0.238  0.238
+## 10    black numeric 0.220  0.150   0.224  0.224
+## 11     ldis numeric 0.168  0.188   0.205  0.205
+## 12       zn numeric 0.152  0.172   0.167  0.172
+## 13     chas numeric 0.011  0.011   0.011  0.011
+## 14    lmedv numeric    NA     NA      NA     NA</code></pre>
 </div>
