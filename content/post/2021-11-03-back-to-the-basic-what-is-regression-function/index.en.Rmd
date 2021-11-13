@@ -668,8 +668,8 @@ lm_model <- linear_reg() %>%
 lmfit_00tr <- lm_model %>% 
   fit(lmedv ~., data = Boston_tr)
 
-tidy(lmfit_00tr)  %>% kbl %>% kable_material()
-glance(lmfit_00tr)  %>% kbl %>% kable_material()
+tidy(lmfit_00tr) %>% kbl %>% kable_material()
+glance(lmfit_00tr) %>% kbl %>% kable_material()
 
 lmfit_00tr %>% 
   vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = "yellow"),
@@ -722,7 +722,7 @@ rmse(Boston_housing_results_lm00,
 
 rsq(Boston_housing_results_lm00,
     truth = lmedv,
-    estimate = .pred)  %>% kbl %>% kable_material()
+    estimate = .pred) %>% kbl %>% kable_material()
 
 Boston_housing_results_lm00 %>% 
   ggplot(mapping = aes(x = .pred, y = lmedv)) +

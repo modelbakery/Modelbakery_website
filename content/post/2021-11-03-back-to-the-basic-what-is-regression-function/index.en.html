@@ -2937,7 +2937,7 @@ plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&qu
 lmfit_00tr &lt;- lm_model %&gt;% 
   fit(lmedv ~., data = Boston_tr)
 
-tidy(lmfit_00tr)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+tidy(lmfit_00tr) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -3199,7 +3199,7 @@ srlstat
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>glance(lmfit_00tr)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+<pre class="r"><code>glance(lmfit_00tr) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -3350,7 +3350,7 @@ standard
 </table>
 <pre class="r"><code>rsq(Boston_housing_results_lm00,
     truth = lmedv,
-    estimate = .pred)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+    estimate = .pred) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
