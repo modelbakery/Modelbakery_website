@@ -365,6 +365,7 @@ Since most of the variables exhibit an asymmetry with a higher density on the le
 
 In comparison to original data, these transformed variables are more asymmetric and where logarithm was applied, the less outliers were shown. The question is: is the upper and/or extreme always an outlier? I believe there is no straight answer hence I will carry out this transformed data set and outlier treated data set as I go along the analysis.  
 
+
 #### Correlation: lares package 
 
 ```{r}
@@ -406,11 +407,14 @@ From the summary statistics computed with glance function, it is clear that asym
 
 Depending on the nature of task (target variable: Boston House Price) the predictors will vary in weight of importance between the interpretation and the accuracy. Having skewed data will have tendency to hide these importance and its information have on the House Price. By default, it is our challenge to align these distributions in respect to, ideally normally distributed, Y in order to protect loss on valuable information. 
 
-Understanding that skewness and scale are different is important, it can be easily observed by t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation then only having to look at correlation. I believe this approach can also be powerful in recongising hierachical relationships between the variable X's. 
-
+Understanding that skewness and scale are different is important, it can be easily seen from its result on t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation than having correlation matrix alone. I believe this approach can also be powerful in recognising hierarchical relationships between the variable X's. 
 
 
 ## Summary table for variable coefficient & correlation 
+
+One of the aspect in regression is the multi-colinearity issue. Although a thorough investigation in variable correlation can be useful but it merely highlights on confounders and its effect sizes. I like to imagine multi-colinearity as the entaglements of features in given dimensional space, and without the any knowelgde on the subject, it holds risk of miss-interpreting the what's in behind the scene, as I like to phrase ultimate "route cause". 
+
+Multi-colinearity and robust regression is one of my keen interest and would like to discover further and share. Hopefully in the next post :)  
 
 ```{r}
 var_names <- colnames(Boston_transform %>% dplyr::select(lmedv, everything()))
@@ -428,10 +432,51 @@ summary_relationship_tbl %>% kbl() %>% kable_material()
 ```
 
 
-## Outlier Detection: On Fluential Observation by Cooks Distance 
+
+## Outlier Detection: On Fluential Observation by Cook's Distance 
+
+The family of regression in nature sensitive to abnormal data points and there are many techniques to remove the outliers from the data set. In linear approach, the estimated Y's are predicted by conditional average of X's coordinates in individual instances. Hence it is a voting mechanism of all the points to estimate the line of the best fit. I like to imagine it as every data points tries to pull the line towards it selves, and some does more successfully than others: leverage. 
+
+```{r, echo=FALSE}
+outlier_treatment <- function(x, na.rm = T) {
+  x[x > quantile(x,.95,na.rm = na.rm)]<- quantile(x, .95,na.rm = na.rm)
+  x[x < quantile(x,.05,na.rm = na.rm)]<- quantile(x, .05,na.rm = na.rm)
+  return(x)
+}
+```
+
+```{r, echo=FALSE, result=TRUE, message=FALSE}
+Boston_example <- Boston_transform
+
+P_example1 <- Boston_example %>% 
+  ggplot(aes(lcrim, lmedv)) +
+  geom_point(colour = viridisLite::viridis(n = 20)[1]) +
+  geom_smooth(method = "lm", se = FALSE, colour = "yellow") +
+  theme_tq_dark()
+
+P_example2 <- Boston_example %>% 
+  mutate(lcrim_outlier_treat_at95 = lcrim %>% outlier_treatment()) %>% 
+  ggplot(aes(lcrim_outlier_treat_at95, lmedv)) +
+  geom_point(colour = viridisLite::viridis(n = 20)[1]) +
+  geom_smooth(method = "lm", se = FALSE, colour = "yellow") +
+  theme_tq_dark()
+  
+gridExtra::grid.arrange(P_example1, P_example2, ncol = 2)
+```
+
+In other words, if there are presence of extreme outlier situated far from the mean and rest of the coordinates, this leverage is likely to cause regression line distortion and thus the coefficient estimates. 
+
+A general notation for Cook's Distance is given below:
+
+$$
+D_i = \frac{\sum_{j=1}^n(\hat{y_j} - \hat{y_{j(i)}})^2}{constant}  
+$$
+
+The equation denotes, how much influential effect does i observation have and it is computed by the difference of $\ \hat{y_j}$ (with i) and $\ \hat{y_{j(i)}}$ (without i) at all the $\ y$ values. If the parameter estimate change a great deal upon suspect outlier (leverage) deletion from the least squares estimate calculation, the point is said to be influential. 
+
 
 ```{r}
-# plot cook's distance
+# plot Cook's distance
 cooksd_outlier_detect <- function(lm_fit){
   cooksd <- cooks.distance(lm_fit)
   influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])
@@ -442,11 +487,14 @@ cooksd_outlier_detect(lm_fit_01edit)
 cooksd_outlier_plot <- function(lm_fit){
   cooksd <- cooks.distance(lm_fit)
   plot(cooksd, pch="*", cex=2, main="Influential Obs by Cooks distance") +
+    # I have relaxed the Cook's distance assumption to retain as much information as possible. 
     abline(h = 4*mean(cooksd, na.rm=T), col="red") +
     text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd>4*mean(cooksd, na.rm=T),names(cooksd),""), col="red")
 }
-
+cooksd_outlier_plot(lm_fit_01edit)
 ```
+
+A general rule of thumb is to investigate any point that is more than 3 times the mean of all the distances. However, the log(y) (House Price) contain noticable outliers and there is a possibility that these target value upon deletion could be the reason for parameter estimate change. If the influential observation happen to be the Y actual value contribution, we would need to pull this set of observations separatelty and investigate further while making the prediction without this influential detected set.
 
 ```{r}
 # Vectorise outliers NA converter 
@@ -500,7 +548,7 @@ outlier_treatment <- function(x, na.rm = T) {
 }
 ```
 
-### Outlier Treatment #1: Predictor Varaibles IQR-outliers mean treatment at influential Observation detected 
+### Outlier Treatment #1: Predictor Varaibles IQR out-of-bound Outliers Treatment at Detected Influential Observation
 
 ```{r}
 # Add Row Id 
@@ -508,35 +556,43 @@ Boston_row_tbl <- Boston_transform %>%
   mutate(row_id = row_number()) %>% 
   select(row_id, everything())
 
-# 
+# Add flag to the Cook's Distance Diagnosed Observation
 Boston_outlier_1tbl <- Boston_row_tbl %>% 
   mutate(row_id = row_number(),
          cooksd_flag = case_when(row_id %in% cooksd_outlier_detect(lm_fit_01edit) ~ 1,
                                 TRUE ~ 0)) %>% 
+  # filter these observation set 
   filter(cooksd_flag == 1) %>%  
+  # Detect IQR out-of-bound outliers and convert to NA values  
   mutate_at(vars(lcrim:srlstat), ~ detect_outliers_to_na(.)) %>% 
+  # Replace NA to mean value 
   mutate_at(vars(lcrim:srlstat), function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))) %>% 
+  # bind with rest of the observation 
   bind_rows(Boston_row_tbl[-cooksd_outlier_detect(lm_fit_01edit),]) %>% 
   arrange(row_id) %>% 
   select(-c(cooksd_flag)) 
 
-# 
+# 02Edit linear model: Outlier Detection + Treatment Iteration 
 lm_fit_02edit <- lm(lmedv~.-row_id, data = Boston_outlier_1tbl); summary(lm_fit_02edit)
+
+# Treated 3 observation out of 24: the 21 observations are influential data points attributed by the Y values. 
 cooksd_outlier_detect(lm_fit_02edit)
 cooksd_outlier_plot(lm_fit_02edit)
 plot(lm_fit_02edit)
 
-# Remove the Target Variable Extreme Outliers 
+
+# Remove thes Cook's distance diagnosed outliers 
 Boston_outlier_2tbl <- Boston_outlier_1tbl %>% 
   filter(!row_id %in% cooksd_outlier_detect(lm_fit_02edit)) 
 
+```
 
+
+```{r}
+# 03Edit linear model: Cook's Distance Outiler Deletion 
 lm_fit_03edit <- lm(lmedv~.-row_id, data = Boston_outlier_2tbl); summary(lm_fit_03edit)
 cooksd_outlier_plot(lm_fit_03edit)
 plot(lm_fit_03edit)
-
-Boston_prepared <- Boston_outlier_2tbl %>% select(-row_id)
-
 
 glance(lm_fit_03edit) %>% kbl %>% kable_material()
 ```
@@ -544,6 +600,8 @@ glance(lm_fit_03edit) %>% kbl %>% kable_material()
 ## Data Partitioning: train:test (7:3)
 
 ```{r}
+Boston_prepared <- Boston_outlier_2tbl %>% select(-row_id)
+
 set.seed(42)
 tidy_split <- initial_split(Boston_prepared, prop = .7,
                             strata = lmedv)
@@ -554,14 +612,26 @@ Boston_te <- testing(tidy_split)
 
 ## Variable Selection: Best Subsets Selection & Optimal Dimension
 
-```{r}
+Optimal number of variables: consideration process by computation of best model with each subsets. 
+
+Finding: 
+
+[1] Method: "Forward" and "Backward"
+Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However, minimum BIC, probabilistic approach, suggests 10 variables is at its optimal. 
+
+[2] Method: "Sequential Replacement" (stepwise)
+Suggests the variable importance of srlstat and black have on the estmimate parameters. 
+
+```{r, message=FALSE, warning=FALSE}
 regsubfit_full <- regsubsets(lmedv~.,
                         data= Boston_tr, 
                         intercept = T,
-                        method = c("backward", "forward", "seqrep"),
+                        method = c("exhaustive"),
                         nvmax = 13)
 
 regfit_summary <- summary(regsubfit_full)
+regfit_summary
+
 ```
 
 ```{r}
@@ -576,6 +646,19 @@ plot(regfit_summary$bic, xlab="No. of Predictor Variables", ylab="BIC", type="l"
 plot(regfit_summary$rss, xlab="No. of Predictor Variables", ylab="RSS", type="l") 
 ```
 
+## Linear Model Predcition 
+
+Steps 
+
+[1] Split Data (Done)
+
+[2] Feature Engineering (Done)
+
+[3] Specify a Model: 
+
+* specify our linear regression model with parsnip.
+
+#### VIP: Variable of Importance 
 
 ```{r}
 lm_model <- linear_reg() %>% 
@@ -585,21 +668,50 @@ lm_model <- linear_reg() %>%
 lmfit_00tr <- lm_model %>% 
   fit(lmedv ~., data = Boston_tr)
 
-# plot(lmfit_00tr$fit, 
-#      pch = 16,
-#      col = '#006EA1')
-
 tidy(lmfit_00tr); glance(lmfit_00tr)
 
-vip(lmfit_00tr)
-
-predict(lmfit_00tr, new_data = Boston_te)
-
-Boston_housing_results_lm00 <- predict(lmfit_00tr, new_data = Boston_te) %>% 
-                            bind_cols(Boston_te)
+lmfit_00tr %>% 
+  vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = "yellow"),
+      mapping = aes_string(color = "Sign"))
 
 ```
 
+
+```{r}
+lmfit <- lm(lmedv~., Boston_tr)
+backward <- stats::step(lmfit, direction = "backward", trace = 0)
+forward <- stats::step(lmfit, direction = "forward", trace = 0)
+stepwise <- stats::step(lmfit, direction = "both", trace = 0)
+
+p1_back <- backward %>% vip(num_features = length(coef(backward)), 
+          geom = "point", horizontal = FALSE,
+          mapping = aes_string(color = "Sign", size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position="default") 
+
+p2_forw <- vip(forward, num_features = length(coef(backward)), 
+          geom = "point", horizontal = FALSE, 
+          mapping = aes_string(color = "Sign", size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position="default") 
+
+p2_step <- vip(stepwise, num_features = length(coef(backward)), 
+          geom = "point", horizontal = FALSE, 
+          mapping = aes_string(color = "Sign", size = 3)) + 
+  scale_color_viridis_d() +
+  theme(legend.position="default") 
+
+grid.arrange(p2_step, p2_forw, ncol = 1)
+```
+
+[3] Prediction 
+
+```{r}
+Boston_housing_results_lm00 <- predict(lmfit_00tr, new_data = Boston_te) %>%
+  bind_cols(Boston_te) %>% 
+  mutate(residue = lmedv - .pred) %>% 
+  select(.pred, residue, lmedv, everything())
+```
 
 ```{r}
 # RMSE on test set
@@ -611,20 +723,21 @@ rsq(Boston_housing_results_lm00,
     truth = lmedv,
     estimate = .pred)
 
-ggplot(data = Boston_housing_results_lm00,
-       mapping = aes(x = .pred, y = lmedv)) +
+Boston_housing_results_lm00 %>% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
   labs(title = 'Multiple Linear Regression Results: Boston House Price Prediction',
        x = 'Predicted Price',
-       y = 'Actual Price')
+       y = 'Actual Price') +
+  theme_tq()
 
-```
 
-```{r}
-# Multicollinearity suspect: Promising variables (Severe)
-summary_relationship_tbl %>% 
-  filter(str_detect(label, pattern = "chas"))
+Boston_housing_results_lm00 %>% 
+  ggplot(aes(.pred, residue)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE); mean(Boston_housing_results_lm00$residue)
+
 ```
 
 
@@ -754,6 +867,7 @@ generator_univar_importance_tbl <- function(dataframe, response) {
       arrange(min_AIC)
   } 
 }
+
 ```
 
 ```{r}

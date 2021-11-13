@@ -1244,11 +1244,13 @@ nobs
 <li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
 </ul>
 <p>Depending on the nature of task (target variable: Boston House Price) the predictors will vary in weight of importance between the interpretation and the accuracy. Having skewed data will have tendency to hide these importance and its information have on the House Price. By default, it is our challenge to align these distributions in respect to, ideally normally distributed, Y in order to protect loss on valuable information.</p>
-<p>Understanding that skewness and scale are different is important, it can be easily observed by t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation then only having to look at correlation. I believe this approach can also be powerful in recongising hierachical relationships between the variable X’s.</p>
+<p>Understanding that skewness and scale are different is important, it can be easily seen from its result on t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation than having correlation matrix alone. I believe this approach can also be powerful in recognising hierarchical relationships between the variable X’s.</p>
 </div>
 </div>
 <div id="summary-table-for-variable-coefficient-correlation" class="section level2">
 <h2>Summary table for variable coefficient &amp; correlation</h2>
+<p>One of the aspect in regression is the multi-colinearity issue. Although a thorough investigation in variable correlation can be useful but it merely highlights on confounders and its effect sizes. I like to imagine multi-colinearity as the entaglements of features in given dimensional space, and without the any knowelgde on the subject, it holds risk of miss-interpreting the what’s in behind the scene, as I like to phrase ultimate “route cause”.</p>
+<p>Multi-colinearity and robust regression is one of my keen interest and would like to discover further and share. Hopefully in the next post :)</p>
 <pre class="r"><code>var_names &lt;- colnames(Boston_transform %&gt;% dplyr::select(lmedv, everything()))
 
 summary_relationship_tbl &lt;- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %&gt;% 
@@ -2005,8 +2007,16 @@ NA
 </table>
 </div>
 <div id="outlier-detection-on-fluential-observation-by-cooks-distance" class="section level2">
-<h2>Outlier Detection: On Fluential Observation by Cooks Distance</h2>
-<pre class="r"><code># plot cook&#39;s distance
+<h2>Outlier Detection: On Fluential Observation by Cook’s Distance</h2>
+<p>The family of regression in nature sensitive to abnormal data points and there are many techniques to remove the outliers from the data set. In linear approach, the estimated Y’s are predicted by conditional average of X’s coordinates in individual instances. Hence it is a voting mechanism of all the points to estimate the line of the best fit. I like to imagine it as every data points tries to pull the line towards it selves, and some does more successfully than others: leverage.</p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>In other words, if there are presence of extreme outlier situated far from the mean and rest of the coordinates, this leverage is likely to cause regression line distortion and thus the coefficient estimates.</p>
+<p>A general notation for Cook’s Distance is given below:</p>
+<p><span class="math display">\[
+D_i = \frac{\sum_{j=1}^n(\hat{y_j} - \hat{y_{j(i)}})^2}{constant}  
+\]</span></p>
+<p>The equation denotes, how much influential effect does i observation have and it is computed by the difference of <span class="math inline">\(\ \hat{y_j}\)</span> (with i) and <span class="math inline">\(\ \hat{y_{j(i)}}\)</span> (without i) at all the <span class="math inline">\(\ y\)</span> values. If the parameter estimate change a great deal upon suspect outlier (leverage) deletion from the least squares estimate calculation, the point is said to be influential.</p>
+<pre class="r"><code># plot Cook&#39;s distance
 cooksd_outlier_detect &lt;- function(lm_fit){
   cooksd &lt;- cooks.distance(lm_fit)
   influential &lt;- as.numeric(names(cooksd)[(cooksd &gt; 4*mean(cooksd, na.rm=T))])
@@ -2018,9 +2028,14 @@ cooksd_outlier_detect(lm_fit_01edit)</code></pre>
 <pre class="r"><code>cooksd_outlier_plot &lt;- function(lm_fit){
   cooksd &lt;- cooks.distance(lm_fit)
   plot(cooksd, pch=&quot;*&quot;, cex=2, main=&quot;Influential Obs by Cooks distance&quot;) +
+    # I have relaxed the Cook&#39;s distance assumption to retain as much information as possible. 
     abline(h = 4*mean(cooksd, na.rm=T), col=&quot;red&quot;) +
     text(x=1:length(cooksd)+1, y=cooksd, labels=ifelse(cooksd&gt;4*mean(cooksd, na.rm=T),names(cooksd),&quot;&quot;), col=&quot;red&quot;)
-}</code></pre>
+}
+cooksd_outlier_plot(lm_fit_01edit)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre><code>## integer(0)</code></pre>
+<p>A general rule of thumb is to investigate any point that is more than 3 times the mean of all the distances. However, the log(y) (House Price) contain noticable outliers and there is a possibility that these target value upon deletion could be the reason for parameter estimate change. If the influential observation happen to be the Y actual value contribution, we would need to pull this set of observations separatelty and investigate further while making the prediction without this influential detected set.</p>
 <pre class="r"><code># Vectorise outliers NA converter 
 detect_outliers_to_na &lt;- function(x) {
   if (missing(x)) stop(&quot;The argument x needs a vector.&quot;)
@@ -2041,26 +2056,30 @@ detect_outliers_to_na &lt;- function(x) {
            )
   return(output_tbl$outlier)
 }</code></pre>
-<div id="outlier-treatment-1-predictor-varaibles-iqr-outliers-mean-treatment-at-influential-observation-detected" class="section level3">
-<h3>Outlier Treatment #1: Predictor Varaibles IQR-outliers mean treatment at influential Observation detected</h3>
+<div id="outlier-treatment-1-predictor-varaibles-iqr-out-of-bound-outliers-treatment-at-detected-influential-observation" class="section level3">
+<h3>Outlier Treatment #1: Predictor Varaibles IQR out-of-bound Outliers Treatment at Detected Influential Observation</h3>
 <pre class="r"><code># Add Row Id 
 Boston_row_tbl &lt;- Boston_transform %&gt;% 
   mutate(row_id = row_number()) %&gt;% 
   select(row_id, everything())
 
-# 
+# Add flag to the Cook&#39;s Distance Diagnosed Observation
 Boston_outlier_1tbl &lt;- Boston_row_tbl %&gt;% 
   mutate(row_id = row_number(),
          cooksd_flag = case_when(row_id %in% cooksd_outlier_detect(lm_fit_01edit) ~ 1,
                                 TRUE ~ 0)) %&gt;% 
+  # filter these observation set 
   filter(cooksd_flag == 1) %&gt;%  
+  # Detect IQR out-of-bound outliers and convert to NA values  
   mutate_at(vars(lcrim:srlstat), ~ detect_outliers_to_na(.)) %&gt;% 
+  # Replace NA to mean value 
   mutate_at(vars(lcrim:srlstat), function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))) %&gt;% 
+  # bind with rest of the observation 
   bind_rows(Boston_row_tbl[-cooksd_outlier_detect(lm_fit_01edit),]) %&gt;% 
   arrange(row_id) %&gt;% 
   select(-c(cooksd_flag)) 
 
-# 
+# 02Edit linear model: Outlier Detection + Treatment Iteration 
 lm_fit_02edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_1tbl); summary(lm_fit_02edit)</code></pre>
 <pre><code>## 
 ## Call:
@@ -2092,19 +2111,19 @@ lm_fit_02edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_1tbl); summary(lm_f
 ## Residual standard error: 0.1913 on 492 degrees of freedom
 ## Multiple R-squared:  0.7865, Adjusted R-squared:  0.7809 
 ## F-statistic: 139.4 on 13 and 492 DF,  p-value: &lt; 2.2e-16</code></pre>
-<pre class="r"><code>cooksd_outlier_detect(lm_fit_02edit)</code></pre>
+<pre class="r"><code># Treated 3 observation out of 24: the 21 observations are influential data points attributed by the Y values. 
+cooksd_outlier_detect(lm_fit_02edit)</code></pre>
 <pre><code>##  [1]   8   9 149 215 368 369 370 372 373 375 381 399 400 401 402 406 410 413 417
 ## [20] 420 490 491 506</code></pre>
 <pre class="r"><code>cooksd_outlier_plot(lm_fit_02edit)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>plot(lm_fit_02edit)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-4.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-5.png" width="672" /></p>
-<pre class="r"><code># Remove the Target Variable Extreme Outliers 
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-4.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-16-5.png" width="672" /></p>
+<pre class="r"><code># Remove thes Cook&#39;s distance diagnosed outliers 
 Boston_outlier_2tbl &lt;- Boston_outlier_1tbl %&gt;% 
-  filter(!row_id %in% cooksd_outlier_detect(lm_fit_02edit)) 
-
-
+  filter(!row_id %in% cooksd_outlier_detect(lm_fit_02edit)) </code></pre>
+<pre class="r"><code># 03Edit linear model: Cook&#39;s Distance Outiler Deletion 
 lm_fit_03edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_2tbl); summary(lm_fit_03edit)</code></pre>
 <pre><code>## 
 ## Call:
@@ -2137,14 +2156,11 @@ lm_fit_03edit &lt;- lm(lmedv~.-row_id, data = Boston_outlier_2tbl); summary(lm_f
 ## Multiple R-squared:  0.8577, Adjusted R-squared:  0.8538 
 ## F-statistic: 217.5 on 13 and 469 DF,  p-value: &lt; 2.2e-16</code></pre>
 <pre class="r"><code>cooksd_outlier_plot(lm_fit_03edit)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-6.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>plot(lm_fit_03edit)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-7.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-8.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-9.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-14-10.png" width="672" /></p>
-<pre class="r"><code>Boston_prepared &lt;- Boston_outlier_2tbl %&gt;% select(-row_id)
-
-
-glance(lm_fit_03edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-2.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-3.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-4.png" width="672" /><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-5.png" width="672" /></p>
+<pre class="r"><code>glance(lm_fit_03edit) %&gt;% kbl %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
@@ -2231,7 +2247,9 @@ nobs
 </div>
 <div id="data-partitioning-traintest-73" class="section level2">
 <h2>Data Partitioning: train:test (7:3)</h2>
-<pre class="r"><code>set.seed(42)
+<pre class="r"><code>Boston_prepared &lt;- Boston_outlier_2tbl %&gt;% select(-row_id)
+
+set.seed(42)
 tidy_split &lt;- initial_split(Boston_prepared, prop = .7,
                             strata = lmedv)
 Boston_tr &lt;- training(tidy_split)
@@ -2239,35 +2257,98 @@ Boston_te &lt;- testing(tidy_split)</code></pre>
 </div>
 <div id="variable-selection-best-subsets-selection-optimal-dimension" class="section level2">
 <h2>Variable Selection: Best Subsets Selection &amp; Optimal Dimension</h2>
+<p>Optimal number of variables: consideration process by computation of best model with each subsets.</p>
+<p>Finding:</p>
+<p>[1] Method: “Forward” and “Backward”
+Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However, minimum BIC, probabilistic approach, suggests 10 variables is at its optimal.</p>
+<p>[2] Method: “Sequential Replacement” (stepwise)
+Suggests the variable importance of srlstat and black have on the estmimate parameters.</p>
 <pre class="r"><code>regsubfit_full &lt;- regsubsets(lmedv~.,
                         data= Boston_tr, 
                         intercept = T,
-                        method = c(&quot;backward&quot;, &quot;forward&quot;, &quot;seqrep&quot;),
+                        method = c(&quot;exhaustive&quot;),
                         nvmax = 13)
 
-regfit_summary &lt;- summary(regsubfit_full)</code></pre>
+regfit_summary &lt;- summary(regsubfit_full)
+regfit_summary</code></pre>
+<pre><code>## Subset selection object
+## Call: regsubsets.formula(lmedv ~ ., data = Boston_tr, intercept = T, 
+##     method = c(&quot;exhaustive&quot;), nvmax = 13)
+## 13 Variables  (and intercept)
+##          Forced in Forced out
+## lcrim        FALSE      FALSE
+## zn           FALSE      FALSE
+## lindus       FALSE      FALSE
+## chas         FALSE      FALSE
+## lnox         FALSE      FALSE
+## lrm          FALSE      FALSE
+## sqage        FALSE      FALSE
+## ldis         FALSE      FALSE
+## lrad         FALSE      FALSE
+## ltax         FALSE      FALSE
+## eptratio     FALSE      FALSE
+## black        FALSE      FALSE
+## srlstat      FALSE      FALSE
+## 1 subsets of each size up to 13
+## Selection Algorithm: exhaustive
+##           lcrim zn  lindus chas lnox lrm sqage ldis lrad ltax eptratio black
+## 1  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot; &quot;  
+## 2  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot; &quot;  
+## 3  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot;*&quot;  
+## 4  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
+## 5  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
+## 6  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
+## 7  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
+## 8  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+## 9  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot;*&quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+## 10  ( 1 ) &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+## 11  ( 1 ) &quot;*&quot;   &quot; &quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+## 12  ( 1 ) &quot;*&quot;   &quot;*&quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+## 13  ( 1 ) &quot;*&quot;   &quot;*&quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot;*&quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
+##           srlstat
+## 1  ( 1 )  &quot;*&quot;    
+## 2  ( 1 )  &quot;*&quot;    
+## 3  ( 1 )  &quot;*&quot;    
+## 4  ( 1 )  &quot;*&quot;    
+## 5  ( 1 )  &quot;*&quot;    
+## 6  ( 1 )  &quot;*&quot;    
+## 7  ( 1 )  &quot;*&quot;    
+## 8  ( 1 )  &quot;*&quot;    
+## 9  ( 1 )  &quot;*&quot;    
+## 10  ( 1 ) &quot;*&quot;    
+## 11  ( 1 ) &quot;*&quot;    
+## 12  ( 1 ) &quot;*&quot;    
+## 13  ( 1 ) &quot;*&quot;</code></pre>
 <pre class="r"><code>opt_adjr2 &lt;- which.max(regfit_summary$adjr2)
 opt_bic &lt;- which.min(regfit_summary$bic)
 
 plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;adj.RSquare&quot;, type=&quot;l&quot;) +points(opt_adjr2, regfit_summary$adjr2[opt_adjr2], col = &quot;red&quot;, cex=2, pch=20)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>plot(regfit_summary$bic, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;BIC&quot;, type=&quot;l&quot;) +
   points(opt_bic, regfit_summary$bic[opt_bic], col = &quot;red&quot;, cex=2, pch=20)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>plot(regfit_summary$rss, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;RSS&quot;, type=&quot;l&quot;) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-17-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
+</div>
+<div id="linear-model-predcition" class="section level2">
+<h2>Linear Model Predcition</h2>
+<p>Steps</p>
+<p>[1] Split Data (Done)</p>
+<p>[2] Feature Engineering (Done)</p>
+<p>[3] Specify a Model:</p>
+<ul>
+<li>specify our linear regression model with parsnip.</li>
+</ul>
+<div id="vip-variable-of-importance" class="section level4">
+<h4>VIP: Variable of Importance</h4>
 <pre class="r"><code>lm_model &lt;- linear_reg() %&gt;% 
             set_engine(&#39;lm&#39;) %&gt;% 
             set_mode(&#39;regression&#39;)
 
 lmfit_00tr &lt;- lm_model %&gt;% 
   fit(lmedv ~., data = Boston_tr)
-
-# plot(lmfit_00tr$fit, 
-#      pch = 16,
-#      col = &#39;#006EA1&#39;)
 
 tidy(lmfit_00tr); glance(lmfit_00tr)</code></pre>
 <pre><code>## # A tibble: 14 × 5
@@ -2292,25 +2373,40 @@ tidy(lmfit_00tr); glance(lmfit_00tr)</code></pre>
 ##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
 ## 1     0.855         0.849 0.142      146. 2.04e-126    13   185. -341. -283.
 ## # … with 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
-<pre class="r"><code>vip(lmfit_00tr)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<pre class="r"><code>predict(lmfit_00tr, new_data = Boston_te)</code></pre>
-<pre><code>## # A tibble: 147 × 1
-##    .pred
-##    &lt;dbl&gt;
-##  1  3.43
-##  2  3.30
-##  3  2.82
-##  4  2.93
-##  5  2.99
-##  6  2.93
-##  7  2.78
-##  8  2.89
-##  9  2.83
-## 10  2.74
-## # … with 137 more rows</code></pre>
-<pre class="r"><code>Boston_housing_results_lm00 &lt;- predict(lmfit_00tr, new_data = Boston_te) %&gt;% 
-                            bind_cols(Boston_te)</code></pre>
+<pre class="r"><code>lmfit_00tr %&gt;% 
+  vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = &quot;yellow&quot;),
+      mapping = aes_string(color = &quot;Sign&quot;))</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<pre class="r"><code>lmfit &lt;- lm(lmedv~., Boston_tr)
+backward &lt;- stats::step(lmfit, direction = &quot;backward&quot;, trace = 0)
+forward &lt;- stats::step(lmfit, direction = &quot;forward&quot;, trace = 0)
+stepwise &lt;- stats::step(lmfit, direction = &quot;both&quot;, trace = 0)
+
+p1_back &lt;- backward %&gt;% vip(num_features = length(coef(backward)), 
+          geom = &quot;point&quot;, horizontal = FALSE,
+          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position=&quot;default&quot;) 
+
+p2_forw &lt;- vip(forward, num_features = length(coef(backward)), 
+          geom = &quot;point&quot;, horizontal = FALSE, 
+          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position=&quot;default&quot;) 
+
+p2_step &lt;- vip(stepwise, num_features = length(coef(backward)), 
+          geom = &quot;point&quot;, horizontal = FALSE, 
+          mapping = aes_string(color = &quot;Sign&quot;, size = 3)) + 
+  scale_color_viridis_d() +
+  theme(legend.position=&quot;default&quot;) 
+
+grid.arrange(p2_step, p2_forw, ncol = 1)</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p>[3] Prediction</p>
+<pre class="r"><code>Boston_housing_results_lm00 &lt;- predict(lmfit_00tr, new_data = Boston_te) %&gt;%
+  bind_cols(Boston_te) %&gt;% 
+  mutate(residue = lmedv - .pred) %&gt;% 
+  select(.pred, residue, lmedv, everything())</code></pre>
 <pre class="r"><code># RMSE on test set
 rmse(Boston_housing_results_lm00, 
      truth = lmedv,
@@ -2326,19 +2422,22 @@ rmse(Boston_housing_results_lm00,
 ##   .metric .estimator .estimate
 ##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
 ## 1 rsq     standard       0.856</code></pre>
-<pre class="r"><code>ggplot(data = Boston_housing_results_lm00,
-       mapping = aes(x = .pred, y = lmedv)) +
+<pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
   geom_point(color = &#39;#006EA1&#39;) +
   geom_abline(intercept = 0, slope = 1, color = &#39;orange&#39;) +
   labs(title = &#39;Multiple Linear Regression Results: Boston House Price Prediction&#39;,
        x = &#39;Predicted Price&#39;,
-       y = &#39;Actual Price&#39;)</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
-<pre class="r"><code># Multicollinearity suspect: Promising variables (Severe)
-summary_relationship_tbl %&gt;% 
-  filter(str_detect(label, pattern = &quot;chas&quot;))</code></pre>
-<pre><code>## [1] var_names  Estimate   t_stats    p_value    corr       label      cross_corr
-## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
+       y = &#39;Actual Price&#39;) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
+  ggplot(aes(.pred, residue)) + 
+  geom_point() + 
+  geom_smooth(method = &quot;lm&quot;, se = FALSE); mean(Boston_housing_results_lm00$residue)</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-2.png" width="672" /></p>
+<pre><code>## [1] -0.01004848</code></pre>
 <pre class="r"><code>generator_univar_importance_tbl(Boston_tr, &quot;lmedv&quot;)</code></pre>
 <pre><code>## [1] &quot;Response variable: lmedv&quot;</code></pre>
 <pre><code>##     varname vartype    R2 R2_log R2_quad max_R2
@@ -2356,4 +2455,5 @@ summary_relationship_tbl %&gt;%
 ## 12       zn numeric 0.152  0.172   0.167  0.172
 ## 13     chas numeric 0.011  0.011   0.011  0.011
 ## 14    lmedv numeric    NA     NA      NA     NA</code></pre>
+</div>
 </div>
