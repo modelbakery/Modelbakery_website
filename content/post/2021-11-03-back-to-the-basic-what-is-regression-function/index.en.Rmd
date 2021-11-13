@@ -91,6 +91,7 @@ library(broom)
 
 library(caret)
 library(tidymodels)
+library(vip) 
 
 library(hrbrthemes)
 library(GGally)
@@ -171,22 +172,22 @@ lBoston <- Boston %>%
 # Distribution of target medv 
 P_medv <- ggplot(Boston, aes(x = medv)) +
   geom_density(aes(x = medv, y = ..density..)) +
-    geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
+    geom_density(color="black", lwd =1.5, fill = viridisLite::viridis(n = 20)[3], alpha = 0.8)  +
     stat_function(fun=dnorm, 
                 args = list(mean=mean(Boston$medv),
                             sd=sd(Boston$medv)),
-                color="red", lwd = 1) +
+                color=viridisLite::viridis(n = 20)[20], lwd = 1) +
   theme_minimal()
 
 # Distribution of logarithm target medv 
 P_lmedv <- lBoston %>% 
   ggplot(aes(x = log_medv)) +
   geom_density(aes(x = log_medv, y = ..density..)) +
-    geom_density(color="black", lwd =1.5, fill = palette_light()[1])  +
+    geom_density(color="black", lwd =1.5, fill = viridisLite::viridis(n = 20)[3], alpha = 0.8)  +
     stat_function(fun=dnorm, 
                 args = list(mean=mean(lBoston$log_medv),
                             sd=sd(lBoston$log_medv)),
-                color="red", lwd = 1) +
+                color=viridisLite::viridis(n = 20)[20], lwd = 1) +
   theme_minimal()
 
 # Shapiro-Wilk normality test: Both rejects the Null Hypothesis stating that the target data does not fit the normal distribution with 95% confidence. Significant departure from normality was found. 
@@ -244,7 +245,7 @@ generator_hist_facet <- function(data, bins = 20, ncol = 5,
 boxplot(Boston)
 
 # Customised facet histogram: can be found on my GitHub :)  
-generator_hist_facet(lBoston)
+generator_hist_facet(lBoston, bins = 15, fill = viridisLite::viridis(n = 20)[1])
 ```
 
 
@@ -260,17 +261,31 @@ GGally::ggpairs(Boston_medv_median[ ,c(14,1:7, 15)],
                 aes(color=median_medv_cutoff, alpha = 0.75),
                 lower = list(continous = "smooth")) +
   theme_bw() +
-  labs(title = "prostate cancer") +
+  scale_color_viridis_d(alpha = 0.7) +
+  scale_fill_viridis_d(alpha = 0.7) +
+  labs(
+    title    = "Correlation Matrix Plot for Boston Housing: crim ~ age",
+    subtitle = "Promising Separation of High & Low target Subgroups by rm & indus Predictor Vars",
+    caption  = "medv > median(medv): Yellow
+                medv ≤ meidan(medv): Purple",
+  ) + 
   theme(plot.title = element_text(face = 'bold',
                                   colour = 'black',
-                                  hjust = 0.5, size = 12))
+                                  hjust = 0.5, size = 12)) 
 
 # GGally ggpairs plot for variables from dis ~ lstat 
-GGally::ggpairs(Boston_medv_median[ ,c(14,8:15)],
-                aes(color=median_medv_cutoff, alpha = 0.75),
+GGally::ggpairs(Boston_medv_median[ ,c(14,8:13,15)],
+                aes(colour=median_medv_cutoff, alpha = 0.75),
                 lower = list(continous = "smooth")) +
   theme_bw() +
-  labs(title = "prostate cancer") +
+  labs(
+    title    = "Correlation Matrix Plot for Boston Housing: dis ~ lstat",
+    subtitle = "Promising Separation of High & Low target Subgroups by black & lstat Predictor Vars",
+    caption  = "medv > median(medv): Yellow
+                medv ≤ meidan(medv): Purple",
+  ) +
+  scale_color_viridis_d(alpha = 0.7) +
+  scale_fill_viridis_d(alpha = 0.7) +
   theme(plot.title = element_text(face = 'bold',
                                   colour = 'black',
                                   hjust = 0.5, size = 12))
@@ -551,6 +566,9 @@ cooksd_outlier_plot(lm_fit_03edit)
 plot(lm_fit_03edit)
 
 Boston_prepared <- Boston_outlier_2tbl %>% select(-row_id)
+
+
+glance(lm_fit_03edit) %>% kbl %>% kable_material()
 ```
 
 ## Data Partitioning: train:test (7:3)
@@ -597,9 +615,39 @@ lm_model <- linear_reg() %>%
 lmfit_00tr <- lm_model %>% 
   fit(lmedv ~., data = Boston_tr)
 
-plot(lmfit_00tr$fit, 
-     pch = 16,
-     col = '#006EA1')
+# plot(lmfit_00tr$fit, 
+#      pch = 16,
+#      col = '#006EA1')
+
+tidy(lmfit_00tr); glance(lmfit_00tr)
+
+vip(lmfit_00tr)
+
+predict(lmfit_00tr, new_data = Boston_te)
+
+Boston_housing_results_lm00 <- predict(lmfit_00tr, new_data = Boston_te) %>% 
+                            bind_cols(Boston_te)
+
+```
+
+
+```{r}
+# RMSE on test set
+rmse(Boston_housing_results_lm00, 
+     truth = lmedv,
+     estimate = .pred)
+
+rsq(Boston_housing_results_lm00,
+    truth = lmedv,
+    estimate = .pred)
+
+ggplot(data = Boston_housing_results_lm00,
+       mapping = aes(x = .pred, y = lmedv)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Multiple Linear Regression Results: Boston House Price Prediction',
+       x = 'Predicted Price',
+       y = 'Actual Price')
 
 ```
 
@@ -607,8 +655,6 @@ plot(lmfit_00tr$fit,
 # Multicollinearity suspect: Promising variables (Severe)
 summary_relationship_tbl %>% 
   filter(str_detect(label, pattern = "chas"))
-
-
 ```
 
 
