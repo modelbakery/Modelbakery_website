@@ -23,44 +23,6 @@ projects: []
 draft: TRUE
 ---
 
-The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what's called "root cause" is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and not be betrayed by algorithms.
-
-In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity. 
-
-
-Contents:
-
-Study 
-
-* What is multiple linear regression function 
-  + Why linear regression?
-  + What are its assumptions and difference with linear regression?
-  + Estimation of the parameters by least squares
-  + Assessing the accuracy of the Coefficient Estimates
-  + Hypothesis Testing (t-test)
-  + Assessing the Overall Accuracy of the Model 
-  + Variable Selection 
-  + Model Selection 
-
-* Business Case Study 
-  + Variable Interaction (Synergy Effect: Feature Engineering & Business Strategy)
-
-
-## General notation for 
-
-Its general notation:
-
-f(x) = E(Y|X =x) 
-
-Depending on the complexity of the function, we may be able to understand how each components Xj affects Y, and therefore the interpretable level of parameters with respect to independent X variables influencing on Y. 
-
-Thus models, even within Regression, have many uses and those amongst them. Some of its models would be easier to interpret than others but stronger the assumptions and its limitations to follow. I mean there is really no "free-lunch" right? 
-
-Before I begin explore the assumptions and algorithms of different regression models. Lets try to understand the general scheme of ideal function - explained by ...
-
-* Conditional average 
-So is there an ideal f(X)? 
-
 
 ## Why linear regression?
 
@@ -69,8 +31,7 @@ I always had this wonder. How do we know in what situation, the linear approxima
 >“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
 >—Albert Einstein
 
-I believe that the more complicated the problem is, the more important its interpretation becomes. 
-In other words, we should always consider the possibility of simpler way to approach any form of problems. 
+I believe that the more complicated the problem is, the more important its interpretation becomes. In other words, we should always consider the possibility of simpler way to approach any form of problems. 
 
 
 ## Load Libraries
@@ -408,19 +369,20 @@ In comparison to original data, these transformed variables are more asymmetric 
 
 ```{r}
 # Target variable correlation plot
-corr_info <- corr_var(Boston_transform, 
+corr_plot <- corr_var(Boston_transform, 
   lmedv 
-); corr_info
+); corr_plot
 
 # X's cross correlation plot: display only significant correlations (at 5% level)
-corr_cross_info <- corr_cross(Boston_transform %>% dplyr::select(-lmedv), 
+corr_cross_plot <- corr_cross(Boston_transform %>% dplyr::select(-lmedv), 
   max_pvalue = 0.05,
   rm.na = FALSE
-); corr_cross_info
+); corr_cross_plot
 
-# Capturing data into table 
-corr_tbl <- corr_info$data %>% dplyr::select(variables, corr)
-corr_cross_tbl <-corr_cross_info$data %>% dplyr::select(key, label, corr)
+# Capturing data into table: 
+# @ TBD {Bind with variable coefficient statistics tbl}
+corr_tbl <- corr_plot$data %>% dplyr::select(variables, corr)
+corr_cross_tbl <-corr_cross_plot$data %>% dplyr::select(key, label, corr)
 ```
 
 #### Linear Model: Original VS Transformed Data Set
@@ -442,7 +404,14 @@ From the summary statistics computed with glance function, it is clear that asym
 * Less number of statistically significant variables depicted (t_value > 2) on the model. Optimal parameters   
 
 
+Depending on the nature of task (target variable: Boston House Price) the predictors will vary in weight of importance between the interpretation and the accuracy. Having skewed data will have tendency to hide these importance and its information have on the House Price. By default, it is our challenge to align these distributions in respect to, ideally normally distributed, Y in order to protect loss on valuable information. 
+
+Understanding that skewness and scale are different is important, it can be easily observed by t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation then only having to look at correlation. I believe this approach can also be powerful in recongising hierachical relationships between the variable X's. 
+
+
+
 ## Summary table for variable coefficient & correlation 
+
 ```{r}
 var_names <- colnames(Boston_transform %>% dplyr::select(lmedv, everything()))
 
@@ -457,6 +426,7 @@ summary_relationship_tbl <- summary(lm_fit_00edit)$coefficients[,c(1,3:4)] %>%
 
 summary_relationship_tbl %>% kbl() %>% kable_material()
 ```
+
 
 ## Outlier Detection: On Fluential Observation by Cooks Distance 
 

@@ -28,39 +28,6 @@ draft: TRUE
 <link href="{{< blogdown/postref >}}index.en_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>The concept I first learnt about multiple linear regression was too good to be true, to be applied in the real world data. This view I once had on linear regression differ greatly from one I have now. Simplicity is the best, but the work behind?- seeking deeply into the what’s called “root cause” is simply a time investment. That said, the better we are with regression, the better we will understand the hidden problems and not be betrayed by algorithms.</p>
-<p>In this post, I will be focusing on variable transformation, multicollinearity, VIF, adjusted R-squared, and variable selection to come up with acceptable accuracy without relaxing the assumption of linearity.</p>
-<p>Contents:</p>
-<p>Study</p>
-<ul>
-<li>What is multiple linear regression function
-<ul>
-<li>Why linear regression?</li>
-<li>What are its assumptions and difference with linear regression?</li>
-<li>Estimation of the parameters by least squares</li>
-<li>Assessing the accuracy of the Coefficient Estimates</li>
-<li>Hypothesis Testing (t-test)</li>
-<li>Assessing the Overall Accuracy of the Model</li>
-<li>Variable Selection</li>
-<li>Model Selection</li>
-</ul></li>
-<li>Business Case Study
-<ul>
-<li>Variable Interaction (Synergy Effect: Feature Engineering &amp; Business Strategy)</li>
-</ul></li>
-</ul>
-<div id="general-notation-for" class="section level2">
-<h2>General notation for</h2>
-<p>Its general notation:</p>
-<p>f(x) = E(Y|X =x)</p>
-<p>Depending on the complexity of the function, we may be able to understand how each components Xj affects Y, and therefore the interpretable level of parameters with respect to independent X variables influencing on Y.</p>
-<p>Thus models, even within Regression, have many uses and those amongst them. Some of its models would be easier to interpret than others but stronger the assumptions and its limitations to follow. I mean there is really no “free-lunch” right?</p>
-<p>Before I begin explore the assumptions and algorithms of different regression models. Lets try to understand the general scheme of ideal function - explained by …</p>
-<ul>
-<li>Conditional average
-So is there an ideal f(X)?</li>
-</ul>
-</div>
 <div id="why-linear-regression" class="section level2">
 <h2>Why linear regression?</h2>
 <p>I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right?</p>
@@ -68,8 +35,7 @@ So is there an ideal f(X)?</li>
 <p>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
 —Albert Einstein</p>
 </blockquote>
-<p>I believe that the more complicated the problem is, the more important its interpretation becomes.
-In other words, we should always consider the possibility of simpler way to approach any form of problems.</p>
+<p>I believe that the more complicated the problem is, the more important its interpretation becomes. In other words, we should always consider the possibility of simpler way to approach any form of problems.</p>
 </div>
 <div id="load-libraries" class="section level2">
 <h2>Load Libraries</h2>
@@ -1024,20 +990,21 @@ Boston_transform %&gt;%
 <div id="correlation-lares-package" class="section level4">
 <h4>Correlation: lares package</h4>
 <pre class="r"><code># Target variable correlation plot
-corr_info &lt;- corr_var(Boston_transform, 
+corr_plot &lt;- corr_var(Boston_transform, 
   lmedv 
-); corr_info</code></pre>
+); corr_plot</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <pre class="r"><code># X&#39;s cross correlation plot: display only significant correlations (at 5% level)
-corr_cross_info &lt;- corr_cross(Boston_transform %&gt;% dplyr::select(-lmedv), 
+corr_cross_plot &lt;- corr_cross(Boston_transform %&gt;% dplyr::select(-lmedv), 
   max_pvalue = 0.05,
   rm.na = FALSE
-); corr_cross_info</code></pre>
+); corr_cross_plot</code></pre>
 <pre><code>## Returning only the top 25. You may override with the &#39;top&#39; argument</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
-<pre class="r"><code># Capturing data into table 
-corr_tbl &lt;- corr_info$data %&gt;% dplyr::select(variables, corr)
-corr_cross_tbl &lt;-corr_cross_info$data %&gt;% dplyr::select(key, label, corr)</code></pre>
+<pre class="r"><code># Capturing data into table: 
+# @ TBD {Bind with variable coefficient statistics tbl}
+corr_tbl &lt;- corr_plot$data %&gt;% dplyr::select(variables, corr)
+corr_cross_tbl &lt;-corr_cross_plot$data %&gt;% dplyr::select(key, label, corr)</code></pre>
 </div>
 <div id="linear-model-original-vs-transformed-data-set" class="section level4">
 <h4>Linear Model: Original VS Transformed Data Set</h4>
@@ -1276,6 +1243,8 @@ nobs
 <li><p>Higher R-squared &amp; adj.R-squared, and lower AIC &amp; BIC</p></li>
 <li><p>Less number of statistically significant variables depicted (t_value &gt; 2) on the model. Optimal parameters</p></li>
 </ul>
+<p>Depending on the nature of task (target variable: Boston House Price) the predictors will vary in weight of importance between the interpretation and the accuracy. Having skewed data will have tendency to hide these importance and its information have on the House Price. By default, it is our challenge to align these distributions in respect to, ideally normally distributed, Y in order to protect loss on valuable information.</p>
+<p>Understanding that skewness and scale are different is important, it can be easily observed by t-statistics and correlation coefficients. It can be seem non-ordinary to split the numeric target variable into two subgroups during the data interpretation. However, as seen above, it adds more visual interpretation then only having to look at correlation. I believe this approach can also be powerful in recongising hierachical relationships between the variable X’s.</p>
 </div>
 </div>
 <div id="summary-table-for-variable-coefficient-correlation" class="section level2">
