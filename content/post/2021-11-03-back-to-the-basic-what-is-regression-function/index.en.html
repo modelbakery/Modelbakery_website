@@ -2270,55 +2270,642 @@ Suggests the variable importance of srlstat and black have on the estmimate para
                         nvmax = 13)
 
 regfit_summary &lt;- summary(regsubfit_full)
-regfit_summary</code></pre>
-<pre><code>## Subset selection object
-## Call: regsubsets.formula(lmedv ~ ., data = Boston_tr, intercept = T, 
-##     method = c(&quot;exhaustive&quot;), nvmax = 13)
-## 13 Variables  (and intercept)
-##          Forced in Forced out
-## lcrim        FALSE      FALSE
-## zn           FALSE      FALSE
-## lindus       FALSE      FALSE
-## chas         FALSE      FALSE
-## lnox         FALSE      FALSE
-## lrm          FALSE      FALSE
-## sqage        FALSE      FALSE
-## ldis         FALSE      FALSE
-## lrad         FALSE      FALSE
-## ltax         FALSE      FALSE
-## eptratio     FALSE      FALSE
-## black        FALSE      FALSE
-## srlstat      FALSE      FALSE
-## 1 subsets of each size up to 13
-## Selection Algorithm: exhaustive
-##           lcrim zn  lindus chas lnox lrm sqage ldis lrad ltax eptratio black
-## 1  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot; &quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot; &quot;  
-## 2  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot; &quot;  
-## 3  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot; &quot;      &quot;*&quot;  
-## 4  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
-## 5  ( 1 )  &quot; &quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
-## 6  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot; &quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
-## 7  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot; &quot;  &quot;*&quot;      &quot;*&quot;  
-## 8  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot; &quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-## 9  ( 1 )  &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot;*&quot;  &quot; &quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-## 10  ( 1 ) &quot;*&quot;   &quot; &quot; &quot; &quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-## 11  ( 1 ) &quot;*&quot;   &quot; &quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-## 12  ( 1 ) &quot;*&quot;   &quot;*&quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot; &quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-## 13  ( 1 ) &quot;*&quot;   &quot;*&quot; &quot;*&quot;    &quot;*&quot;  &quot;*&quot;  &quot;*&quot; &quot;*&quot;   &quot;*&quot;  &quot;*&quot;  &quot;*&quot;  &quot;*&quot;      &quot;*&quot;  
-##           srlstat
-## 1  ( 1 )  &quot;*&quot;    
-## 2  ( 1 )  &quot;*&quot;    
-## 3  ( 1 )  &quot;*&quot;    
-## 4  ( 1 )  &quot;*&quot;    
-## 5  ( 1 )  &quot;*&quot;    
-## 6  ( 1 )  &quot;*&quot;    
-## 7  ( 1 )  &quot;*&quot;    
-## 8  ( 1 )  &quot;*&quot;    
-## 9  ( 1 )  &quot;*&quot;    
-## 10  ( 1 ) &quot;*&quot;    
-## 11  ( 1 ) &quot;*&quot;    
-## 12  ( 1 ) &quot;*&quot;    
-## 13  ( 1 ) &quot;*&quot;</code></pre>
+
+regfit_summary$outmat %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+lcrim
+</th>
+<th style="text-align:left;">
+zn
+</th>
+<th style="text-align:left;">
+lindus
+</th>
+<th style="text-align:left;">
+chas
+</th>
+<th style="text-align:left;">
+lnox
+</th>
+<th style="text-align:left;">
+lrm
+</th>
+<th style="text-align:left;">
+sqage
+</th>
+<th style="text-align:left;">
+ldis
+</th>
+<th style="text-align:left;">
+lrad
+</th>
+<th style="text-align:left;">
+ltax
+</th>
+<th style="text-align:left;">
+eptratio
+</th>
+<th style="text-align:left;">
+black
+</th>
+<th style="text-align:left;">
+srlstat
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1 ( 1 )
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2 ( 1 )
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3 ( 1 )
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4 ( 1 )
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5 ( 1 )
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+6 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+7 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+8 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+9 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+10 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+11 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+12 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+<tr>
+<td style="text-align:left;">
+13 ( 1 )
+</td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+<td style="text-align:left;">
+<ul>
+<li></td>
+</tr>
+</tbody>
+</table></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
 <pre class="r"><code>opt_adjr2 &lt;- which.max(regfit_summary$adjr2)
 opt_bic &lt;- which.min(regfit_summary$bic)
 
@@ -2350,29 +2937,351 @@ plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&qu
 lmfit_00tr &lt;- lm_model %&gt;% 
   fit(lmedv ~., data = Boston_tr)
 
-tidy(lmfit_00tr); glance(lmfit_00tr)</code></pre>
-<pre><code>## # A tibble: 14 × 5
-##    term        estimate std.error statistic  p.value
-##    &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
-##  1 (Intercept)  2.98      0.366        8.15 7.91e-15
-##  2 lcrim       -0.0994    0.0203      -4.90 1.53e- 6
-##  3 zn           0.00611   0.00490      1.25 2.14e- 1
-##  4 lindus      -0.0243    0.0186      -1.31 1.91e- 1
-##  5 chas         0.0996    0.0313       3.18 1.60e- 3
-##  6 lnox        -0.457     0.234       -1.95 5.15e- 2
-##  7 lrm          0.913     0.116        7.85 6.05e-14
-##  8 sqage       -0.00461   0.00424     -1.09 2.77e- 1
-##  9 ldis        -0.230     0.0337      -6.83 4.29e-11
-## 10 lrad         0.0976    0.0186       5.25 2.72e- 7
-## 11 ltax        -0.121     0.0422      -2.88 4.29e- 3
-## 12 eptratio    -0.0287    0.00741     -3.88 1.26e- 4
-## 13 black        0.0686    0.0105       6.51 2.82e-10
-## 14 srlstat     -0.189     0.0160     -11.8  4.93e-27</code></pre>
-<pre><code>## # A tibble: 1 × 12
-##   r.squared adj.r.squared sigma statistic   p.value    df logLik   AIC   BIC
-##       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-## 1     0.855         0.849 0.142      146. 2.04e-126    13   185. -341. -283.
-## # … with 3 more variables: deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</code></pre>
+tidy(lmfit_00tr)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+term
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+std.error
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+(Intercept)
+</td>
+<td style="text-align:right;">
+2.9811264
+</td>
+<td style="text-align:right;">
+0.3655766
+</td>
+<td style="text-align:right;">
+8.154587
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lcrim
+</td>
+<td style="text-align:right;">
+-0.0993706
+</td>
+<td style="text-align:right;">
+0.0202830
+</td>
+<td style="text-align:right;">
+-4.899198
+</td>
+<td style="text-align:right;">
+0.0000015
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+zn
+</td>
+<td style="text-align:right;">
+0.0061077
+</td>
+<td style="text-align:right;">
+0.0049019
+</td>
+<td style="text-align:right;">
+1.245989
+</td>
+<td style="text-align:right;">
+0.2136744
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lindus
+</td>
+<td style="text-align:right;">
+-0.0243457
+</td>
+<td style="text-align:right;">
+0.0185979
+</td>
+<td style="text-align:right;">
+-1.309061
+</td>
+<td style="text-align:right;">
+0.1914472
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+chas
+</td>
+<td style="text-align:right;">
+0.0996421
+</td>
+<td style="text-align:right;">
+0.0312996
+</td>
+<td style="text-align:right;">
+3.183493
+</td>
+<td style="text-align:right;">
+0.0015972
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lnox
+</td>
+<td style="text-align:right;">
+-0.4565157
+</td>
+<td style="text-align:right;">
+0.2335500
+</td>
+<td style="text-align:right;">
+-1.954681
+</td>
+<td style="text-align:right;">
+0.0514858
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lrm
+</td>
+<td style="text-align:right;">
+0.9133291
+</td>
+<td style="text-align:right;">
+0.1162822
+</td>
+<td style="text-align:right;">
+7.854419
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sqage
+</td>
+<td style="text-align:right;">
+-0.0046146
+</td>
+<td style="text-align:right;">
+0.0042350
+</td>
+<td style="text-align:right;">
+-1.089630
+</td>
+<td style="text-align:right;">
+0.2766907
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ldis
+</td>
+<td style="text-align:right;">
+-0.2300286
+</td>
+<td style="text-align:right;">
+0.0336884
+</td>
+<td style="text-align:right;">
+-6.828125
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+lrad
+</td>
+<td style="text-align:right;">
+0.0976265
+</td>
+<td style="text-align:right;">
+0.0185825
+</td>
+<td style="text-align:right;">
+5.253688
+</td>
+<td style="text-align:right;">
+0.0000003
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ltax
+</td>
+<td style="text-align:right;">
+-0.1213053
+</td>
+<td style="text-align:right;">
+0.0421748
+</td>
+<td style="text-align:right;">
+-2.876250
+</td>
+<td style="text-align:right;">
+0.0042926
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+eptratio
+</td>
+<td style="text-align:right;">
+-0.0287482
+</td>
+<td style="text-align:right;">
+0.0074074
+</td>
+<td style="text-align:right;">
+-3.881000
+</td>
+<td style="text-align:right;">
+0.0001262
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0.0686069
+</td>
+<td style="text-align:right;">
+0.0105331
+</td>
+<td style="text-align:right;">
+6.513475
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+srlstat
+</td>
+<td style="text-align:right;">
+-0.1888897
+</td>
+<td style="text-align:right;">
+0.0159761
+</td>
+<td style="text-align:right;">
+-11.823304
+</td>
+<td style="text-align:right;">
+0.0000000
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>glance(lmfit_00tr)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+<th style="text-align:right;">
+nobs
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.8550502
+</td>
+<td style="text-align:right;">
+0.8491982
+</td>
+<td style="text-align:right;">
+0.1423718
+</td>
+<td style="text-align:right;">
+146.1122
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+185.3558
+</td>
+<td style="text-align:right;">
+-340.7117
+</td>
+<td style="text-align:right;">
+-283.455
+</td>
+<td style="text-align:right;">
+6.526857
+</td>
+<td style="text-align:right;">
+322
+</td>
+<td style="text-align:right;">
+336
+</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>lmfit_00tr %&gt;% 
   vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = &quot;yellow&quot;),
       mapping = aes_string(color = &quot;Sign&quot;))</code></pre>
@@ -2410,18 +3319,66 @@ grid.arrange(p2_step, p2_forw, ncol = 1)</code></pre>
 <pre class="r"><code># RMSE on test set
 rmse(Boston_housing_results_lm00, 
      truth = lmedv,
-     estimate = .pred)</code></pre>
-<pre><code>## # A tibble: 1 × 3
-##   .metric .estimator .estimate
-##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
-## 1 rmse    standard       0.151</code></pre>
+     estimate = .pred) %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+.metric
+</th>
+<th style="text-align:left;">
+.estimator
+</th>
+<th style="text-align:right;">
+.estimate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+rmse
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.1512553
+</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>rsq(Boston_housing_results_lm00,
     truth = lmedv,
-    estimate = .pred)</code></pre>
-<pre><code>## # A tibble: 1 × 3
-##   .metric .estimator .estimate
-##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
-## 1 rsq     standard       0.856</code></pre>
+    estimate = .pred)  %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+.metric
+</th>
+<th style="text-align:left;">
+.estimator
+</th>
+<th style="text-align:right;">
+.estimate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+rsq
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.8557721
+</td>
+</tr>
+</tbody>
+</table>
 <pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
   ggplot(mapping = aes(x = .pred, y = lmedv)) +
   geom_point(color = &#39;#006EA1&#39;) +

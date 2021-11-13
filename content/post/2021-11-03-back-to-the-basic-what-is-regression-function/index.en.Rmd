@@ -630,8 +630,8 @@ regsubfit_full <- regsubsets(lmedv~.,
                         nvmax = 13)
 
 regfit_summary <- summary(regsubfit_full)
-regfit_summary
 
+regfit_summary$outmat %>% kbl %>% kable_material()
 ```
 
 ```{r}
@@ -668,7 +668,8 @@ lm_model <- linear_reg() %>%
 lmfit_00tr <- lm_model %>% 
   fit(lmedv ~., data = Boston_tr)
 
-tidy(lmfit_00tr); glance(lmfit_00tr)
+tidy(lmfit_00tr)  %>% kbl %>% kable_material()
+glance(lmfit_00tr)  %>% kbl %>% kable_material()
 
 lmfit_00tr %>% 
   vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = "yellow"),
@@ -717,11 +718,11 @@ Boston_housing_results_lm00 <- predict(lmfit_00tr, new_data = Boston_te) %>%
 # RMSE on test set
 rmse(Boston_housing_results_lm00, 
      truth = lmedv,
-     estimate = .pred)
+     estimate = .pred) %>% kbl %>% kable_material()
 
 rsq(Boston_housing_results_lm00,
     truth = lmedv,
-    estimate = .pred)
+    estimate = .pred)  %>% kbl %>% kable_material()
 
 Boston_housing_results_lm00 %>% 
   ggplot(mapping = aes(x = .pred, y = lmedv)) +
