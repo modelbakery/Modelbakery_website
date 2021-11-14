@@ -653,20 +653,24 @@ plot(regfit_summary$rss, xlab="No. of Predictor Variables", ylab="RSS", type="l"
 #### VIP: Variable of Importance 
 
 ```{r}
+summary_relationship_tbl %>% filter(label %>% str_detect("lnox"))
+```
+
+```{r}
 # Stepwise function 
 lmfit <- lm(lmedv~., Boston_tr)
 forward  <- stats::step(lmfit, direction  = "forward", trace = 0)
 backward <- stats::step(lmfit, direction  = "backward", trace = 0)
 stepwise <- stats::step(lmfit, direction  = "both", trace = 0)
 
-# Backward and both gives the same output 
+# Backward and stepwise outputs the same prediction result 
 method <- c("forward", "backward", "stepwise")
 cbind(method, rbind(
   forward  %>% glance(),
   backward %>% glance(),
   stepwise %>% glance())) %>% kbl %>% kable_material()
 
-# Stepwise Selection method: VIP visualisation 
+# Step Selection method: VIP visualisation 
 p1_forw <- vip(forward, num_features = length(coef(backward)), 
           geom = "point", horizontal = FALSE, 
           mapping = aes_string(color = "Sign", size = 5)) + 
@@ -687,13 +691,9 @@ grid.arrange(p1_forw + labs(caption  = "VIP: Forward Selection Algorithm by AIC 
 
 Steps 
 
-[1] Split Data: 7:3 
+[1] Split Data: 7:3 (Done)
 
-[2] Feature Engineering: 
-
-* Pre-made 
-
-* Log + normalisation 
+[2] Feature Engineering: (Done)
 
 [3] Specify a Model: Linear Regression 
 
@@ -703,23 +703,48 @@ Steps
 
 * Backward stepwise: 11 variables 
 
-* Interaction TBD 
-
+* Interaction TBD (next post)
 
 ```{r}
+# Recipes 
+forw_recipe <- recipe(lmedv~., data = Boston_tr)
+
+backw_recipe <- recipe(backward$call$formula, data = Boston_tr) 
+
+poly_recipe <- recipe(lmedv ~ lrm + lrad + lcrim + chas + lnox + ldis + ltax + 
+    eptratio + black + srlstat, data = Boston_tr) %>%
+  step_poly(lrm, lrad) %>% 
+  prep()
+
+
+# Specify a Model: Linear Regression 
 lm_model <- linear_reg() %>% 
             set_engine('lm') %>% 
-            set_mode('regression')
+            set_mode('regression') 
 
-lmfit_00tr <- lm_model %>% 
-  fit(lmedv ~., data = Boston_tr)
+# Work flow 
+forw_fit <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(forw_recipe) %>% 
+  last_fit(split = tidy_split)
 
-tidy(lmfit_00tr) %>% kbl %>% kable_material()
-glance(lmfit_00tr) %>% kbl %>% kable_material()
+backw_fit <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(backw_recipe) %>% 
+  last_fit(split = tidy_split)
 
-lmfit_00tr %>% 
-  vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = "yellow"),
-      mapping = aes_string(color = "Sign"))
+poly_fit <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(poly_recipe) %>% 
+  last_fit(split = tidy_split)
+
+
+names_fit <- c("forw_fit", "forw_fit", "backw_fit", "backw_fit", "poly_fit", "poly_fit")
+cbind(names_fit, rbind(
+  forw_fit %>% collect_metrics(),
+  backw_fit %>% collect_metrics(),
+  poly_fit %>% collect_metrics()
+)) %>% arrange(.metric) %>% kbl() %>% kable_material()
 
 ```
 
@@ -727,23 +752,25 @@ lmfit_00tr %>%
 [3] Prediction 
 
 ```{r}
-Boston_housing_results_lm00 <- predict(lmfit_00tr, new_data = Boston_te) %>%
-  bind_cols(Boston_te) %>% 
+forw_results <- forw_fit %>% 
+                 collect_predictions() %>% 
+  left_join(forw_recipe %>% prep() %>% bake(new_data = Boston_te), by = "lmedv") %>% 
   mutate(residue = lmedv - .pred) %>% 
-  select(.pred, residue, lmedv, everything())
-```
+  select(-c(id, .config))
 
-```{r}
-# RMSE on test set
-rmse(Boston_housing_results_lm00, 
-     truth = lmedv,
-     estimate = .pred) %>% kbl %>% kable_material()
+backw_results <- backw_fit %>% 
+                 collect_predictions() %>% 
+  left_join(backw_recipe %>% prep() %>% bake(new_data = Boston_te), by = "lmedv") %>% 
+  mutate(residue = lmedv - .pred) %>% 
+  select(-c(id, .config))
 
-rsq(Boston_housing_results_lm00,
-    truth = lmedv,
-    estimate = .pred) %>% kbl %>% kable_material()
+poly_results <- poly_fit %>% 
+                 collect_predictions() %>% 
+  left_join(poly_recipe %>% prep() %>% bake(new_data = Boston_te), by = "lmedv") %>% 
+  mutate(residue = lmedv - .pred) %>% 
+  select(-c(id, .config))
 
-Boston_housing_results_lm00 %>% 
+forw_results %>% 
   ggplot(mapping = aes(x = .pred, y = lmedv)) +
   geom_point(color = '#006EA1') +
   geom_abline(intercept = 0, slope = 1, color = 'orange') +
@@ -752,7 +779,61 @@ Boston_housing_results_lm00 %>%
        y = 'Actual Price') +
   theme_tq()
 
+forw_results %>% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = '#006EA1') +
+  geom_smooth(method = "lm", se = FALSE, color = 'orange') +
+  labs(title = 'Residue Plot: Error Variance Check',
+       x = 'Predicted Price',
+       y = 'Error') +
+  theme_tq()
+
+backw_results %>% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Multiple Linear Regression Results: Boston House Price Prediction',
+       x = 'Predicted Price',
+       y = 'Actual Price') +
+  theme_tq()
+
+backw_results %>% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = '#006EA1') +
+  geom_smooth(method = "lm", se = FALSE, color = 'orange')  +
+  labs(title = 'Residue Plot: Error Variance Check',
+       x = 'Predicted Price',
+       y = 'Error') +
+  theme_tq()
+
+poly_results %>% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
+  geom_point(color = '#006EA1') +
+  geom_abline(intercept = 0, slope = 1, color = 'orange') +
+  labs(title = 'Multiple Linear Regression Results: Boston House Price Prediction',
+       x = 'Predicted Price',
+       y = 'Actual Price') +
+  theme_tq()
+
+poly_results %>% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = '#006EA1') +
+  geom_smooth(method = "lm", se = FALSE, color = 'orange')  +
+  labs(title = 'Residue Plot: Error Variance Check',
+       x = 'Predicted Price',
+       y = 'Error') +
+  theme_tq()
 ```
+```{r}
+sum(forw_results$residue^2); mean(forw_results$residue)
+
+sum(backw_results$residue^2); mean(backw_results$residue)
+
+sum(poly_results$residue^2); mean(poly_results$residue)
+
+```
+
+
 
 Some Problems with R-squared
 
@@ -760,19 +841,16 @@ Previously, I demonstrated that you cannot use R-squared to conclude whether you
 
 Problem 1: R-squared increases every time you add an independent variable to the model. The R-squared never decreases, not even when it’s just a chance correlation between variables. A regression model that contains more independent variables than another model can look like it provides a better fit merely because it contains more variables.
 
-```{r}
-Boston_housing_results_lm00 %>% 
-  ggplot(aes(.pred, residue)) + 
-  geom_point(color = '#006EA1') + 
-  geom_smooth(method = "lm", se = FALSE, color = 'orange'); mean(Boston_housing_results_lm00$residue)
-```
 
 Problem 2: When a model contains an excessive number of independent variables and polynomial terms, it becomes overly customized to fit the peculiarities and random noise in your sample rather than reflecting the entire population. Statisticians call this overfitting the model, and it produces deceptively high R-squared values and a decreased capability for precise predictions.
 
 Fortunately for us, adjusted R-squared and predicted R-squared address both of these problems.
 
 ```{r}
-cof <- round(lmfit_00tr$fit$coefficients, 3) 
+Boston_final_lm_fit <- lm_model %>% 
+                fit(lmedv~., data = Boston_tr)
+
+cof <- round(Boston_final_lm_fit$fit$coefficients, 3)
 n <- names(cof)
 y = paste('Final Model:', 'y=',
           cof[1], '*', n[1], "+",
@@ -786,7 +864,9 @@ y = paste('Final Model:', 'y=',
           cof[9], '*', n[9], '+',
           cof[10], '*', n[10], '+',
           cof[11], '*', n[11], '+',
-          cof[12], '*', n[12])
+          cof[12], '*', n[12], '+',
+          cof[13], '*', n[13], '+',
+          cof[14], '*', n[14])
 y
 ```
 

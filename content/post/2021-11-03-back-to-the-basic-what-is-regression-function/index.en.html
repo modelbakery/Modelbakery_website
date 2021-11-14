@@ -2921,13 +2921,30 @@ plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&qu
 <pre class="r"><code>plot(regfit_summary$rss, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;RSS&quot;, type=&quot;l&quot;) </code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" />
 #### VIP: Variable of Importance</p>
+<pre class="r"><code>summary_relationship_tbl %&gt;% filter(label %&gt;% str_detect(&quot;lnox&quot;))</code></pre>
+<pre><code>##   var_names     Estimate   t_stats      p_value      corr          label
+## 1      lnox -17.76661123 -4.651257 4.245644e-06 -0.513735    lnox + ldis
+## 2      lnox -17.76661123 -4.651257 4.245644e-06 -0.513735 lnox + srlstat
+## 3      lnox -17.76661123 -4.651257 4.245644e-06 -0.513735    lnox + lrad
+## 4      lnox -17.76661123 -4.651257 4.245644e-06 -0.513735    lnox + ltax
+## 5     lcrim  -0.10801136 -3.286517 1.086810e-03 -0.599781   lcrim + lnox
+## 6    lindus   0.02055863  0.334310 7.382881e-01 -0.553887  lindus + lnox
+## 7      lnox -17.76661123 -4.651257 4.245644e-06 -0.513735   lnox + sqage
+##   cross_corr
+## 1  -0.843877
+## 2   0.602493
+## 3   0.604894
+## 4   0.665838
+## 5   0.713491
+## 6   0.735757
+## 7   0.767939</code></pre>
 <pre class="r"><code># Stepwise function 
 lmfit &lt;- lm(lmedv~., Boston_tr)
 forward  &lt;- stats::step(lmfit, direction  = &quot;forward&quot;, trace = 0)
 backward &lt;- stats::step(lmfit, direction  = &quot;backward&quot;, trace = 0)
 stepwise &lt;- stats::step(lmfit, direction  = &quot;both&quot;, trace = 0)
 
-# Backward and both gives the same output 
+# Backward and stepwise outputs the same prediction result 
 method &lt;- c(&quot;forward&quot;, &quot;backward&quot;, &quot;stepwise&quot;)
 cbind(method, rbind(
   forward  %&gt;% glance(),
@@ -3103,7 +3120,7 @@ stepwise
 </tr>
 </tbody>
 </table>
-<pre class="r"><code># Stepwise Selection method: VIP visualisation 
+<pre class="r"><code># Step Selection method: VIP visualisation 
 p1_forw &lt;- vip(forward, num_features = length(coef(backward)), 
           geom = &quot;point&quot;, horizontal = FALSE, 
           mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
@@ -3118,392 +3135,65 @@ p2_back &lt;- backward %&gt;% vip(num_features = length(coef(backward)),
 
 grid.arrange(p1_forw + labs(caption  = &quot;VIP: Forward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)&quot;), 
              p2_back + labs(caption  = &quot;VIP: Backward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 </div>
 <div id="linear-model-predcition" class="section level2">
 <h2>Linear Model Predcition</h2>
 <p>Steps</p>
-<p>[1] Split Data: 7:3</p>
-<p>[2] Feature Engineering:</p>
-<ul>
-<li><p>Pre-made</p></li>
-<li><p>Log + normalisation</p></li>
-</ul>
+<p>[1] Split Data: 7:3 (Done)</p>
+<p>[2] Feature Engineering: (Done)</p>
 <p>[3] Specify a Model: Linear Regression</p>
 <p>[4] Recipe (Refer from regsubset)</p>
 <ul>
 <li><p>Forward stepwise: All 13 variables</p></li>
 <li><p>Backward stepwise: 11 variables</p></li>
-<li><p>Interaction TBD</p></li>
+<li><p>Interaction TBD (next post)</p></li>
 </ul>
-<pre class="r"><code>lm_model &lt;- linear_reg() %&gt;% 
+<pre class="r"><code># Recipes 
+forw_recipe &lt;- recipe(lmedv~., data = Boston_tr)
+
+backw_recipe &lt;- recipe(backward$call$formula, data = Boston_tr) 
+
+poly_recipe &lt;- recipe(lmedv ~ lrm + lrad + lcrim + chas + lnox + ldis + ltax + 
+    eptratio + black + srlstat, data = Boston_tr) %&gt;%
+  step_poly(lrm, lrad) %&gt;% 
+  prep()
+
+
+# Specify a Model: Linear Regression 
+lm_model &lt;- linear_reg() %&gt;% 
             set_engine(&#39;lm&#39;) %&gt;% 
-            set_mode(&#39;regression&#39;)
+            set_mode(&#39;regression&#39;) 
 
-lmfit_00tr &lt;- lm_model %&gt;% 
-  fit(lmedv ~., data = Boston_tr)
+# Work flow 
+forw_fit &lt;- workflow() %&gt;% 
+  add_model(lm_model) %&gt;% 
+  add_recipe(forw_recipe) %&gt;% 
+  last_fit(split = tidy_split)</code></pre>
+<pre><code>## Warning: package &#39;rlang&#39; was built under R version 4.1.1</code></pre>
+<pre class="r"><code>backw_fit &lt;- workflow() %&gt;% 
+  add_model(lm_model) %&gt;% 
+  add_recipe(backw_recipe) %&gt;% 
+  last_fit(split = tidy_split)
 
-tidy(lmfit_00tr) %&gt;% kbl %&gt;% kable_material()</code></pre>
+poly_fit &lt;- workflow() %&gt;% 
+  add_model(lm_model) %&gt;% 
+  add_recipe(poly_recipe) %&gt;% 
+  last_fit(split = tidy_split)
+
+
+names_fit &lt;- c(&quot;forw_fit&quot;, &quot;forw_fit&quot;, &quot;backw_fit&quot;, &quot;backw_fit&quot;, &quot;poly_fit&quot;, &quot;poly_fit&quot;)
+cbind(names_fit, rbind(
+  forw_fit %&gt;% collect_metrics(),
+  backw_fit %&gt;% collect_metrics(),
+  poly_fit %&gt;% collect_metrics()
+)) %&gt;% arrange(.metric) %&gt;% kbl() %&gt;% kable_material()</code></pre>
 <table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
-term
+names_fit
 </th>
-<th style="text-align:right;">
-estimate
-</th>
-<th style="text-align:right;">
-std.error
-</th>
-<th style="text-align:right;">
-statistic
-</th>
-<th style="text-align:right;">
-p.value
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-(Intercept)
-</td>
-<td style="text-align:right;">
-2.9811264
-</td>
-<td style="text-align:right;">
-0.3655766
-</td>
-<td style="text-align:right;">
-8.154587
-</td>
-<td style="text-align:right;">
-0.0000000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lcrim
-</td>
-<td style="text-align:right;">
--0.0993706
-</td>
-<td style="text-align:right;">
-0.0202830
-</td>
-<td style="text-align:right;">
--4.899198
-</td>
-<td style="text-align:right;">
-0.0000015
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-zn
-</td>
-<td style="text-align:right;">
-0.0061077
-</td>
-<td style="text-align:right;">
-0.0049019
-</td>
-<td style="text-align:right;">
-1.245989
-</td>
-<td style="text-align:right;">
-0.2136744
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lindus
-</td>
-<td style="text-align:right;">
--0.0243457
-</td>
-<td style="text-align:right;">
-0.0185979
-</td>
-<td style="text-align:right;">
--1.309061
-</td>
-<td style="text-align:right;">
-0.1914472
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-chas
-</td>
-<td style="text-align:right;">
-0.0996421
-</td>
-<td style="text-align:right;">
-0.0312996
-</td>
-<td style="text-align:right;">
-3.183493
-</td>
-<td style="text-align:right;">
-0.0015972
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lnox
-</td>
-<td style="text-align:right;">
--0.4565157
-</td>
-<td style="text-align:right;">
-0.2335500
-</td>
-<td style="text-align:right;">
--1.954681
-</td>
-<td style="text-align:right;">
-0.0514858
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lrm
-</td>
-<td style="text-align:right;">
-0.9133291
-</td>
-<td style="text-align:right;">
-0.1162822
-</td>
-<td style="text-align:right;">
-7.854419
-</td>
-<td style="text-align:right;">
-0.0000000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-sqage
-</td>
-<td style="text-align:right;">
--0.0046146
-</td>
-<td style="text-align:right;">
-0.0042350
-</td>
-<td style="text-align:right;">
--1.089630
-</td>
-<td style="text-align:right;">
-0.2766907
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ldis
-</td>
-<td style="text-align:right;">
--0.2300286
-</td>
-<td style="text-align:right;">
-0.0336884
-</td>
-<td style="text-align:right;">
--6.828125
-</td>
-<td style="text-align:right;">
-0.0000000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-lrad
-</td>
-<td style="text-align:right;">
-0.0976265
-</td>
-<td style="text-align:right;">
-0.0185825
-</td>
-<td style="text-align:right;">
-5.253688
-</td>
-<td style="text-align:right;">
-0.0000003
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ltax
-</td>
-<td style="text-align:right;">
--0.1213053
-</td>
-<td style="text-align:right;">
-0.0421748
-</td>
-<td style="text-align:right;">
--2.876250
-</td>
-<td style="text-align:right;">
-0.0042926
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-eptratio
-</td>
-<td style="text-align:right;">
--0.0287482
-</td>
-<td style="text-align:right;">
-0.0074074
-</td>
-<td style="text-align:right;">
--3.881000
-</td>
-<td style="text-align:right;">
-0.0001262
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-black
-</td>
-<td style="text-align:right;">
-0.0686069
-</td>
-<td style="text-align:right;">
-0.0105331
-</td>
-<td style="text-align:right;">
-6.513475
-</td>
-<td style="text-align:right;">
-0.0000000
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-srlstat
-</td>
-<td style="text-align:right;">
--0.1888897
-</td>
-<td style="text-align:right;">
-0.0159761
-</td>
-<td style="text-align:right;">
--11.823304
-</td>
-<td style="text-align:right;">
-0.0000000
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>glance(lmfit_00tr) %&gt;% kbl %&gt;% kable_material()</code></pre>
-<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
-<th style="text-align:right;">
-r.squared
-</th>
-<th style="text-align:right;">
-adj.r.squared
-</th>
-<th style="text-align:right;">
-sigma
-</th>
-<th style="text-align:right;">
-statistic
-</th>
-<th style="text-align:right;">
-p.value
-</th>
-<th style="text-align:right;">
-df
-</th>
-<th style="text-align:right;">
-logLik
-</th>
-<th style="text-align:right;">
-AIC
-</th>
-<th style="text-align:right;">
-BIC
-</th>
-<th style="text-align:right;">
-deviance
-</th>
-<th style="text-align:right;">
-df.residual
-</th>
-<th style="text-align:right;">
-nobs
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right;">
-0.8550502
-</td>
-<td style="text-align:right;">
-0.8491982
-</td>
-<td style="text-align:right;">
-0.1423718
-</td>
-<td style="text-align:right;">
-146.1122
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-13
-</td>
-<td style="text-align:right;">
-185.3558
-</td>
-<td style="text-align:right;">
--340.7117
-</td>
-<td style="text-align:right;">
--283.455
-</td>
-<td style="text-align:right;">
-6.526857
-</td>
-<td style="text-align:right;">
-322
-</td>
-<td style="text-align:right;">
-336
-</td>
-</tr>
-</tbody>
-</table>
-<pre class="r"><code>lmfit_00tr %&gt;% 
-  vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = &quot;yellow&quot;),
-      mapping = aes_string(color = &quot;Sign&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
-<p>[3] Prediction</p>
-<pre class="r"><code>Boston_housing_results_lm00 &lt;- predict(lmfit_00tr, new_data = Boston_te) %&gt;%
-  bind_cols(Boston_te) %&gt;% 
-  mutate(residue = lmedv - .pred) %&gt;% 
-  select(.pred, residue, lmedv, everything())</code></pre>
-<pre class="r"><code># RMSE on test set
-rmse(Boston_housing_results_lm00, 
-     truth = lmedv,
-     estimate = .pred) %&gt;% kbl %&gt;% kable_material()</code></pre>
-<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
-<tr>
 <th style="text-align:left;">
 .metric
 </th>
@@ -3513,10 +3203,16 @@ rmse(Boston_housing_results_lm00,
 <th style="text-align:right;">
 .estimate
 </th>
+<th style="text-align:left;">
+.config
+</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td style="text-align:left;">
+forw_fit
+</td>
 <td style="text-align:left;">
 rmse
 </td>
@@ -3526,28 +3222,48 @@ standard
 <td style="text-align:right;">
 0.1512553
 </td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
 </tr>
-</tbody>
-</table>
-<pre class="r"><code>rsq(Boston_housing_results_lm00,
-    truth = lmedv,
-    estimate = .pred) %&gt;% kbl %&gt;% kable_material()</code></pre>
-<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
-<thead>
 <tr>
-<th style="text-align:left;">
-.metric
-</th>
-<th style="text-align:left;">
-.estimator
-</th>
-<th style="text-align:right;">
-.estimate
-</th>
+<td style="text-align:left;">
+backw_fit
+</td>
+<td style="text-align:left;">
+rmse
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.1522465
+</td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
 </tr>
-</thead>
-<tbody>
 <tr>
+<td style="text-align:left;">
+poly_fit
+</td>
+<td style="text-align:left;">
+rmse
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.1462015
+</td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+forw_fit
+</td>
 <td style="text-align:left;">
 rsq
 </td>
@@ -3557,10 +3273,66 @@ standard
 <td style="text-align:right;">
 0.8557721
 </td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+backw_fit
+</td>
+<td style="text-align:left;">
+rsq
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.8539971
+</td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+poly_fit
+</td>
+<td style="text-align:left;">
+rsq
+</td>
+<td style="text-align:left;">
+standard
+</td>
+<td style="text-align:right;">
+0.8623000
+</td>
+<td style="text-align:left;">
+Preprocessor1_Model1
+</td>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
+<p>[3] Prediction</p>
+<pre class="r"><code>forw_results &lt;- forw_fit %&gt;% 
+                 collect_predictions() %&gt;% 
+  left_join(forw_recipe %&gt;% prep() %&gt;% bake(new_data = Boston_te), by = &quot;lmedv&quot;) %&gt;% 
+  mutate(residue = lmedv - .pred) %&gt;% 
+  select(-c(id, .config))
+
+backw_results &lt;- backw_fit %&gt;% 
+                 collect_predictions() %&gt;% 
+  left_join(backw_recipe %&gt;% prep() %&gt;% bake(new_data = Boston_te), by = &quot;lmedv&quot;) %&gt;% 
+  mutate(residue = lmedv - .pred) %&gt;% 
+  select(-c(id, .config))
+
+poly_results &lt;- poly_fit %&gt;% 
+                 collect_predictions() %&gt;% 
+  left_join(poly_recipe %&gt;% prep() %&gt;% bake(new_data = Boston_te), by = &quot;lmedv&quot;) %&gt;% 
+  mutate(residue = lmedv - .pred) %&gt;% 
+  select(-c(id, .config))
+
+forw_results %&gt;% 
   ggplot(mapping = aes(x = .pred, y = lmedv)) +
   geom_point(color = &#39;#006EA1&#39;) +
   geom_abline(intercept = 0, slope = 1, color = &#39;orange&#39;) +
@@ -3569,19 +3341,72 @@ standard
        y = &#39;Actual Price&#39;) +
   theme_tq()</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<pre class="r"><code>forw_results %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = &#39;#006EA1&#39;) +
+  geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &#39;orange&#39;) +
+  labs(title = &#39;Residue Plot: Error Variance Check&#39;,
+       x = &#39;Predicted Price&#39;,
+       y = &#39;Error&#39;) +
+  theme_tq()</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-2.png" width="672" /></p>
+<pre class="r"><code>backw_results %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
+  geom_point(color = &#39;#006EA1&#39;) +
+  geom_abline(intercept = 0, slope = 1, color = &#39;orange&#39;) +
+  labs(title = &#39;Multiple Linear Regression Results: Boston House Price Prediction&#39;,
+       x = &#39;Predicted Price&#39;,
+       y = &#39;Actual Price&#39;) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-3.png" width="672" /></p>
+<pre class="r"><code>backw_results %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = &#39;#006EA1&#39;) +
+  geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &#39;orange&#39;)  +
+  labs(title = &#39;Residue Plot: Error Variance Check&#39;,
+       x = &#39;Predicted Price&#39;,
+       y = &#39;Error&#39;) +
+  theme_tq()</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-4.png" width="672" /></p>
+<pre class="r"><code>poly_results %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = lmedv)) +
+  geom_point(color = &#39;#006EA1&#39;) +
+  geom_abline(intercept = 0, slope = 1, color = &#39;orange&#39;) +
+  labs(title = &#39;Multiple Linear Regression Results: Boston House Price Prediction&#39;,
+       x = &#39;Predicted Price&#39;,
+       y = &#39;Actual Price&#39;) +
+  theme_tq()</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-5.png" width="672" /></p>
+<pre class="r"><code>poly_results %&gt;% 
+  ggplot(mapping = aes(x = .pred, y = residue)) +
+  geom_point(color = &#39;#006EA1&#39;) +
+  geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &#39;orange&#39;)  +
+  labs(title = &#39;Residue Plot: Error Variance Check&#39;,
+       x = &#39;Predicted Price&#39;,
+       y = &#39;Error&#39;) +
+  theme_tq()</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-6.png" width="672" /></p>
+<pre class="r"><code>sum(forw_results$residue^2); mean(forw_results$residue)</code></pre>
+<pre><code>## [1] 5.930766</code></pre>
+<pre><code>## [1] -0.0001069424</code></pre>
+<pre class="r"><code>sum(backw_results$residue^2); mean(backw_results$residue)</code></pre>
+<pre><code>## [1] 5.97844</code></pre>
+<pre><code>## [1] -0.0005482193</code></pre>
+<pre class="r"><code>sum(poly_results$residue^2); mean(poly_results$residue)</code></pre>
+<pre><code>## [1] 5.410732</code></pre>
+<pre><code>## [1] -0.003638544</code></pre>
 <p>Some Problems with R-squared</p>
 <p>Previously, I demonstrated that you cannot use R-squared to conclude whether your model is biased. To check for this bias, you need to check your residual plots. Unfortunately, there are yet more problems with R-squared that we need to address.</p>
 <p>Problem 1: R-squared increases every time you add an independent variable to the model. The R-squared never decreases, not even when it’s just a chance correlation between variables. A regression model that contains more independent variables than another model can look like it provides a better fit merely because it contains more variables.</p>
-<pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
-  ggplot(aes(.pred, residue)) + 
-  geom_point(color = &#39;#006EA1&#39;) + 
-  geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &#39;orange&#39;); mean(Boston_housing_results_lm00$residue)</code></pre>
-<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
-<pre><code>## [1] -0.01004848</code></pre>
 <p>Problem 2: When a model contains an excessive number of independent variables and polynomial terms, it becomes overly customized to fit the peculiarities and random noise in your sample rather than reflecting the entire population. Statisticians call this overfitting the model, and it produces deceptively high R-squared values and a decreased capability for precise predictions.</p>
 <p>Fortunately for us, adjusted R-squared and predicted R-squared address both of these problems.</p>
-<pre class="r"><code>cof &lt;- round(lmfit_00tr$fit$coefficients, 3) 
+<pre class="r"><code>Boston_final_lm_fit &lt;- lm_model %&gt;% 
+                fit(lmedv~., data = Boston_tr)
+
+cof &lt;- round(Boston_final_lm_fit$fit$coefficients, 3)
 n &lt;- names(cof)
 y = paste(&#39;Final Model:&#39;, &#39;y=&#39;,
           cof[1], &#39;*&#39;, n[1], &quot;+&quot;,
@@ -3595,9 +3420,11 @@ y = paste(&#39;Final Model:&#39;, &#39;y=&#39;,
           cof[9], &#39;*&#39;, n[9], &#39;+&#39;,
           cof[10], &#39;*&#39;, n[10], &#39;+&#39;,
           cof[11], &#39;*&#39;, n[11], &#39;+&#39;,
-          cof[12], &#39;*&#39;, n[12])
+          cof[12], &#39;*&#39;, n[12], &#39;+&#39;,
+          cof[13], &#39;*&#39;, n[13], &#39;+&#39;,
+          cof[14], &#39;*&#39;, n[14])
 y</code></pre>
-<pre><code>## [1] &quot;Final Model: y= 2.981 * (Intercept) + -0.099 * lcrim + 0.006 * zn + -0.024 * lindus + 0.1 * chas + -0.457 * lnox + 0.913 * lrm + -0.005 * sqage + -0.23 * ldis + 0.098 * lrad + -0.121 * ltax + -0.029 * eptratio&quot;</code></pre>
+<pre><code>## [1] &quot;Final Model: y= 2.981 * (Intercept) + -0.099 * lcrim + 0.006 * zn + -0.024 * lindus + 0.1 * chas + -0.457 * lnox + 0.913 * lrm + -0.005 * sqage + -0.23 * ldis + 0.098 * lrad + -0.121 * ltax + -0.029 * eptratio + 0.069 * black + -0.189 * srlstat&quot;</code></pre>
 <pre class="r"><code>generator_univar_importance_tbl(Boston_tr, &quot;lmedv&quot;)</code></pre>
 <pre><code>## [1] &quot;Response variable: lmedv&quot;</code></pre>
 <pre><code>##     varname vartype    R2 R2_log R2_quad max_R2
