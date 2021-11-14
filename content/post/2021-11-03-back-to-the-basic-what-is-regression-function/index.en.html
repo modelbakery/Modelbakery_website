@@ -28,6 +28,8 @@ draft: TRUE
 <link href="{{< blogdown/postref >}}index.en_files/lightable/lightable.css" rel="stylesheet" />
 
 
+<p>“Will my model actually be used?”- the one of the first questions as analyst or researcher must ask them selevs. - by Frank E from the book: Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4). One of its reasons it stated were the potential users of the model did not trust the relationship, weights, or variables used to make the prediction.</p>
+<p>The objective of study here is pre-processing, understanding variables, powerful visulaisation in a workflow mechanism to guide linearlising the model with using Boston Housing Dataset. The design of this workflow includes variable transformation (asymmetric reduction), PCP and correlation matrix upon target variable subgroup projection, Cook’s Distance outlier dignostic and treatment, and lastly linear regression output (rmse: 0.151, r-squared: 0.856).</p>
 <div id="why-linear-regression" class="section level2">
 <h2>Why linear regression?</h2>
 <p>I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right?</p>
@@ -2260,7 +2262,7 @@ Boston_te &lt;- testing(tidy_split)</code></pre>
 <p>Optimal number of variables: consideration process by computation of best model with each subsets.</p>
 <p>Finding:</p>
 <p>[1] Method: “Forward” and “Backward”
-Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However, minimum BIC, probabilistic approach, suggests 10 variables is at its optimal.</p>
+Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However at minimal BIC, penalised AIC, suggests using 10 variables is optimal goodness of fit.</p>
 <p>[2] Method: “Sequential Replacement” (stepwise)
 Suggests the variable importance of srlstat and black have on the estmimate parameters.</p>
 <pre class="r"><code>regsubfit_full &lt;- regsubsets(lmedv~.,
@@ -2917,19 +2919,223 @@ plot(regfit_summary$adjr2, xlab=&quot;No. of Predictor Variables&quot;, ylab=&qu
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-2.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
 <pre class="r"><code>plot(regfit_summary$rss, xlab=&quot;No. of Predictor Variables&quot;, ylab=&quot;RSS&quot;, type=&quot;l&quot;) </code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-20-3.png" width="672" />
+#### VIP: Variable of Importance</p>
+<pre class="r"><code># Stepwise function 
+lmfit &lt;- lm(lmedv~., Boston_tr)
+forward  &lt;- stats::step(lmfit, direction  = &quot;forward&quot;, trace = 0)
+backward &lt;- stats::step(lmfit, direction  = &quot;backward&quot;, trace = 0)
+stepwise &lt;- stats::step(lmfit, direction  = &quot;both&quot;, trace = 0)
+
+# Backward and both gives the same output 
+method &lt;- c(&quot;forward&quot;, &quot;backward&quot;, &quot;stepwise&quot;)
+cbind(method, rbind(
+  forward  %&gt;% glance(),
+  backward %&gt;% glance(),
+  stepwise %&gt;% glance())) %&gt;% kbl %&gt;% kable_material()</code></pre>
+<table class=" lightable-material" style="font-family: &quot;Source Sans Pro&quot;, helvetica, sans-serif; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+method
+</th>
+<th style="text-align:right;">
+r.squared
+</th>
+<th style="text-align:right;">
+adj.r.squared
+</th>
+<th style="text-align:right;">
+sigma
+</th>
+<th style="text-align:right;">
+statistic
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+logLik
+</th>
+<th style="text-align:right;">
+AIC
+</th>
+<th style="text-align:right;">
+BIC
+</th>
+<th style="text-align:right;">
+deviance
+</th>
+<th style="text-align:right;">
+df.residual
+</th>
+<th style="text-align:right;">
+nobs
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+forward
+</td>
+<td style="text-align:right;">
+0.8550502
+</td>
+<td style="text-align:right;">
+0.8491982
+</td>
+<td style="text-align:right;">
+0.1423718
+</td>
+<td style="text-align:right;">
+146.1122
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+13
+</td>
+<td style="text-align:right;">
+185.3558
+</td>
+<td style="text-align:right;">
+-340.7117
+</td>
+<td style="text-align:right;">
+-283.4550
+</td>
+<td style="text-align:right;">
+6.526857
+</td>
+<td style="text-align:right;">
+322
+</td>
+<td style="text-align:right;">
+336
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+backward
+</td>
+<td style="text-align:right;">
+0.8537822
+</td>
+<td style="text-align:right;">
+0.8488180
+</td>
+<td style="text-align:right;">
+0.1425512
+</td>
+<td style="text-align:right;">
+171.9884
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+183.8927
+</td>
+<td style="text-align:right;">
+-341.7853
+</td>
+<td style="text-align:right;">
+-292.1629
+</td>
+<td style="text-align:right;">
+6.583951
+</td>
+<td style="text-align:right;">
+324
+</td>
+<td style="text-align:right;">
+336
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stepwise
+</td>
+<td style="text-align:right;">
+0.8537822
+</td>
+<td style="text-align:right;">
+0.8488180
+</td>
+<td style="text-align:right;">
+0.1425512
+</td>
+<td style="text-align:right;">
+171.9884
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+183.8927
+</td>
+<td style="text-align:right;">
+-341.7853
+</td>
+<td style="text-align:right;">
+-292.1629
+</td>
+<td style="text-align:right;">
+6.583951
+</td>
+<td style="text-align:right;">
+324
+</td>
+<td style="text-align:right;">
+336
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Stepwise Selection method: VIP visualisation 
+p1_forw &lt;- vip(forward, num_features = length(coef(backward)), 
+          geom = &quot;point&quot;, horizontal = FALSE, 
+          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position=&quot;default&quot;) 
+
+p2_back &lt;- backward %&gt;% vip(num_features = length(coef(backward)), 
+          geom = &quot;point&quot;, horizontal = FALSE,
+          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position=&quot;default&quot;) 
+
+grid.arrange(p1_forw + labs(caption  = &quot;VIP: Forward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)&quot;), 
+             p2_back + labs(caption  = &quot;VIP: Backward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)&quot;))</code></pre>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 </div>
 <div id="linear-model-predcition" class="section level2">
 <h2>Linear Model Predcition</h2>
 <p>Steps</p>
-<p>[1] Split Data (Done)</p>
-<p>[2] Feature Engineering (Done)</p>
-<p>[3] Specify a Model:</p>
+<p>[1] Split Data: 7:3</p>
+<p>[2] Feature Engineering:</p>
 <ul>
-<li>specify our linear regression model with parsnip.</li>
+<li><p>Pre-made</p></li>
+<li><p>Log + normalisation</p></li>
 </ul>
-<div id="vip-variable-of-importance" class="section level4">
-<h4>VIP: Variable of Importance</h4>
+<p>[3] Specify a Model: Linear Regression</p>
+<p>[4] Recipe (Refer from regsubset)</p>
+<ul>
+<li><p>Forward stepwise: All 13 variables</p></li>
+<li><p>Backward stepwise: 11 variables</p></li>
+<li><p>Interaction TBD</p></li>
+</ul>
 <pre class="r"><code>lm_model &lt;- linear_reg() %&gt;% 
             set_engine(&#39;lm&#39;) %&gt;% 
             set_mode(&#39;regression&#39;)
@@ -3285,31 +3491,6 @@ nobs
 <pre class="r"><code>lmfit_00tr %&gt;% 
   vip(aesthetics = list(fill = viridisLite::viridis(n = 20)[3], col = &quot;yellow&quot;),
       mapping = aes_string(color = &quot;Sign&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
-<pre class="r"><code>lmfit &lt;- lm(lmedv~., Boston_tr)
-backward &lt;- stats::step(lmfit, direction = &quot;backward&quot;, trace = 0)
-forward &lt;- stats::step(lmfit, direction = &quot;forward&quot;, trace = 0)
-stepwise &lt;- stats::step(lmfit, direction = &quot;both&quot;, trace = 0)
-
-p1_back &lt;- backward %&gt;% vip(num_features = length(coef(backward)), 
-          geom = &quot;point&quot;, horizontal = FALSE,
-          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
-  scale_color_viridis_d() +
-    theme(legend.position=&quot;default&quot;) 
-
-p2_forw &lt;- vip(forward, num_features = length(coef(backward)), 
-          geom = &quot;point&quot;, horizontal = FALSE, 
-          mapping = aes_string(color = &quot;Sign&quot;, size = 5)) + 
-  scale_color_viridis_d() +
-    theme(legend.position=&quot;default&quot;) 
-
-p2_step &lt;- vip(stepwise, num_features = length(coef(backward)), 
-          geom = &quot;point&quot;, horizontal = FALSE, 
-          mapping = aes_string(color = &quot;Sign&quot;, size = 3)) + 
-  scale_color_viridis_d() +
-  theme(legend.position=&quot;default&quot;) 
-
-grid.arrange(p2_step, p2_forw, ncol = 1)</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>[3] Prediction</p>
 <pre class="r"><code>Boston_housing_results_lm00 &lt;- predict(lmfit_00tr, new_data = Boston_te) %&gt;%
@@ -3388,13 +3569,35 @@ standard
        y = &#39;Actual Price&#39;) +
   theme_tq()</code></pre>
 <p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p>Some Problems with R-squared</p>
+<p>Previously, I demonstrated that you cannot use R-squared to conclude whether your model is biased. To check for this bias, you need to check your residual plots. Unfortunately, there are yet more problems with R-squared that we need to address.</p>
+<p>Problem 1: R-squared increases every time you add an independent variable to the model. The R-squared never decreases, not even when it’s just a chance correlation between variables. A regression model that contains more independent variables than another model can look like it provides a better fit merely because it contains more variables.</p>
 <pre class="r"><code>Boston_housing_results_lm00 %&gt;% 
   ggplot(aes(.pred, residue)) + 
-  geom_point() + 
-  geom_smooth(method = &quot;lm&quot;, se = FALSE); mean(Boston_housing_results_lm00$residue)</code></pre>
+  geom_point(color = &#39;#006EA1&#39;) + 
+  geom_smooth(method = &quot;lm&quot;, se = FALSE, color = &#39;orange&#39;); mean(Boston_housing_results_lm00$residue)</code></pre>
 <pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
-<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-24-2.png" width="672" /></p>
+<p><img src="{{< blogdown/postref >}}index.en_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
 <pre><code>## [1] -0.01004848</code></pre>
+<p>Problem 2: When a model contains an excessive number of independent variables and polynomial terms, it becomes overly customized to fit the peculiarities and random noise in your sample rather than reflecting the entire population. Statisticians call this overfitting the model, and it produces deceptively high R-squared values and a decreased capability for precise predictions.</p>
+<p>Fortunately for us, adjusted R-squared and predicted R-squared address both of these problems.</p>
+<pre class="r"><code>cof &lt;- round(lmfit_00tr$fit$coefficients, 3) 
+n &lt;- names(cof)
+y = paste(&#39;Final Model:&#39;, &#39;y=&#39;,
+          cof[1], &#39;*&#39;, n[1], &quot;+&quot;,
+          cof[2], &#39;*&#39;, n[2], &#39;+&#39;,
+          cof[3], &#39;*&#39;, n[3], &#39;+&#39;,
+          cof[4], &#39;*&#39;, n[4], &#39;+&#39;,
+          cof[5], &#39;*&#39;, n[5], &#39;+&#39;,
+          cof[6], &#39;*&#39;, n[6], &#39;+&#39;,
+          cof[7], &#39;*&#39;, n[7], &#39;+&#39;,
+          cof[8], &#39;*&#39;, n[8], &#39;+&#39;,
+          cof[9], &#39;*&#39;, n[9], &#39;+&#39;,
+          cof[10], &#39;*&#39;, n[10], &#39;+&#39;,
+          cof[11], &#39;*&#39;, n[11], &#39;+&#39;,
+          cof[12], &#39;*&#39;, n[12])
+y</code></pre>
+<pre><code>## [1] &quot;Final Model: y= 2.981 * (Intercept) + -0.099 * lcrim + 0.006 * zn + -0.024 * lindus + 0.1 * chas + -0.457 * lnox + 0.913 * lrm + -0.005 * sqage + -0.23 * ldis + 0.098 * lrad + -0.121 * ltax + -0.029 * eptratio&quot;</code></pre>
 <pre class="r"><code>generator_univar_importance_tbl(Boston_tr, &quot;lmedv&quot;)</code></pre>
 <pre><code>## [1] &quot;Response variable: lmedv&quot;</code></pre>
 <pre><code>##     varname vartype    R2 R2_log R2_quad max_R2
@@ -3412,5 +3615,4 @@ standard
 ## 12       zn numeric 0.152  0.172   0.167  0.172
 ## 13     chas numeric 0.011  0.011   0.011  0.011
 ## 14    lmedv numeric    NA     NA      NA     NA</code></pre>
-</div>
 </div>

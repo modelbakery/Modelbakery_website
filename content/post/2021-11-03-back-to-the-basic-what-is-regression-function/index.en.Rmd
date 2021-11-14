@@ -23,6 +23,10 @@ projects: []
 draft: TRUE
 ---
 
+"Will my model actually be used?"- the one of the first questions as analyst or researcher must ask them selevs. - by Frank E from the book: Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4). One of its reasons it stated were the potential users of the model did not trust the relationship, weights, or variables used to make the prediction. 
+
+The objective of study here is pre-processing, understanding variables, powerful visulaisation in a workflow mechanism to guide linearlising the model with using Boston Housing Dataset. The design of this workflow includes variable transformation (asymmetric reduction), PCP and correlation matrix upon target variable subgroup projection, Cook's Distance outlier dignostic and treatment, and lastly linear regression output (rmse: 0.151, r-squared: 0.856). 
+
 
 ## Why linear regression?
 
@@ -211,6 +215,7 @@ generator_hist_facet(lBoston, bins = 15, fill = viridisLite::viridis(n = 20)[1])
 
 
 ## GGally Visualisation 
+
 ```{r, message=FALSE, warning=FALSE}
 # Data preparation for GGally visualisation with observation split at meidan Y value. 
 Boston_medv_median <- Boston %>% 
@@ -617,7 +622,7 @@ Optimal number of variables: consideration process by computation of best model 
 Finding: 
 
 [1] Method: "Forward" and "Backward"
-Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However, minimum BIC, probabilistic approach, suggests 10 variables is at its optimal. 
+Minimum Sum of error and both maxmium adjusted R squared and R squared achieved at total number of variables (13). However at minimal BIC, penalised AIC, suggests using 10 variables is optimal goodness of fit. 
 
 [2] Method: "Sequential Replacement" (stepwise)
 Suggests the variable importance of srlstat and black have on the estmimate parameters. 
@@ -645,20 +650,61 @@ plot(regfit_summary$bic, xlab="No. of Predictor Variables", ylab="BIC", type="l"
 
 plot(regfit_summary$rss, xlab="No. of Predictor Variables", ylab="RSS", type="l") 
 ```
+#### VIP: Variable of Importance 
+
+```{r}
+# Stepwise function 
+lmfit <- lm(lmedv~., Boston_tr)
+forward  <- stats::step(lmfit, direction  = "forward", trace = 0)
+backward <- stats::step(lmfit, direction  = "backward", trace = 0)
+stepwise <- stats::step(lmfit, direction  = "both", trace = 0)
+
+# Backward and both gives the same output 
+method <- c("forward", "backward", "stepwise")
+cbind(method, rbind(
+  forward  %>% glance(),
+  backward %>% glance(),
+  stepwise %>% glance())) %>% kbl %>% kable_material()
+
+# Stepwise Selection method: VIP visualisation 
+p1_forw <- vip(forward, num_features = length(coef(backward)), 
+          geom = "point", horizontal = FALSE, 
+          mapping = aes_string(color = "Sign", size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position="default") 
+
+p2_back <- backward %>% vip(num_features = length(coef(backward)), 
+          geom = "point", horizontal = FALSE,
+          mapping = aes_string(color = "Sign", size = 5)) + 
+  scale_color_viridis_d() +
+    theme(legend.position="default") 
+
+grid.arrange(p1_forw + labs(caption  = "VIP: Forward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)"), 
+             p2_back + labs(caption  = "VIP: Backward Selection Algorithm by AIC | Positive/Negative interaction (Yellow/Purple)"))
+```
 
 ## Linear Model Predcition 
 
 Steps 
 
-[1] Split Data (Done)
+[1] Split Data: 7:3 
 
-[2] Feature Engineering (Done)
+[2] Feature Engineering: 
 
-[3] Specify a Model: 
+* Pre-made 
 
-* specify our linear regression model with parsnip.
+* Log + normalisation 
 
-#### VIP: Variable of Importance 
+[3] Specify a Model: Linear Regression 
+
+[4] Recipe (Refer from regsubset)
+
+* Forward stepwise: All 13 variables  
+
+* Backward stepwise: 11 variables 
+
+* Interaction TBD 
+
 
 ```{r}
 lm_model <- linear_reg() %>% 
@@ -677,33 +723,6 @@ lmfit_00tr %>%
 
 ```
 
-
-```{r}
-lmfit <- lm(lmedv~., Boston_tr)
-backward <- stats::step(lmfit, direction = "backward", trace = 0)
-forward <- stats::step(lmfit, direction = "forward", trace = 0)
-stepwise <- stats::step(lmfit, direction = "both", trace = 0)
-
-p1_back <- backward %>% vip(num_features = length(coef(backward)), 
-          geom = "point", horizontal = FALSE,
-          mapping = aes_string(color = "Sign", size = 5)) + 
-  scale_color_viridis_d() +
-    theme(legend.position="default") 
-
-p2_forw <- vip(forward, num_features = length(coef(backward)), 
-          geom = "point", horizontal = FALSE, 
-          mapping = aes_string(color = "Sign", size = 5)) + 
-  scale_color_viridis_d() +
-    theme(legend.position="default") 
-
-p2_step <- vip(stepwise, num_features = length(coef(backward)), 
-          geom = "point", horizontal = FALSE, 
-          mapping = aes_string(color = "Sign", size = 3)) + 
-  scale_color_viridis_d() +
-  theme(legend.position="default") 
-
-grid.arrange(p2_step, p2_forw, ncol = 1)
-```
 
 [3] Prediction 
 
@@ -733,14 +752,43 @@ Boston_housing_results_lm00 %>%
        y = 'Actual Price') +
   theme_tq()
 
-
-Boston_housing_results_lm00 %>% 
-  ggplot(aes(.pred, residue)) + 
-  geom_point() + 
-  geom_smooth(method = "lm", se = FALSE); mean(Boston_housing_results_lm00$residue)
-
 ```
 
+Some Problems with R-squared
+
+Previously, I demonstrated that you cannot use R-squared to conclude whether your model is biased. To check for this bias, you need to check your residual plots. Unfortunately, there are yet more problems with R-squared that we need to address.
+
+Problem 1: R-squared increases every time you add an independent variable to the model. The R-squared never decreases, not even when it’s just a chance correlation between variables. A regression model that contains more independent variables than another model can look like it provides a better fit merely because it contains more variables.
+
+```{r}
+Boston_housing_results_lm00 %>% 
+  ggplot(aes(.pred, residue)) + 
+  geom_point(color = '#006EA1') + 
+  geom_smooth(method = "lm", se = FALSE, color = 'orange'); mean(Boston_housing_results_lm00$residue)
+```
+
+Problem 2: When a model contains an excessive number of independent variables and polynomial terms, it becomes overly customized to fit the peculiarities and random noise in your sample rather than reflecting the entire population. Statisticians call this overfitting the model, and it produces deceptively high R-squared values and a decreased capability for precise predictions.
+
+Fortunately for us, adjusted R-squared and predicted R-squared address both of these problems.
+
+```{r}
+cof <- round(lmfit_00tr$fit$coefficients, 3) 
+n <- names(cof)
+y = paste('Final Model:', 'y=',
+          cof[1], '*', n[1], "+",
+          cof[2], '*', n[2], '+',
+          cof[3], '*', n[3], '+',
+          cof[4], '*', n[4], '+',
+          cof[5], '*', n[5], '+',
+          cof[6], '*', n[6], '+',
+          cof[7], '*', n[7], '+',
+          cof[8], '*', n[8], '+',
+          cof[9], '*', n[9], '+',
+          cof[10], '*', n[10], '+',
+          cof[11], '*', n[11], '+',
+          cof[12], '*', n[12])
+y
+```
 
 ```{r, echo = FALSE}
 generator_univar_importance_tbl <- function(dataframe, response) {
