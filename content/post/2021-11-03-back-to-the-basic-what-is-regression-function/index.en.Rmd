@@ -1001,5 +1001,7 @@ generator_univar_importance_tbl <- function(dataframe, response) {
 
 ```{r}
 generator_univar_importance_tbl(Boston_tr, "lmedv")
+
+end. 
 ```
 
