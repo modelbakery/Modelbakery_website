@@ -1,0 +1,99 @@
+---
+title: K-Mean Clustering Company using Financial Stock Data
+author: Package Build
+date: '2021-11-20'
+slug: k-mean-clustering-company-using-financial-stock-data
+categories: []
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-11-20T01:54:08+09:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+draft: TRUE
+---
+
+B2B sales organisation wants to know which companies are similar to each other to help in identifying potential customers in various segments of the market. There are many techniques for market research but in here we will try to penetrate various market segments using companies stock price data. 
+
+When it comes to market research or investment, looking at the returns of dozen of companies will be tricky analyses to pull insights. Since stocks have a tendency to move together, cluster analysis could help by grouping the similar return trend rather than trying to decide based on individual stocks.
+
+
+$$ 
+return_{daily} = \frac{price_{i}-price_{i-1}}{price_{i-1}}
+$$
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidyquant)
+library(quantmod)
+library(broom)
+library(umap)
+library(plotly) 
+```
+
+
+```{r}
+SP500_prices_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_backup/post3/sp500stock/sp_500_prices_tbl_2019.11_2021.11.rds")
+
+SP500_index_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_backup/post3/sp500stock/SP500_index_list_tbl.rds")
+```
+
+```{r}
+SP500_daily_returns_tbl <- SP500_prices_tbl %>% 
+    select(symbol, date, adjusted) %>% 
+    group_by(symbol) %>% 
+    mutate(lag = lag(adjusted, order_by = date, n = 1)) %>% 
+    filter(!is.na(lag)) %>% 
+    mutate(diff = adjusted - lag) %>% 
+    mutate(pct_return = diff/lag)  %>% ungroup() %>% 
+    select(symbol, date, pct_return) 
+```
+
+
+## Convert to User-Item Format
+
+```{r}
+SP500_date_matrix_tbl <- SP500_daily_returns_tbl %>% 
+  spread(date, pct_return, fill = 0)
+```
+
+
+```{r}
+kmeans_obj <- SP500_date_matrix_tbl %>% 
+    select(-symbol) %>% 
+    kmeans(centers = 4, nstart = 20)
+
+kmeans_obj %>% broom::glance()
+```
+
+
+## Step 4 - Find the optimal value of K
+
+```{r}
+kmeans_mapper <- function(center = 3) {
+    SP500_date_matrix_tbl %>%
+        select(-symbol) %>%
+        kmeans(centers = center, nstart = 20)
+}
+
+cluster_tbl <- tibble(centers = 1:30)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
