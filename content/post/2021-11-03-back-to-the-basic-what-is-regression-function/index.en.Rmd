@@ -20,22 +20,39 @@ image:
   focal_point: ''
   preview_only: no
 projects: []
-draft: TRUE
+draft: FALSE
 ---
 
-"Will my model actually be used?"- the one of the first questions as analyst or researcher must ask them selevs. - by Frank E from the book: Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4). One of its reasons it stated were the potential users of the model did not trust the relationship, weights, or variables used to make the prediction. 
+As we fit regression models, we might need to make a choice between linear and nonlinear regression models. Often, in the field of statistics, the region between these forms are explained by two folds: the strength of the assumption and interpretability of variables' relationship their weights used to make the prediction. 
 
-The objective of study here is pre-processing, understanding variables, powerful visulaisation in a workflow mechanism to guide linearlising the model with using Boston Housing Dataset. The design of this workflow includes variable transformation (asymmetric reduction), PCP and correlation matrix upon target variable subgroup projection, Cook's Distance outlier dignostic and treatment, and lastly linear regression output (rmse: 0.151, r-squared: 0.856). 
+"Will my model actually be used?"- the one of the first questions as analyst or researcher must ask them selves (Frank E 2008$^1$). If anything, why can we not simply trust the model have been established with high performance? 
+
+In this post, we will get the pulse of "correct" model criteria and the assumptions associated with linear regression model.
+
+
+## Agenda 
+
+[1] The assumptions associated with linear regression model and where have they oriented from?
+
+[2] Variable __asymmetric reduction__: variable transformation & Parallel Coordinates Plot (PCP) 
+
+[3] __Outlier detection__: Cook's Distance Outlier Dignostic and Treatment 
+
+[4] Understand Forward & Backward __Stepwise Regression__
+
 
 
 ## Why linear regression?
 
-I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right? 
+The biggest advantage of linear regression models is linearity: Due to its strong assumption it makes the estimation procedure simple and easy to understand the interpretation on the relationship and weights of the individual features. For example, in medical field, despite the fact that having R-squared above 0.7 is extremely rare, linear regression is yet favourable approach. This is because it is not only important to predict the clinical outcome, but also to quantify the influence of the drug and other features into account in an interpretable way. 
+
+The application of linear regression is endless and it is often this generalised and interpretable statistical learning to be our benchmark on how extent we need to flex our assumption. 
 
 >“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
 >—Albert Einstein
 
-I believe that the more complicated the problem is, the more important its interpretation becomes. In other words, we should always consider the possibility of simpler way to approach any form of problems. 
+
+## Why linear regression?
 
 
 ## Load Libraries
@@ -1001,7 +1018,7 @@ generator_univar_importance_tbl <- function(dataframe, response) {
 
 ```{r}
 generator_univar_importance_tbl(Boston_tr, "lmedv")
-
-end. 
 ```
 
+# Reference 
+Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4)

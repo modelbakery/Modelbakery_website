@@ -20,7 +20,7 @@ image:
   focal_point: ''
   preview_only: no
 projects: []
-draft: TRUE
+draft: FALSE
 ---
 
 <script src="{{< blogdown/postref >}}index.en_files/header-attrs/header-attrs.js"></script>
@@ -28,16 +28,27 @@ draft: TRUE
 <link href="{{< blogdown/postref >}}index.en_files/lightable/lightable.css" rel="stylesheet" />
 
 
-<p>“Will my model actually be used?”- the one of the first questions as analyst or researcher must ask them selevs. - by Frank E from the book: Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4). One of its reasons it stated were the potential users of the model did not trust the relationship, weights, or variables used to make the prediction.</p>
-<p>The objective of study here is pre-processing, understanding variables, powerful visulaisation in a workflow mechanism to guide linearlising the model with using Boston Housing Dataset. The design of this workflow includes variable transformation (asymmetric reduction), PCP and correlation matrix upon target variable subgroup projection, Cook’s Distance outlier dignostic and treatment, and lastly linear regression output (rmse: 0.151, r-squared: 0.856).</p>
+<p>As we fit regression models, we might need to make a choice between linear and nonlinear regression models. Often, in the field of statistics, the region between these forms are explained by two folds: the strength of the assumption and interpretability of variables’ relationship their weights used to make the prediction.</p>
+<p>“Will my model actually be used?”- the one of the first questions as analyst or researcher must ask them selves (Frank E 2008<span class="math inline">\(^1\)</span>). If anything, why can we not simply trust the model have been established with high performance?</p>
+<p>In this post, we will get the pulse of “correct” model criteria and the assumptions associated with linear regression model.</p>
+<div id="agenda" class="section level2">
+<h2>Agenda</h2>
+<p>[1] The assumptions associated with linear regression model and where have they oriented from?</p>
+<p>[2] Variable <strong>asymmetric reduction</strong>: variable transformation &amp; Parallel Coordinates Plot (PCP)</p>
+<p>[3] <strong>Outlier detection</strong>: Cook’s Distance Outlier Dignostic and Treatment</p>
+<p>[4] Understand Forward &amp; Backward <strong>Stepwise Regression</strong></p>
+</div>
 <div id="why-linear-regression" class="section level2">
 <h2>Why linear regression?</h2>
-<p>I always had this wonder. How do we know in what situation, the linear approximation is reasonable assumption to be made? - Well, most of the times never. Does that make linear regression any less vulable? Absolutley not, right?</p>
+<p>The biggest advantage of linear regression models is linearity: Due to its strong assumption it makes the estimation procedure simple and easy to understand the interpretation on the relationship and weights of the individual features. For example, in medical field, despite the fact that having R-squared above 0.7 is extremely rare, linear regression is yet favourable approach. This is because it is not only important to predict the clinical outcome, but also to quantify the influence of the drug and other features into account in an interpretable way.</p>
+<p>The application of linear regression is endless and it is often this generalised and interpretable statistical learning to be our benchmark on how extent we need to flex our assumption.</p>
 <blockquote>
 <p>“If I had an hour to solve a problem and my life depended on the solution, I would spend the first 55 minutes determining the proper question to ask … for once I know the proper question, I could solve the problem in less than five minutes.”
 —Albert Einstein</p>
 </blockquote>
-<p>I believe that the more complicated the problem is, the more important its interpretation becomes. In other words, we should always consider the possibility of simpler way to approach any form of problems.</p>
+</div>
+<div id="why-linear-regression-1" class="section level2">
+<h2>Why linear regression?</h2>
 </div>
 <div id="load-libraries" class="section level2">
 <h2>Load Libraries</h2>
@@ -3442,4 +3453,8 @@ y</code></pre>
 ## 12       zn numeric 0.152  0.172   0.167  0.172
 ## 13     chas numeric 0.011  0.011   0.011  0.011
 ## 14    lmedv numeric    NA     NA      NA     NA</code></pre>
+</div>
+<div id="reference" class="section level1">
+<h1>Reference</h1>
+<p>Regression Modeling Strategies with Applications to Linear Models, Logistics Regression, and Survial Analysis (pg 4)</p>
 </div>
