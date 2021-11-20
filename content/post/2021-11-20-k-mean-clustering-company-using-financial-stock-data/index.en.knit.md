@@ -142,7 +142,8 @@ $$
 $$
 \frac{\partial f}{\partial x}
 $$
-```{r, message=FALSE, warning=FALSE}
+
+```r
 library(tidyverse)
 library(tidyquant)
 library(quantmod)
@@ -152,26 +153,357 @@ library(plotly)
 library(factoextra)
 library(cluster)
 library(kableExtra)
-
 ```
 
 
-```{r}
+
+```r
 SP500_prices_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_backup/post3/sp500stock/sp_500_prices_tbl_2019.11_2021.11.rds")
 
 SP500_index_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_backup/post3/sp500stock/SP500_index_list_tbl.rds")
-
 ```
-```{r}
+
+```r
 SP500_prices_tbl %>% head(20) %>% kbl() %>% kable_material()
 ```
 
-```{r}
+<table class=" lightable-material" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> symbol </th>
+   <th style="text-align:left;"> date </th>
+   <th style="text-align:right;"> open </th>
+   <th style="text-align:right;"> high </th>
+   <th style="text-align:right;"> low </th>
+   <th style="text-align:right;"> close </th>
+   <th style="text-align:right;"> volume </th>
+   <th style="text-align:right;"> adjusted </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-21 </td>
+   <td style="text-align:right;"> 78.97 </td>
+   <td style="text-align:right;"> 78.97 </td>
+   <td style="text-align:right;"> 77.31 </td>
+   <td style="text-align:right;"> 78.30 </td>
+   <td style="text-align:right;"> 2142200 </td>
+   <td style="text-align:right;"> 77.19080 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-22 </td>
+   <td style="text-align:right;"> 78.61 </td>
+   <td style="text-align:right;"> 79.19 </td>
+   <td style="text-align:right;"> 78.23 </td>
+   <td style="text-align:right;"> 79.12 </td>
+   <td style="text-align:right;"> 1869700 </td>
+   <td style="text-align:right;"> 77.99919 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-25 </td>
+   <td style="text-align:right;"> 79.45 </td>
+   <td style="text-align:right;"> 80.46 </td>
+   <td style="text-align:right;"> 79.30 </td>
+   <td style="text-align:right;"> 80.26 </td>
+   <td style="text-align:right;"> 2640800 </td>
+   <td style="text-align:right;"> 79.12303 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-26 </td>
+   <td style="text-align:right;"> 78.57 </td>
+   <td style="text-align:right;"> 81.03 </td>
+   <td style="text-align:right;"> 77.96 </td>
+   <td style="text-align:right;"> 80.95 </td>
+   <td style="text-align:right;"> 5329900 </td>
+   <td style="text-align:right;"> 79.80327 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-27 </td>
+   <td style="text-align:right;"> 81.08 </td>
+   <td style="text-align:right;"> 81.34 </td>
+   <td style="text-align:right;"> 80.69 </td>
+   <td style="text-align:right;"> 81.08 </td>
+   <td style="text-align:right;"> 1628000 </td>
+   <td style="text-align:right;"> 79.93142 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-11-29 </td>
+   <td style="text-align:right;"> 80.96 </td>
+   <td style="text-align:right;"> 81.24 </td>
+   <td style="text-align:right;"> 80.47 </td>
+   <td style="text-align:right;"> 80.77 </td>
+   <td style="text-align:right;"> 835800 </td>
+   <td style="text-align:right;"> 79.62580 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-02 </td>
+   <td style="text-align:right;"> 80.78 </td>
+   <td style="text-align:right;"> 80.99 </td>
+   <td style="text-align:right;"> 80.02 </td>
+   <td style="text-align:right;"> 80.35 </td>
+   <td style="text-align:right;"> 1775600 </td>
+   <td style="text-align:right;"> 79.21176 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-03 </td>
+   <td style="text-align:right;"> 79.52 </td>
+   <td style="text-align:right;"> 80.11 </td>
+   <td style="text-align:right;"> 79.17 </td>
+   <td style="text-align:right;"> 80.10 </td>
+   <td style="text-align:right;"> 1978200 </td>
+   <td style="text-align:right;"> 78.96529 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-04 </td>
+   <td style="text-align:right;"> 80.30 </td>
+   <td style="text-align:right;"> 81.00 </td>
+   <td style="text-align:right;"> 80.18 </td>
+   <td style="text-align:right;"> 80.93 </td>
+   <td style="text-align:right;"> 1690900 </td>
+   <td style="text-align:right;"> 79.78355 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-05 </td>
+   <td style="text-align:right;"> 80.89 </td>
+   <td style="text-align:right;"> 81.74 </td>
+   <td style="text-align:right;"> 80.50 </td>
+   <td style="text-align:right;"> 81.53 </td>
+   <td style="text-align:right;"> 1900000 </td>
+   <td style="text-align:right;"> 80.37504 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-06 </td>
+   <td style="text-align:right;"> 82.24 </td>
+   <td style="text-align:right;"> 82.42 </td>
+   <td style="text-align:right;"> 81.82 </td>
+   <td style="text-align:right;"> 82.21 </td>
+   <td style="text-align:right;"> 1783400 </td>
+   <td style="text-align:right;"> 81.04540 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-09 </td>
+   <td style="text-align:right;"> 82.34 </td>
+   <td style="text-align:right;"> 82.47 </td>
+   <td style="text-align:right;"> 81.55 </td>
+   <td style="text-align:right;"> 81.62 </td>
+   <td style="text-align:right;"> 1913800 </td>
+   <td style="text-align:right;"> 80.46377 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-10 </td>
+   <td style="text-align:right;"> 82.90 </td>
+   <td style="text-align:right;"> 83.80 </td>
+   <td style="text-align:right;"> 82.70 </td>
+   <td style="text-align:right;"> 82.93 </td>
+   <td style="text-align:right;"> 3067700 </td>
+   <td style="text-align:right;"> 81.75521 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-11 </td>
+   <td style="text-align:right;"> 82.93 </td>
+   <td style="text-align:right;"> 83.47 </td>
+   <td style="text-align:right;"> 82.57 </td>
+   <td style="text-align:right;"> 83.42 </td>
+   <td style="text-align:right;"> 1718300 </td>
+   <td style="text-align:right;"> 82.23827 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-12 </td>
+   <td style="text-align:right;"> 83.49 </td>
+   <td style="text-align:right;"> 84.98 </td>
+   <td style="text-align:right;"> 83.17 </td>
+   <td style="text-align:right;"> 84.81 </td>
+   <td style="text-align:right;"> 1920800 </td>
+   <td style="text-align:right;"> 83.60857 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-13 </td>
+   <td style="text-align:right;"> 84.67 </td>
+   <td style="text-align:right;"> 84.74 </td>
+   <td style="text-align:right;"> 83.59 </td>
+   <td style="text-align:right;"> 83.71 </td>
+   <td style="text-align:right;"> 1811200 </td>
+   <td style="text-align:right;"> 82.52417 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-16 </td>
+   <td style="text-align:right;"> 84.47 </td>
+   <td style="text-align:right;"> 84.97 </td>
+   <td style="text-align:right;"> 84.00 </td>
+   <td style="text-align:right;"> 84.45 </td>
+   <td style="text-align:right;"> 1371200 </td>
+   <td style="text-align:right;"> 83.25369 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-17 </td>
+   <td style="text-align:right;"> 84.76 </td>
+   <td style="text-align:right;"> 84.86 </td>
+   <td style="text-align:right;"> 83.78 </td>
+   <td style="text-align:right;"> 83.95 </td>
+   <td style="text-align:right;"> 1653200 </td>
+   <td style="text-align:right;"> 82.76075 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-18 </td>
+   <td style="text-align:right;"> 83.75 </td>
+   <td style="text-align:right;"> 84.05 </td>
+   <td style="text-align:right;"> 83.36 </td>
+   <td style="text-align:right;"> 83.43 </td>
+   <td style="text-align:right;"> 2025500 </td>
+   <td style="text-align:right;"> 82.24812 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> 2019-12-19 </td>
+   <td style="text-align:right;"> 83.95 </td>
+   <td style="text-align:right;"> 84.67 </td>
+   <td style="text-align:right;"> 83.56 </td>
+   <td style="text-align:right;"> 84.51 </td>
+   <td style="text-align:right;"> 1696000 </td>
+   <td style="text-align:right;"> 83.31284 </td>
+  </tr>
+</tbody>
+</table>
+
+
+```r
 SP500_index_tbl %>% head(20) %>% kbl() %>% kable_material()
 ```
 
+<table class=" lightable-material" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> symbol </th>
+   <th style="text-align:left;"> company </th>
+   <th style="text-align:left;"> sector </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> A </td>
+   <td style="text-align:left;"> Agilent Technologies Inc. </td>
+   <td style="text-align:left;"> Health Care </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AAL </td>
+   <td style="text-align:left;"> American Airlines Group Inc. </td>
+   <td style="text-align:left;"> Industrials </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AAP </td>
+   <td style="text-align:left;"> Advance Auto Parts Inc. </td>
+   <td style="text-align:left;"> Consumer Discretionary </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AAPL </td>
+   <td style="text-align:left;"> Apple Inc. </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ABBV </td>
+   <td style="text-align:left;"> AbbVie Inc. </td>
+   <td style="text-align:left;"> Health Care </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ABC </td>
+   <td style="text-align:left;"> AmerisourceBergen Corporation </td>
+   <td style="text-align:left;"> Health Care </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ABMD </td>
+   <td style="text-align:left;"> ABIOMED Inc. </td>
+   <td style="text-align:left;"> Health Care </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ABT </td>
+   <td style="text-align:left;"> Abbott Laboratories </td>
+   <td style="text-align:left;"> Health Care </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ACN </td>
+   <td style="text-align:left;"> Accenture Plc Class A </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ADBE </td>
+   <td style="text-align:left;"> Adobe Inc. </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ADI </td>
+   <td style="text-align:left;"> Analog Devices Inc. </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ADM </td>
+   <td style="text-align:left;"> Archer-Daniels-Midland Company </td>
+   <td style="text-align:left;"> Consumer Staples </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ADP </td>
+   <td style="text-align:left;"> Automatic Data Processing Inc. </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ADSK </td>
+   <td style="text-align:left;"> Autodesk Inc. </td>
+   <td style="text-align:left;"> Information Technology </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AEE </td>
+   <td style="text-align:left;"> Ameren Corporation </td>
+   <td style="text-align:left;"> Utilities </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AEP </td>
+   <td style="text-align:left;"> American Electric Power Company Inc. </td>
+   <td style="text-align:left;"> Utilities </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AES </td>
+   <td style="text-align:left;"> AES Corporation </td>
+   <td style="text-align:left;"> Utilities </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AFL </td>
+   <td style="text-align:left;"> Aflac Incorporated </td>
+   <td style="text-align:left;"> Financials </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AIG </td>
+   <td style="text-align:left;"> American International Group Inc. </td>
+   <td style="text-align:left;"> Financials </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> AIZ </td>
+   <td style="text-align:left;"> Assurant Inc. </td>
+   <td style="text-align:left;"> Financials </td>
+  </tr>
+</tbody>
+</table>
 
-```{r}
+
+
+```r
 SP500_daily_returns_tbl <- SP500_prices_tbl %>% 
     select(symbol, date, adjusted) %>% 
     group_by(symbol) %>% 
@@ -185,24 +517,36 @@ SP500_daily_returns_tbl <- SP500_prices_tbl %>%
 
 ## Convert to User-Item Format: here it would be Company-Return Format
 
-```{r}
+
+```r
 SP500_date_matrix_tbl <- SP500_daily_returns_tbl %>% 
   spread(date, pct_return, fill = 0)
 ```
 
-```{r}
+
+```r
 distance <- get_dist(SP500_date_matrix_tbl %>% select(-symbol))
 fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
 ```
 
+<img src="index.en_files/figure-html/unnamed-chunk-7-1.png" width="672" />
 
-```{r}
+
+
+```r
 set.seed(42)
 kmeans_obj <- SP500_date_matrix_tbl %>% 
     select(-symbol) %>% 
     kmeans(centers =7, nstart = 30)
 
 kmeans_obj %>% broom::glance()
+```
+
+```
+## # A tibble: 1 × 4
+##   totss tot.withinss betweenss  iter
+##   <dbl>        <dbl>     <dbl> <int>
+## 1  113.         80.4      32.6     5
 ```
 
 
@@ -223,7 +567,8 @@ $$
 TSS = WSS + BSS\      where\  SS\ = Sum\ of\ Squares  
 $$
 
-```{r, warning=FALSE}
+
+```r
 set.seed(42)
 kmeans_mapper <- function(center = 3) {
     SP500_date_matrix_tbl %>%
@@ -236,14 +581,14 @@ cluster_tbl <- tibble(centers = 1:20)
 k_means_mapped_tbl <- cluster_tbl %>% 
   mutate(k_means = centers %>% map(kmeans_mapper),
          glance  = k_means %>% map(glance))
-
 ```
 
 The Elbow method looks at the total within sum of squares as a function of the number of clusters. With ever increasing the number of clusters (max at number of observations) the WSS will continuously descend in a linear manner. One should choose a number of clusters one before constant rate of WSS change is reached, that is adding another cluster does not significantly influence total WSS. 
 
 To note, the elbow method is sometimes ambiguous. In our SP500 return data set, it is difficult to spot optimal cluster k, with our naked eye. Hence, I got the pulse of local region 5~10 to investigate further using alternative clustering approach. 
 
-```{r}
+
+```r
 k_means_mapped_tbl %>% 
   unnest(glance) %>% 
   ggplot(aes(x = centers, y = tot.withinss)) +
@@ -261,14 +606,16 @@ Scree Plot determines the optimal number of cluster for K-means",
         hence we select 5~10 clusters to segement the customer base."
     ) +
   theme(legend.position = "none")
-
 ```
+
+<img src="index.en_files/figure-html/unnamed-chunk-10-1.png" width="672" />
 
 #### Average Silhouette Method
 
 * Measures the quality of a clustering. It determines how well each object lies within its cluster. A high average silhouette width indicates a good clustering. 
 
-```{r}
+
+```r
 # function to compute average silhouette for k clusters
 silhouette_mapper <- function(k) {
     df <- SP500_date_matrix_tbl %>% select(-symbol)
@@ -290,7 +637,8 @@ k_means_silhouette_mapped_tbl <- cluster_tbl %>%
 
 #### [2] Silhouette Method: Visualisation
 
-```{r}
+
+```r
 k_means_silhouette_mapped_tbl[-1,] %>% 
   ggplot(aes(centers, k_means)) +
   geom_point(colour = palette_light()[1], size = 3) +
@@ -309,6 +657,8 @@ Scree Plot determines the optimal number of cluster for K-means",
   theme(legend.position = "none")
 ```
 
+<img src="index.en_files/figure-html/unnamed-chunk-12-1.png" width="672" />
+
 
 #### Statistical Testing Methods: consists of comparing evidence against null hypothesis. An example is the gap analysis. 
 
@@ -316,16 +666,25 @@ Scree Plot determines the optimal number of cluster for K-means",
 
 The gap analysis compares the total within intra-cluster variation for different values of k with their expected values under null reference distribution of the data. The estimate of the optimal clusters will be value that maximise the gap statistics. This means that the clustering strucutre is far away from the random uniform distribution of points. 
 
-```{r}
+
+```r
 set.seed(42)
 gap_stat <- clusGap(SP500_date_matrix_tbl %>% select(-symbol),
                     FUN = kmeans,
                     nstart = 25,
                     K.max = 10,
                     B = 50)
+```
 
+```
+## Warning: did not converge in 10 iterations
+```
+
+```r
 fviz_gap_stat(gap_stat)
 ```
+
+<img src="index.en_files/figure-html/unnamed-chunk-13-1.png" width="672" />
 #### Conclusion:
 
 * In order to retain the hierachical relationship with industry sector 
@@ -337,7 +696,8 @@ fviz_gap_stat(gap_stat)
 
 Once K-Means Clustering is performed, we can use UMPA (or PCA) to help us visualise each data point according to its cluster assignment. The problem that these observations (companies) are high dimension in space can be solved by applying a dimensionality reduction algorithm to output two most influencial variables respect to the originial variables. 
 
-```{r}
+
+```r
 umap_obj <- SP500_date_matrix_tbl %>% 
     select(-symbol) %>% 
     umap()
@@ -348,8 +708,14 @@ umap_result_tbl <- umap_obj$layout %>%
     bind_cols(SP500_date_matrix_tbl %>% select(symbol))
 ```
 
+```
+## Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0.
+## Using compatibility `.name_repair`.
+```
 
-```{r}
+
+
+```r
 # Get the k_means_obj from the 10th center
 k_means_obj <- k_means_mapped_tbl %>% 
     filter(centers == 6) %>% 
@@ -359,98 +725,10 @@ umap_kmeans_SP500_result_tbl <- k_means_obj %>%
     broom::augment(SP500_date_matrix_tbl %>% select(symbol)) %>%
     left_join(umap_result_tbl, by = "symbol") %>% 
     left_join(SP500_index_tbl %>% select(symbol, company, sector), by = "symbol")
-
 ```
 
 
-```{r, warning=FALSE}
 
-indus_mapper <- function(cluster =1){
-  foo <- umap_kmeans_SP500_result_tbl %>% 
-  select(-c(x,y)) %>% 
-  filter(.cluster == cluster) %>% 
-  count(sector) %>% 
-  mutate(indus_prop = n/sum(n),
-         indus_prop_text = indus_prop %>% scales::percent()) %>%
-  arrange(desc(indus_prop)) %>% 
-  select(sector, indus_prop, indus_prop_text) %>% head(3) %>% 
-  mutate(sector_prop = str_c(sector, str_glue("({indus_prop_text})"))) 
-  if(is.na(foo[2,]) == TRUE) {
-  foo %>% mutate(sector_text = str_glue("{sector_prop[1]}")) %>% 
-  select(sector_text) %>% distinct(sector_text) 
-  } else if(is.na(foo[3,]) == TRUE) {
-  foo %>% mutate(sector_text = str_glue("{sector_prop[1]}
-                                {sector_prop[2]}")) %>% 
-  select(sector_text) %>% distinct(sector_text)   
-  } else{
-   foo %>% mutate(sector_text = str_glue("{sector_prop[1]}
-                                {sector_prop[2]}
-                                {sector_prop[3]}")) %>% 
-  select(sector_text) %>% distinct(sector_text)   
-  }
-}
-
-industry_text_tbl <- cluster_indus %>% 
-  mutate(indus = .cluster %>% map(indus_mapper)) %>% unnest(indus) %>% 
-  mutate(.cluster = as.factor(.cluster))
-  
-umap_kmeans_SP500_result_tbl %>% 
-  left_join(industry_text_tbl, by = ".cluster") %>% 
-    ggplot(aes(x, y, colour = .cluster)) +
-    geom_point(alpha = 0.5) +
-    ggrepel::geom_label_repel(data  = . %>% 
-                              mutate(label = ifelse(symbol %in% c("APA", "AEE", "VTRS", "DFS", "TER", "DAL"), sector_text, "")),
-                                     aes(label = label), 
-                              size = 3,
-                              min.segment.length =  1,
-                              max.overlaps = getOption("ggrepel.max.overlaps", default = 100), show.legend = FALSE, alpha = 0.7) + 
-    theme_tq() +
-    scale_colour_tq() 
-```
-
-
-```{r}
-get_kmeans <- function(k = 3) {
-    
-    k_means_obj <- k_means_mapped_tbl %>%
-        filter(centers == k) %>%
-        pull(k_means) %>%
-        pluck(1)
-    
-    umap_kmeans_results_tbl <- k_means_obj %>% 
-        augment(SP500_date_matrix_tbl) %>%
-        select(symbol, .cluster) %>%
-    left_join(umap_result_tbl, by = "symbol") %>% 
-    left_join(SP500_index_tbl %>% select(symbol, company, sector), by = "symbol")
-    
-    return(umap_kmeans_results_tbl)
-}
-
-plot_cluster <- function(k = 3) {
-    
-    g <- get_kmeans(k) %>%
-        
-        mutate(label_text = str_glue("Stock: {symbol}
-                                     Company: {company}
-                                     Sector: {sector}")) %>%
-        
-        ggplot(aes(x, y, color = .cluster, text = label_text)) +
-        geom_point(alpha = 0.5) +
-        theme_tq() +
-        scale_color_tq()
-    
-    g %>%
-        ggplotly(tooltip = "text")
-    
-}
-```
-
-We can plot the clusters interactively. 
-
-```{r}
-plot_cluster(k = 6)
-```
-```
 
 
 
