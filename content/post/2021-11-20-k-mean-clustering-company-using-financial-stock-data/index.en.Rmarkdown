@@ -337,7 +337,7 @@ fviz_gap_stat(gap_stat)
 
 Once K-Means Clustering is performed, we can use UMPA (or PCA) to help us visualise each data point according to its cluster assignment. The problem that these observations (companies) are high dimension in space can be solved by applying a dimensionality reduction algorithm to output two most influencial variables respect to the originial variables. 
 
-```{r}
+```{r, warning=FALSE}
 umap_obj <- SP500_date_matrix_tbl %>% 
     select(-symbol) %>% 
     umap()
@@ -349,8 +349,8 @@ umap_result_tbl <- umap_obj$layout %>%
 ```
 
 
-```{r}
-# Get the k_means_obj from the 10th center
+```{r, warning=FALSE}
+# Get the k_means_obj from the 6th center
 k_means_obj <- k_means_mapped_tbl %>% 
     filter(centers == 6) %>% 
     pull(k_means) %>%  pluck(1) 

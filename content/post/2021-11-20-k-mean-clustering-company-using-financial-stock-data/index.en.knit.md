@@ -708,15 +708,10 @@ umap_result_tbl <- umap_obj$layout %>%
     bind_cols(SP500_date_matrix_tbl %>% select(symbol))
 ```
 
-```
-## Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0.
-## Using compatibility `.name_repair`.
-```
-
 
 
 ```r
-# Get the k_means_obj from the 10th center
+# Get the k_means_obj from the 6th center
 k_means_obj <- k_means_mapped_tbl %>% 
     filter(centers == 6) %>% 
     pull(k_means) %>%  pluck(1) 
