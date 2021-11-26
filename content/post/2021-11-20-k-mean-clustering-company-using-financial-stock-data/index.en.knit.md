@@ -1,14 +1,13 @@
 ---
-title: K-Mean Clustering Company using Financial Stock Data
-author: Package Build
+title: "K-Mean Clustering Company using Financial Stock Data"
+author: "Package Build"
 date: '2021-11-20'
 slug: K-Mean Clustering Company using Financial Stock Data
-categories:
-  - R
+categories: R
 tags:
-  - Academic
-  - Clustering
-  - Distance Matrix
+- Academic
+- Clustering
+- Distance Matrix
 subtitle: ''
 summary: ''
 authors: []
@@ -162,6 +161,7 @@ SP500_prices_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_
 
 SP500_index_tbl <- read_rds("/Users/seunghyunsung/Documents/GitHub/Modelbakery_backup/post3/sp500stock/SP500_index_list_tbl.rds")
 ```
+
 
 ```r
 SP500_prices_tbl %>% head(20) %>% kbl() %>% kable_material()
@@ -721,6 +721,7 @@ umap_kmeans_SP500_result_tbl <- k_means_obj %>%
     left_join(umap_result_tbl, by = "symbol") %>% 
     left_join(SP500_index_tbl %>% select(symbol, company, sector), by = "symbol")
 ```
+
 
 
 
