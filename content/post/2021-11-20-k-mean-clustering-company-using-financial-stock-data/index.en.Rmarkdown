@@ -198,11 +198,26 @@ fviz_dist(distance, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4
 
 ```{r}
 set.seed(42)
-kmeans_obj <- SP500_date_matrix_tbl %>% 
-    select(-symbol) %>% 
-    kmeans(centers =7, nstart = 30)
 
-kmeans_obj %>% broom::glance()
+kmeans_obj_mapper <- function(center = 1){
+   SP500_date_matrix_tbl %>% 
+    select(-symbol) %>% 
+    kmeans(centers =center, nstart = 30)
+}
+
+kmeans_overview <- tibble(center = 1:10) %>% 
+  mutate(
+    kmeans_obj_map = center %>% map(kmeans_obj_mapper),
+    glance = kmeans_obj_map %>% map(broom::glance)
+    )
+
+kmeans_overview %>% unnest(glance) %>% 
+  mutate(
+    perc_tot.withiness = 
+      (tot.withinss/totss) %>% scales::percent()
+    ) %>% 
+  select(-kmeans_obj_map) %>% 
+  kbl() %>% kable_material()
 ```
 
 
@@ -316,16 +331,7 @@ Scree Plot determines the optimal number of cluster for K-means",
 
 The gap analysis compares the total within intra-cluster variation for different values of k with their expected values under null reference distribution of the data. The estimate of the optimal clusters will be value that maximise the gap statistics. This means that the clustering strucutre is far away from the random uniform distribution of points. 
 
-```{r}
-set.seed(42)
-gap_stat <- clusGap(SP500_date_matrix_tbl %>% select(-symbol),
-                    FUN = kmeans,
-                    nstart = 25,
-                    K.max = 10,
-                    B = 50)
 
-fviz_gap_stat(gap_stat)
-```
 #### Conclusion:
 
 * In order to retain the hierachical relationship with industry sector 
@@ -389,11 +395,15 @@ indus_mapper <- function(cluster =1){
   }
 }
 
+cluster_indus <-  tibble(.cluster = 1:6)
+
 industry_text_tbl <- cluster_indus %>% 
   mutate(indus = .cluster %>% map(indus_mapper)) %>% unnest(indus) %>% 
   mutate(.cluster = as.factor(.cluster))
 
 ```
+
+
 ```{r}
 umap_kmeans_SP500_result_tbl %>% 
   left_join(industry_text_tbl, by = ".cluster") %>% 
