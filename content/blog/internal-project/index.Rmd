@@ -18,13 +18,9 @@ url_slides: ""
 url_video: ""
 ---
 
+You may have heard of the Pareto Principle, but knowing how would you utilize its advantages can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, abstracting a target customer from highly complex and overload of information in customers' demographics, desire, and product categories, the power of the leading score can be significant. 
 
-
-You may have heard of the Pareto Principle, but knowing how would you utilize its advantages, in reality, can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, depending on the number of leads, levels of customers' demographics, desire, and product categories, the power of the leading score can ever so be significant. 
-
-In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution for actionable decision makings. 
-
-There are many excellent books and course materials with technical details on statistical inference, but knowing when and how to apply it in the real world is another muscle we all need to train ourselves.
+In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution and each purchasing behvaiour groups similar in size. To put RFM into marketing perspectives, it is a valuable tool when marketers wants a quick and success. This matric will almost always warrant quick and profitable results. 
 
 
 ***
@@ -136,9 +132,7 @@ Having this in mind, we will explore the transcation data in depth and construct
 library(readr)
 library(fs) 
 library(tufte)
-
 library(forecast)
-
 library(GGally)
 library(knitr)
 library(kableExtra)
@@ -160,6 +154,7 @@ library(tidyquant)
 library(timetk)
 library(rsample) 
 library(wesanderson)
+library(formattable)
 ```
 
 
@@ -197,144 +192,657 @@ trans_df <- trans_df_raw %>%
     amount = tran_amount) 
 ```
 
+```{r}
+resp <- resp_df_raw %>% 
+  select(customer_id, response) %>% 
+  setNames(c("customer_id", "campaign"))
 
+cust_df <- trans_df %>% 
+  left_join(resp, by = "customer_id") %>% 
+  mutate(campaign = case_when(campaign == 1 ~ 1,
+                                TRUE ~ 0))
+```
 
-## 3.0 Data Preparation 
-
-### 3.1 Checking for duplicates 
-
-* No duplicated data 
-* Diagnosed same-day repeated purchase 
-  + 10.7% from total customers falls in this category 
-  +  0.6% of occurrence within transaction history 
-  
-Question to ask:
-
-* Are these group statistically significant in respect to their revenue?
-* Does same-day repeated purchase represent any meanings?
 
 
 ```{r}
-format_dollar  <- function(x, ...) {
-  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
+cust_df %>% 
+  mutate(year = year(date)) %>% 
+  group_by(year) %>% 
+  summarise(revenue = sum(amount)) %>% 
+  mutate(revenue_text = scales::dollar(revenue, scale = 1e-6, suffix = "M")) %>% 
+  ggplot(aes(year, revenue)) +
+  geom_col(fill = "#2c3e50") +
+  geom_text(aes(label = revenue_text), vjust = 1.5, colour = "white") + 
+  theme_tq()
+```
+
+
+```{r}
+
+camp_facet_rev_monthly_tbl <- cust_df %>% 
+  mutate(monthly = floor_date(date, "month") -1) %>% 
+  group_by(monthly, campaign) %>% 
+  summarise(
+    monthly_pur = n(),
+    revenue = sum(amount)) %>%  ungroup() %>% 
+  filter(!monthly == min(monthly) & !monthly == max(monthly)) %>% 
+  arrange(campaign) %>% 
+  mutate(campaign = ifelse(campaign == 0, "no_response", "response"))
+
+p_camp_facet_rev_monthly <- camp_facet_rev_monthly_tbl %>% 
+  ggplot(aes(monthly, revenue, colour = campaign)) +
+  geom_point(aes(colour = campaign)) +
+  geom_line() +
+  # geom_smooth(method = 'loess', span = 0.2, colour = "black", alpha = 0.5) +
+  facet_wrap(~campaign, scales = "free_y", nrow = 2) +
+  scale_colour_tq() +
+  theme_tq() +
+  scale_y_continuous(labels = scales::dollar_format(scale = 1e-3, suffix = "K")) +
+  labs(
+    title = "Campaign Revenue Inspection Time Plot",
+    subtitle = "Campaign Revenue Growth Activity Decline is Alarming!",
+    x = "Time (in month)",
+    y = "Revenue ($K)",
+    colour = "Campaign",
+    caption = "4 years revenue trends from customer campaign data base
+              Estimated campaign start date : 2013/02
+              Estimated campaign influene end date : 2014/07"
+  ) +
+  theme(legend.position = "none")
+
+p_camp_facet_rev_monthly
+```
+
+* Has the marketing (advertising) strategy applied to right customers? 
+  + Loyal or persuaders 
+  + How can we define "Target" customer to drive revenue 
+  + How is the acquisition rate? Business future potential 
+  + The business health LTV/CVC
+  + What is our current value offered to our existing customers - are we losing customer rentention and/or acqusition rate by the competitiors. 
+  + Are we investing enough marketing 
+
+
+
+## 3.0 Structuring Business Problem Framework 
+
+#### 3.A 
+
+Define Objectives: Campagin Target Customer 
+
+Strategy: TBD 
+
+* Acquisition Strategy
+
+* 
+Retailers tend to use advanced methods for calculating CAC because customer lifespans tend to be longer and the average spend tends to be shorter. If you imagine the number of times you'll pop into Target during your life (no matter where the location) and how much you'll spend there, you'll see how figuring out this amount of money can be crazy difficult.
+
+Assess Target Customer: 
+
+* Cohort Analsysis
+
+* Customer acqusition cost (CAC)
+
+* Customer life-time value (with and with-out marketing expansion)
+
+* CAC:LTV ratio: internal business health metric
+
+
+
+## 4.0 Cohort Analysis 
+
+```{r}
+
+set_cohort_period <- function(data, period = "month"){
+  cust_df %>% 
+    distinct(customer_id, date) %>% 
+    group_by(customer_id) %>% 
+    mutate(
+      first_pur = min(date),
+      last_pur  = max(date), 
+      duration  = as.numeric(last_pur - first_pur),
+      cohort    = floor_date(first_pur, period),
+      cohort    = as.yearmon(cohort, '%Y-%m')) %>% 
+    ungroup() 
 }
 
-se <- function(x) sqrt(var(x)/length(x))
+monthly_cohort_retention_tbl <- cust_df %>% 
+  set_cohort_period(period = "month") %>% 
+  mutate(cohort_date = lubridate::my(cohort),
+         cohort = as.character(cohort) %>% as_factor() %>% fct_reorder(cohort_date)) %>% 
+  group_by(cohort) %>% 
+  mutate(
+     days_next_pur = as.numeric(difftime(date, first_pur, units = c("days"))),
+     month_next_pur = floor(days_next_pur/30)
+     ) %>% ungroup() %>% 
+  group_by(cohort, month_next_pur) %>% 
+  summarise(user = n()) %>% 
+  group_by(cohort) %>% 
+  mutate(first_no_user = first(user),
+         cohort_retention = user/first_no_user) %>% 
+  select(-first_no_user) %>% ungroup()
 
+
+first_purchase_user_tbl <- monthly_cohort_retention_tbl %>% 
+  filter(month_next_pur == 0) %>% 
+  select(cohort, user) 
+
+
+monthly_cohort_retention_metrics <- monthly_cohort_retention_tbl %>% 
+  reshape2::dcast(cohort~month_next_pur,
+                  value.var = "cohort_retention") %>% 
+  left_join(
+    first_purchase_user_tbl,
+    by = "cohort") %>% 
+  select(-"0") %>% 
+  select(cohort, user, everything()) 
+
+monthly_cohort_retention_metrics
+
+
+monthly_cohort_retention_tbl %>% 
+  filter(!month_next_pur == 0) %>% 
+  group_by(cohort) %>% 
+  summarise(avg_retention = mean(user),
+            avg_retention_rate = mean(cohort_retention))
+ 
 ```
+
 
 ```{r}
+breaks_cohort  <- quantile(monthly_cohort_retention_metrics[,3:46], probs = seq(.05, .95, .05), na.rm = TRUE)
 
-dup_pur_customer <- which(duplicated(trans_df[, c("customer_id", "date")]))
-y_dup_df <- trans_df[dup_pur_customer,]
-n_dup_df <- trans_df[-dup_pur_customer,]
-
-y_dup_df$samday_purchase <- TRUE
-n_dup_df$samday_purchase <- FALSE
-
-
-cust_dup_tbl <- rbind(y_dup_df, n_dup_df) %>% 
-  group_by(customer_id) %>% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
-
+monthly_cohort_retention_tbl %>% 
+  mutate(pct = cohort_retention*100) %>% 
+  ggplot(aes(month_next_pur, reorder(cohort, desc(cohort)), fill = cohort_retention)) +
+  geom_raster() +
+  scale_fill_continuous(type = "gradient", low = "deepskyblue", high = "darkblue") +
+  scale_x_continuous(breaks = breaks_cohort, expand = c(0,0)) +
+  geom_text(aes(label = scales::percent(formattable(pct), suffix = "%", prefix = " ")), size = 2, col = "white") +
+  theme_tq()
 ```
 
-```{r}
-cust_dup_tbl %>% 
-  group_by(samday_purchase) %>% 
-  summarise(count            = n_distinct(customer_id),
-            med_pur_freq     = median(frequency),
-            avg_pur_freq     = mean(frequency),
-            sd_freq          = sd(frequency),
-            se_freq          = se(frequency),
-            med_pur_monetary = median(monetary) %>% format_dollar,
-            avg_pur_monetary = mean(monetary)   %>% format_dollar,
-            sd_monetary      = sd(monetary),
-            se_monetary      = se(monetary)) %>% 
-    kbl() %>% 
-    kable_material_dark()
+Analysis framework for understanding customer loyalty: customer retention rate and churn rate 
 
-```
+The time frame I want to study: Annual, Quarterly, monthly 
 
-### 3.2 Hypothesis Test on same-day repeated and non-repeated purchase group  
+Information aquired: 
 
-* Unbalanced Welch Two Sample t-test
-* Balanced Welch Two Sample t-test
+* The number of exisitng customers at the start of the time period (S)
 
-Both the hypothesis tests rejects null hypothesis (p-value < 0.05) that the difference in mean of customer "same-day duplicate" and "non-duplicate" groups are not significant. 
+* The number of total customers at the end of the time period (E)
 
-> p < .05 bar is too easy to pass and sometimes serves as an excuse for lower quality research."
-- Traflmow, editor of the Basic and Applied Social Psychology journal 
+* The number of new customers added within the time period (N)
 
-A small p-value does not indicate that the null hypothesis is false, in fact it is commonly understood that the extent of p-value should not footnote "statistically significant". However, we can invoke the result is not by chance. 
+[(E-N)/S] * 100 = CRR (Customer retention rate)
 
-```{r}
-random_n_dup_df <- sample_n(n_dup_df, 737) 
-random_n_dup_df$samday_purchase <- FALSE
 
-sample_dup_tbl <- rbind(y_dup_df, random_n_dup_df) %>% 
-  group_by(customer_id) %>% 
-  summarise(monetary = sum(amount),
-            frequency = n(),
-            samday_purchase = mean(samday_purchase) %>% ceiling() %>% as.factor()) %>% ungroup()
+Revenue churn: rate of losing MRR over customer experience in time. 
 
-t.test(monetary~samday_purchase, data = cust_dup_tbl)
-t.test(monetary~samday_purchase, data = sample_dup_tbl)
-```
+* Does our customer downgrades rather than churn? 
 
-### 3.3 Visualisation on same-day repeated and non-repeated customer 
-
-* Customer monetary value, by nature, has two noticeable binary distributions (there always can be more) overlapped from one and another. It would be valid to make a weak assumptions in the threshold from its low-monetary value region to high-monetary value region.
-
-* The difference in low-monetary region (approx. first quantile) to low-monetary region (approx. third quantile) proportions between these groups is indeed notable. 
-
-* Given the same weight on number of customers to these groups, their first quantile density shrinks by factor of ~2.  
-
-The mean, median and other sample statistics had trouble to explain this proportional difference of these two regions. I believe this is where it gets quite tricky. Repeated same-day purchase records themselves are not a meaningful feature, but due to "confonding" effects it false appearence as if it has some predictive power between these two groups. 
-
-Perhaps it is the __accessibility__ upon purchase act as a confounder between monetary value and same-day purchased behaviour. With given customer geographical data or payment methods it would be worth to investigate further but from data what is given the hypothesis remains too strong of an assumptions to define any insightful meanings. 
-
-```{r}
-
-P3_C_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_col(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_B_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_V_dup <- cust_dup_tbl %>% ggplot(aes(x = samday_purchase, y = monetary, fill = samday_purchase)) +
-  geom_violin(alpha = 0.5) +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  scale_fill_tq() +
-  theme_tq()
-
-P3_D_dup <- cust_dup_tbl %>% 
-  ggplot(aes(x = monetary, fill = samday_purchase)) +
-  geom_density(alpha = 0.5) +
-  scale_fill_tq() +
-  theme_tq()
-
-gridExtra::grid.arrange(P3_C_dup, P3_B_dup, P3_V_dup, P3_D_dup, ncol = 2)
-
-```
-
-### 3.4 Perspective Notes 
-
-* Comparative analysis of potential aspects on "what is the behind the scene" of customers at low and high monetary regions are needed. 
+* Repeat purchase rate: Number of return customers/ Total number of customers 
+  + Applies to companies without fixed contracts, such as retailers. 
   
-* In order to identify common characteristics among customers, the "hard" variables such as age, gender, place of residence are needed. 
-  
-* Inquire customer information on geographical and payment method from database in order to approach on defining "soft" variables such as "service accessibility" and its scoring board. 
+Customer lifetime value: the profit generated the average customer contributes to a business over their entire lifecycle. 
 
-***
+* Cost of acquiring and retaining customers. (Average order value * Repeat purchase rate) - customer aquistioon cost 
+
+
+
+```{r}
+cust_monthly_tbl <- cust_df %>% 
+  group_by(customer_id) %>% 
+  summarise(monthly_date = ceiling_date(date, "month")-1,
+         first_pur = min(monthly_date),
+         last_pur = max(monthly_date),
+         duration = as.numeric(last_pur - first_pur),
+         rev = sum(amount),
+         frequency = n(),
+         camp_resp = campaign) %>% ungroup() 
+
+cohort_avg_trans_tbl <- cust_monthly_tbl %>% 
+  group_by(first_pur) %>% 
+  summarise(users = n(),
+            avg_duration = mean(duration),
+            avg_rev = mean(rev),
+            avg_freq = mean(frequency),
+            avg_item_price_pur = avg_rev/avg_freq,
+            avg_camp_resp = mean(camp_resp))  %>% 
+  ungroup() 
+
+
+cohort_avg_trans_tbl %>% 
+  ggplot(aes(first_pur, avg_duration)) +
+  geom_col() +
+  geom_line(cohort_avg_trans_tbl, mapping = aes(first_pur, avg_rev), size = 1) +
+  theme_tq()
+
+cohort_avg_trans_tbl
+  
+month_based_cohort_tbl
+quantile(month_based_cohort_tbl$duration)
+quantile(month_based_cohort_tbl$duration)
+```
+
+```{r}
+cust_monthly_tbl %>% 
+  select(customer_id, last_pur) %>%
+  arrange(last_pur) %>% distinct()
+  
+  
+
+
+cust_holdout_period_tbl<- cust_monthly_tbl %>% 
+  select(customer_id:last_pur) %>% 
+  group_by(customer_id) %>% 
+  mutate(days_since_first_pur = as.numeric(monthly_date - first_pur)) %>% 
+  arrange(customer_id, desc(monthly_date)) %>% 
+  mutate(lag_days_since_first_pur= lag(days_since_first_pur),
+         holdout_period = lag_days_since_first_pur - days_since_first_pur) %>% 
+  drop_na()
+
+
+cust_holdout_period_tbl %>% 
+  group_by(first_pur, customer_id) %>% 
+  summarise(frequency = n(),
+            avg_holdout_period = mean(holdout_period))
+  
+  
+```
+
+
+
+```{r}
+q_cohort_monthly_retention_tbl <- cust_df %>% 
+  set_cohort_period(period = "quarter") %>%
+  group_by(cohort) %>% 
+  mutate(
+     days_next_pur = as.numeric(difftime(date, first_pur, units = c("days"))),
+     month_next_pur = floor(days_next_pur/30)
+     ) %>% ungroup() %>% 
+  group_by(cohort, month_next_pur) %>% 
+  summarise(users = n(),
+            ) %>% ungroup() 
+
+q_cohort_monthly_retention_tbl %>% 
+  ggplot(aes(month_next_pur, users, fill = cohort)) +
+  geom_area(colour = "white") +
+  scale_fill_brewer("Blues") +
+  theme_tq()
+
+```
+
+
+```{r}
+
+# Monthly Cohort Table 
+monthly_cohort_tbl <- cust_df %>% 
+  # remove duplicated: same day purchase data -> can be a typo 
+  distinct(customer_id, date) %>% 
+  group_by(customer_id) %>% 
+  mutate(first_pur = min(date),
+         last_pur  = max(date), 
+         duration  = as.numeric(last_pur - first_pur),
+         cohort    = floor_date(first_pur, "month")) %>% 
+  group_by(cohort) %>% 
+  mutate(date_id = row_number(),
+         cohort  = as.yearmon(cohort, '%Y-%m') %>% format(., "%m/%Y") %>% 
+           as_factor() %>% fct_reorder(date_id)) %>% 
+  ungroup() %>% 
+  select(-date_id)
+
+# LTV cohort Table
+cohort_MAU_tbl <- monthly_cohort_tbl %>% 
+  group_by(cohort) %>% 
+  mutate(
+     days_next_pur = as.numeric(difftime(date, first_pur, units = c("days"))),
+     months_next_pur = floor(days_next_pur/30)
+  ) %>% ungroup() 
+
+
+MAU_retention_matrix <- monthly_cohort_tbl %>% group_by(cohort) %>% 
+  summarise(users = n()) %>% 
+  select(cohort, users) %>% 
+  left_join(reshape2::dcast(cohort_MAU_tbl, cohort~months_next_pur,
+                                 value.var="customer_id",
+                                 fun.aggregate = length), "cohort")
+
+MAU_revenue_tbl <- cohort_MAU_tbl %>% 
+  left_join(
+    cust_df %>% select(customer_id, amount),
+    by = "customer_id"
+    ) %>% 
+  group_by(cohort, months_next_pur) %>% 
+  summarise(revenue = sum(amount)) %>% ungroup() 
+
+MAU_revenue_matrice <- MAU_revenue_tbl %>% 
+  reshape2::dcast(cohort~months_next_pur,
+                  value.var= "revenue") %>% 
+  mutate(across(everything(), ~replace_na(.x, 0)))
+```
+
+
+```{r}
+# Retention Rate Trend Analysis 
+MAU_retention_prep <- cohort_MAU_tbl %>% 
+  select(cohort, months_next_pur, customer_id) %>% 
+  group_by(cohort, months_next_pur) %>% 
+  summarise(active_user = n()) %>% ungroup() %>% 
+  group_by(cohort) %>% 
+  mutate(user = sum(active_user),
+         retention_pct = active_user/user,
+         cumsum_act_user = cumsum(active_user),
+         retained = user-cumsum_act_user,
+         fraction_retained = retained/user) %>% ungroup()
+
+MAU_revenue_tbl %>% 
+  group_by(cohort) %>% 
+  mutate(total_revenue = cumsum(revenue)) %>% ungroup() %>% 
+  ggplot(aes(months_next_pur, revenue, fill = cohort)) +
+  geom_area() 
+  
+
+```
+
+```{r}
+
+  
+
+MAU_retention_prep %>% 
+  ggplot(aes(months_next_pur, fraction_retained, colour = cohort)) +
+  geom_line(size = 1) +
+  theme_tq() 
+
+
+MAU_churn_prep <- cohort_MAU_tbl %>% 
+  select(cohort, months_next_pur, customer_id) %>% 
+  group_by(cohort, months_next_pur) %>% 
+  summarise(active_user = n()) %>% 
+  group_by(cohort) %>% 
+  mutate(users = sum(active_user),
+         lag_active_user = lag(active_user, default = NA_integer_),
+         churn = (active_user-lag_active_user)/lag_active_user,
+         churn = replace_na(churn, 0)) %>% ungroup() 
+
+MAU_churn_prep %>% 
+  select(cohort, months_next_pur, churn) %>% 
+  reshape2::dcast(cohort~months_next_pur,
+                  value.var="churn",
+                  fun.aggregate = NULL) %>% 
+  mutate(across(everything(), ~replace_na(.x, 0))) %>% 
+  left_join(
+        cohort_MAU_tbl %>% group_by(cohort) %>% 
+        summarise(users = n()) %>% 
+        select(cohort, users), 
+      by = "cohort") %>% 
+  select(cohort, users, everything())
+
+MAU_churn_prep %>% 
+  ggplot(aes(months_next_pur, churn)) +
+  geom_line() +
+  facet_wrap(~cohort)
+```
+
+
+```{r}
+rev_active_user = rev(active_user),
+         inactive_user = rev_active_user/user,
+         churn = case_when(inactive_user != 0 ~ 1-inactive_user,
+                           TRUE~ inactive_user))
+MAU_retention_matrix
+
+for (i in sort(3:ncol(MAU_retention_matrix))){
+  MAU_retention_matrix[,i] <- round(MAU_retention_matrix[,i]/MAU_retention_matrix[,2],4)
+}
+
+# Verify: the Users proportions in the same cohort must equal to 1 (Total Users)
+sum(rowSums(MAU_retention_matrix[1,3:49]))
+
+MAU_retention_matrix %>% View()
+
+cw_churn <- MAU_retention_matrix
+  
+for (i in rev(3:ncol(cw_churn))){
+  cw_churn[,i] <- round(cw_churn[,i]/cw_churn[,2],6)
+  cw_churn[,i] <- case_when(cw_churn[,i] !=0 ~ 1-cw_churn[,i],
+                            TRUE ~ cw_churn[,i])
+}
+
+round(cw_churn[,41]/cw_churn[,2], 6) != 0
+```
+
+
+```{r}
+cust_df %>% 
+  group_by(customer_id) %>% 
+  summarise(campaign = median(campaign)) %>% ungroup() %>% 
+  group_by(campaign) %>% 
+  summarise(n = n()) %>% ungroup() %>% 
+  mutate(pct = n/sum(n))
+
+```
+
+Findings: 
+
+* 9.3% campagin responding rate 
+  + What are the potential benchmark for its percentage success rate? 
+  + How can campaign ROI be measured? 
+  + How are these customers and what they value to the company?
+  
+Ultimately, you will need to choose an email marketing budget that works for your company and goals. That being said, email marketing is an extremely cost effective strategy, and it can earn you an incredibly high ROI — $44 for every $1 you spend.So if you’re looking for a way to reach more customers for less money, email marketing is a great option.
+
+
+
+
+Area to investigate to estimate the campaign ROI (valuation of the advertisiment project):
+
+[1] Investigate Object: 9.3% campaign responders
+
+[2] Investigate Objectives: 
+
+* Duration of the campaign activity 
+
+* Revenue growth generated by campaign responders 
+
+[3] Hypothesise benchmark: non-campaign responders ROI 
+
+[4] Collect information on customer data base: limited 
+
+
+
+
+
+```{r}
+camp_facet_rev_monthly_tbl %>% 
+  ggplot(aes(monthly, revenue, fill = campaign)) +
+  geom_col(position = "fill") +
+  scale_fill_tq() +
+  theme_tq() +
+  labs(
+    title = "Campaign Revenue Inspection Time Plot",
+    subtitle = "Campaign Revenue Growth Activity Decline is Alarming!",
+    x = "Time (in month)",
+    y = "Revenue Index",
+    colour = "Campaign"
+  ) +
+  theme(legend.position = "none")
+
+```
+
+```{r, echo=FALSE, warning=FALSE}
+generator_hist_facet <- function(data, bins = 20, ncol = 5,
+                                 fct_reorder = FALSE, 
+                                 fct_rev = FALSE,
+                                 fill = palette_light()[[3]],
+                                 color = "white", scale = "free") {
+      data_factored <- data %>% 
+        gather(key = key, value = value, factor_key = TRUE) 
+      
+    if(fct_reorder) {
+      data_factored <- data_factored %>% 
+        # Trick to get variables in alphabetical order 
+        mutate(key = as.character(key) %>% as.factor())
+    }
+      
+    if(fct_rev) {
+      data_factored <- data_factored %>% 
+        mutate(key = fct_rev(key))
+    }
+      
+    g <- data_factored %>% 
+      ggplot(aes(x = value, group = key)) +
+      geom_histogram(bins = bins, fill = fill, color = color) +
+      facet_wrap(~key, ncol = ncol, scale = scale) +
+      theme_tq()
+    
+    return(g)
+}
+```
+
+```{r}
+
+generator_rfm <- function(data){
+  analy_day <- max(data$date) + 1
+
+  data %>% 
+  dplyr::group_by(customer_id) %>% 
+  dplyr::summarise(recency_days = as.numeric(analy_day - max(date)),
+                   frequency = n(), 
+                   monetary = sum(amount)) %>%  ungroup()
+}
+
+
+rfm_pre_df <- cust_df %>% 
+  mutate(year = year(date)) %>% 
+  filter(year <= 2013) %>% 
+  select(!year) %>% 
+  generator_rfm()  
+
+rfm_df <- rfm_pre_df %>% 
+  mutate(log_recency_days = log(recency_days)) %>% 
+  select(-recency_days)
+
+rfm_df %>% 
+  select(-customer_id) %>% 
+  generator_hist_facet(bins = 40, ncol = 3, fct_rev = FALSE) + theme_ben()
+
+
+```
+
+
+```{r}
+
+rfm_df
+
+rfm_mapper_tbl <- tibble(rfm_matric = c("log_recency_days", "frequency", "monetary"))
+
+rfm_mapper_tbl %>% 
+  mutate(rfm_matric_df = rfm_matric %>% map(score_mapper()))
+
+quantile(rfm_df$log_recency_days, probs = seq(0,1,0.2))
+
+score_mapper <- function(rfm_matric){
+  
+    rfm_level <- quantile(rfm_df$rfm_matric, probs = seq(0,1,0.2))
+    
+    rfm_df %>% 
+      mutate(score = case_when(.$rfm_matric >= rfm_level[1] ~ 1,
+                               .$rfm_matric >= rfm_level[2] ~ 2,
+                               .$rfm_matric >= rfm_level[3] ~ 3,
+                               .$rfm_matric >= rfm_level[4] ~ 4,
+                               TRUE ~ 5))
+}
+
+"log_recency_days" %>% map(score_mapper)
+
+
+generator_rfm_metric <- function(data) {
+  
+  analy_day <- max(data$date) + 1
+  
+  step_1 <- data %>% 
+        generator_rfm() 
+  
+  R_level <- quantile(step_1$recency_days,   probs = result)
+  F_level <- quantile(step_1$frequency, probs = result)
+  M_level <- quantile(step_1$monetary,  probs = result)
+  
+  out <- step_1 %>%
+    mutate(R_score = case_when(.$recency_days >= R_level[1] ~ 1,
+                               .$recency_days >= R_level[2] ~ 2,
+                               .$recency_days >= R_level[3] ~ 3,
+                               .$recency_days >= R_level[4] ~ 4,
+                               TRUE ~ 5),
+           F_score = case_when(.$frequency >= F_level[1] ~ 5,
+                               .$frequency >= F_level[2] ~ 4,
+                               .$frequency >= F_level[3] ~ 3,
+                               .$frequency >= F_level[4] ~ 2,
+                               TRUE ~ 1),
+           M_score = case_when(.$monetary >= M_level[1] ~ 5,
+                               .$monetary >= M_level[2] ~ 4,
+                               .$monetary >= M_level[3] ~ 3,
+                               .$monetary >= M_level[4] ~ 2,
+                               TRUE ~ 1))
+  return(out)
+}
+
+
+generator_rev_per_metric <- function(pre_score_data, ...) {
+  
+  pre_score_data %>% 
+    dplyr::group_by(...) %>% 
+    dplyr::summarise(cust = n_distinct(customer_id),
+                     total_monetary = sum(monetary)) %>% ungroup() %>% 
+    
+    dplyr::mutate(rev_per_cus = total_monetary/cust,
+                  prop_cus = cust/sum(cust),
+                  prop_rev = total_monetary/sum(total_monetary),
+                  rev_effect = prop_rev/prop_cus)
+}
+
+
+```
+
+#### 3.B Develope Adertising KPIs
+
+Average retail industry KPIs: 12.7% email open rate & 6.8% click-to-open rate (2013)
+
+Cost per email campaign action (list of factors): 
+
+* Self managed or agency supported: unknown 
+
+* Frequency of campaign: unknown 
+
+* Platform used: unknown 
+
+* quality of current email list: TBD 
+
+For the analysis purpose I will consider 12.7% email as a conservative KPI that indicates successful conversion rate. Also, email marketing benchmark from __WebFX__ website will be accessed in order to calculate cost per action (highly subjective but the purpose is to access target amongst the customer data base).
+
+
+Findings:
+
+* Clear revenue growth (leveling effect) observed by the marketing campagin activity. 
+  + 
+
+
+```{r}
+calculate_advertising_cost <- function(
+  
+  n = 1,
+  
+  # Cost per email campaign action
+  # direct cost 
+  cost_per_volume = 0.008,
+  verification_cost = 0.003,
+  
+  frequency_of_campaign = 
+)
+```
+
+
+
 
 ## 4.0 Measure the Campaign Response Rate
 
@@ -346,17 +854,15 @@ Typically in the field of ecommerce, in average, a good response rate are within
 
 The average email benchmark by retail industry: 12.6% (open rate), 8.5% (click-to-open rate)
 
-
 ```{r}
-resp <- resp_df_raw %>% 
-  select(customer_id, response) %>% 
-  setNames(c("customer_id", "campaign"))
+format_dollar  <- function(x, ...) {
+  paste0("$", formatC(as.numeric(x), format="f", digits = 0, big.mark=","))
+}
 
-cust_df <- trans_df %>% 
-  left_join(resp, by = "customer_id") %>% 
-  mutate(campaign = case_when(campaign == 1 ~ 1,
-                                TRUE ~ 0))
+se <- function(x) sqrt(var(x)/length(x))
+
 ```
+
 
 The average campaign response rate is 9.4%; with the assumption that the company is either retail or ecommerce business this value sits on a good hand. This value could also mean the percentage of persuaders.  
 
@@ -556,7 +1062,7 @@ cust_df %>%
   
 ```
 
-_generator_hist_facet() and theme_ben() are customised facet histogram function. It is uploaded on my GitHub and you are more than welcome :) For better understanding I recommend looking into Business Science 101 Course organised by __Matt Dancho__ _He regularly uploads free tutorials on Youtube as well. Great Stuff!_
+_generator_hist_facet() and theme_ben() are customised facet histogram function. It is uploaded on my GitHub. Anyone who are interested in customerised visualisation, Business Science 201 Course organised by __Matt Dancho__ _is one of the the option to look at. He regularly uploads free tutorials on Youtube as well_
 
 The recency days dataset is highly right skewed. There are many transformations to handle such skewed distribution, e.g. log transformation for instance. However, inhere, I will like to demonstrate small trick using quantiles binning to effectively split range of customers by organisational profit. - Yes Pareto Principle embeds here. 
 

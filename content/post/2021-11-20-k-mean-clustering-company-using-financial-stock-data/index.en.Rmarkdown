@@ -1,5 +1,6 @@
 ---
-title: "K-Mean Clustering Company using Financial Stock Data"
+title: "Stock Market Clustering"
+subtitle: "k-Means Clustering: Live SP500 Stock Market Data from Yahoo Finance"
 author: "Package Build"
 date: '2021-11-20'
 slug: K-Mean Clustering Company using Financial Stock Data
@@ -86,7 +87,7 @@ $$
 
 #### Correlation-based distance: 
 
-* Pearson correlation: Measures the degree of a linear relationship between two profiles. It is a paramteric correlation which depends on the distribution of the data. 
+* Pearson correlation: Measures the degree of a linear relationship between two profiles. It is a parametric correlation which depends on the distribution of the data. 
 
 * Kendall & Spearman correlation correlation are non-parametric and they are used to perform rank-based correlation analysis. (Outlier sensitivity can be mitigated by using Spearman's correlation instead of Pearson's correlation)
 
@@ -98,7 +99,7 @@ $$
 
 Despite the choice of distance measure has a strong influence on the clustering result, it is often arbitrary. But we must note two things: 
 
-[1] If we want to identify clusters of observations with the samll overall profiles regardless of their magnitudes, we shuld go with __correlation-based distance__ as a dissimilarity measure. In marketing, we can imagine a case where organisation like to identify group of shoppers with the same preference in terms of items, regardless of the volume of items they bought. 
+[1] If we want to identify clusters of observations with the small overall profiles regardless of their magnitudes, we should go with __correlation-based distance__ as a dissimilarity measure. In marketing, we can imagine a case where organisation like to identify group of shoppers with the same preference in terms of items, regardless of the volume of items they bought. 
 
 [2] If Euclidean distance is chosen, then observations with high values of features will be clustered together. The same holds true for observations with low values of features. 
 
@@ -138,9 +139,6 @@ $$
 \frac{SS_B}{df_B}   \frac{SS_W}{df_W}
 $$
 
-$$
-\frac{\partial f}{\partial x}
-$$
 ```{r, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(tidyquant)
@@ -151,6 +149,25 @@ library(plotly)
 library(factoextra)
 library(cluster)
 library(kableExtra)
+
+```
+
+
+```{r}
+get_stock_list <- 
+  function(stock_index = "SP500") {
+        tq_index(stock_index) %>%
+        select(symbol, company, sector) %>%
+        arrange(symbol)
+  }
+
+get_stock <- 
+  function(stock_symbol,
+           from = today() - lubridate::days(730),
+           to = today()){
+  stock_symbol %>%
+    tq_get(get = "stock.prices", from = from, to = to) 
+  }
 
 ```
 
@@ -461,7 +478,7 @@ We can plot the clusters interactively.
 ```{r}
 plot_cluster(k = 6)
 ```
-```
+
 
 
 
