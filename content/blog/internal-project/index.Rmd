@@ -55,6 +55,7 @@ In this post, I like to introduce a simple statistical RFM metrics and further d
 
 ### 1.1 RFM
 
+
 Past history, Marketers realised that targeting the right audience is just as important as what you send. That siad, the "right" customer will always vary depending on business objectives and business cycle. Having reliable KPI's for customer value and engagement score will sincerely accelerate business decisions. RFM sets a trick here; due to its high adaptability in various industries, it serves as a good starting point for customer segmentation journey. It is well known statistical model to develop a sense of company's customer base: __customer purchasing behaviour!__
 
 >The main advantage of RFM analysis is that it provides meaningful information about customers while using fewer (three-dimensional) criterions as cluster attributes. This reduces the complexity of customer value analysis model __without compromising its accuracy__.
