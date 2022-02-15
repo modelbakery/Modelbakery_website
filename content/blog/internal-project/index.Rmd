@@ -9,18 +9,31 @@ links:
   icon_pack: fab
   name: github material
   url: https://github.com/modelbakery/Modelbakery_website/tree/main/content/blog/internal-project
-summary: Simple trick to segment your customers with only three customer information:recency, frequency and monetary. Is this all there to it? (why is it still important?)
+summary: Simple trick to segment your customers with only three customer information recency, frequency and monetary.
 tags:
-title: Why you MUST apply RFM matrics to your company right away!
+title: Retention Measure & Customer Segementation
 url_code: ""
 url_pdf: ""
 url_slides: ""
 url_video: ""
 ---
 
-You may have heard of the Pareto Principle, but knowing how would you utilize its advantages can seriously save your time. By nature of sales businesses, in general, have an urgency to secure as many leads as quickly as possible due to the market competition. Therefore, abstracting a target customer from highly complex and overload of information in customers' demographics, desire, and product categories, the power of the leading score can be significant. 
+By nature of product or service sales businesses, there exists a sense of urgency to secure as many leads to generate more revenue with the notion that, with more of them, many data for conversion of sales such as levels of customers experience, desire, product categories, and the power of the leading score can be backtracked. 
 
-In this post, I like to introduce a simple statistical RFM metrics and further discuss the essence of scoring. The aim is to retain RFM score from revenue view point with acceptable distribution and each purchasing behvaiour groups similar in size. To put RFM into marketing perspectives, it is a valuable tool when marketers wants a quick and success. This matric will almost always warrant quick and profitable results. 
+In a given time and resource the businesses battle seeking for the what is called few "critical" lever to generate more impact and hence the ROAS (Return on advertisement spend) or optimizing investment of effort. 
+
+A common pitfall for Marketers would be overlooking retention and focusing on acquisition. 
+
+> Customer retention is the essential—but often overlooked—foundation for growth in subscription-based services. Though you'd probably agree that the concept of customer retention is important, you're probably not taking the time or effort to calculate it right and try to improve it.
+-- By PROFITWELL
+
+
+The revenue in its simplest form can be expressed as follow:
+
+$$
+Revenue\ = \# Customer\ * Returning\ Rates\ * Average\ Price\ Value
+$$
+
 
 
 ***
