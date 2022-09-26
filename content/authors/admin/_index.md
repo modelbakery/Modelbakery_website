@@ -2,7 +2,7 @@
 bio: 
 education:
   courses:
-  - course: MSc in Polymer Chemistry
+  - course: MSc in Polymer Chemistryyyyy
     institution: Warwick University | UK
     year: 2019
   - course: BSc in Chemistry
