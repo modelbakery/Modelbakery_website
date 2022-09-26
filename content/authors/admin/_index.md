@@ -2,7 +2,7 @@
 bio: 
 education:
   courses:
-  - course: MSc in Polymer Chemistryyyyy
+  - course: MSc in Polymer Chemistry
     institution: Warwick University | UK
     year: 2019
   - course: BSc in Chemistry
@@ -13,7 +13,7 @@ highlight_name: false
 interests:
 - Problem Solving 
 - Statistics 
-- Visual Art 
+- Finance
 # organizations:
 # - name: Stanford University
 #   url: https://www.stanford.edu/
