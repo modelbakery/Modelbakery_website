@@ -1,12 +1,12 @@
 ---
-title: "Statistical Inference - Sampling"
+title: "Statistical Inference - Point and Interval Estimation"
 author: "Package Build"
 date: '2021-11-20'
-subtitle: 샘플링
-slug: 샘플링
+subtitle: 통계적 추정 - 점추정과 구간 추정
+slug: 통계적 추정 - 점추정과 구간 추정
 categories: R
 tags:
-- Statistic Inference
+- Statistics
 - R
 summary: ''
 authors: []
@@ -28,3 +28,6 @@ projects: []
 #### [libraries]
 
 #### 
+
+
+
