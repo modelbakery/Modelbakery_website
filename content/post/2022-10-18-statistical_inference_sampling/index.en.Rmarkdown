@@ -22,13 +22,110 @@ projects: []
 ### Purpose: 
 
 
+### Introduction 
+
+This post explains how to compute virtual sampling using R to illustrate the concepts behind the sampling from the basis of confidence intervals and hypothesis testing. 
+
+### Objectives: 
+
+[1] Understand the effect of sampling variation
+[2] Understand the effect of sample size on sampling variation 
+
+The two major important tools to digest in statistical inference are:
+
++ Hypothesis test 
+
++ Confidence interval  
+
+I having been struggling to perform hypothesis tests and interpret the result. It has been my major huddle throughout my academics. Lets first clarify "why" we bother with this tool - What are we trying to achieve? 
+
+Lets give a thoughtful time and effort to consume the concept. Beware hypothesis tests come in various forms and the steps I illustrate here is not applicable to all. However, as for now the principle behind the these 6 statistical test are the same. 
+
++ One mean: $ \mu$
++ Two means:
+  * independent samples: $ \mu_1$ and $ \mu_2$
+  * paired samples: $ \mu_D$
++ One proportion: $ p$
++ Two proportio: $ p_1$ and $ p_2$
++ One variance $ \sigma^2$
++ Two variance $ \sigma^2_1$ and $ \sigma^2_1$
+
+#### Hypothesis test - why? 
+
+Unlike descriptive statistics where we only describe the data observed, hypothesis teat use a subset of observations referred as sample, to draw conclusion about the a *population*. 
+
+The main reason we bother to estimate the population from our sample is because in real life problems, most of the time, collecting the data on the entire population is practically impossible, too complex, too expensive. 
+
+Hence the goal of performing hypothesis testing is to draw conclusion in order to confirm the belief about a population from the information we can abstract from the smaller group samples. 
+
+I like to remark words phrased by Cassie Kozyrkov - A leading head of decision intelligence at Google.
+> Analytics is a art of finding out what is in the data. 
+> Statistics is about going beyond the data that we have in a moment - it is the science of changing your belief/ mind basis on information you obtained
+
+#### Hypothesis test - When?
+
+For instance lets say you are in airport and you saw couple kissing and they tilt right. You made assumption that people favor right over the left. Now you observed 10 couples (3 people tilting right and 7 tilting left) - the probability of favoring right is 30%.
+
+Based on the probability from your observation:
++ did it change your belief (assumption) or not?
++ how strong did it change your initial belief?
+
+The questions in statistical language are:
++ Is 70% significant proportion?
++ Is our sample size 10 large enough to validate our assumption?
++ What is your confidence interval - your tolerance to accept/reject your null-hypothesis 
+
+As science is my first acedemic language, hypothesis test first require an idea around your facts, to solidate your concept - a process of building your assumption into a theory. 
+
+The key take-ways are:
++ It is important to notice in hypothesis testing we are primary interested in population - not the sample. (The sample is used for the aim of drawing conclusions about the population, so we always test in terms of the population)
++ In hypothesis testing, the assumptions are defined pre-hand the data collection - this is where your experience, prior knowlegde and research skills becomes important - as power of hypothesis testing can only be as powerful as your belief gets. 
++ This means, hypothesis testing is usually not for exploratory analysis (EDA) where it aims to uncover relationship between the variables of interest under a investigation. As this part of analysis is after you collected the data - hence EDA is often referred as what is called 'hypothesis-generating analysis'.
+
+#### Types of hypothesis 
+
++ Null hypothesis
++ Alternative hypothesis 
+
+
+#### Hypothesis testing - How?
+
+Lets look at three different methods to perform a hypothesis tests:
+
++ Method A: Comparing the test statistics with the *critical value* 
++ Method B: Comparing the *p-value* with significance level $ \alpha$
++ Method C: Comparing the target parameter with the *confidence interval*
 
 
 
-### Objective:
 
-#### [libraries]
+#### [Packages]
 
-#### 
++ ggplot2: for visualisation 
++ dplyr: for data wranging
++ tidyr: for converting data to 'tidy' format 
++ readr: for importing spreadsheet of data 
++ patchwork: for simply displaying separate ggplots into same graphics 
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(moderndive)
+library(patchwork)
+```
+
+### Statistic Inference Recap 
+
+Statistical inference is the brunch of statistics that uses a random sample of data taken from a population to make inference. Simply put, its the reverse to probability problems, with gathered data we try to make generalizations about the parameter of interest in the population.
+
+Statistical Inference = Estimation + Hypothesis testing; where the estimation components can be sub-divided into "point estimation" and "interval estimation".
+
++ What is the difference? # Guide to another chapter 
+
++ What are the assumptions required to satisfy the estimation of unknown population statistics from observed sample? 
+
+
+#### Virtual Sampling 
+
+Lets say 
 
 
